@@ -41,6 +41,7 @@
 #include "board-cardhu.h"
 #include "devices.h"
 #include "gpio-names.h"
+#include "tegra3_host1x_devices.h"
 
 #define DC_CTRL_MODE	(TEGRA_DC_OUT_ONE_SHOT_MODE | \
 			 TEGRA_DC_OUT_ONE_SHOT_LP_MODE)
@@ -1394,7 +1395,7 @@ skip_lvds:
 #endif
 
 #ifdef CONFIG_TEGRA_GRHOST
-	err = nvhost_device_register(&tegra_grhost_device);
+	err = tegra3_register_host1x_devices();
 	if (err)
 		return err;
 #endif
