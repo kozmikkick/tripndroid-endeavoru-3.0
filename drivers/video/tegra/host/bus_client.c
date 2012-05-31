@@ -50,15 +50,28 @@
 #include "nvhost_job.h"
 #include "nvhost_hwctx.h"
 
+static int validate_reg(struct nvhost_device *ndev, u32 offset, int count)
+{
+	struct resource *r = nvhost_get_resource(ndev, IORESOURCE_MEM, 0);
+	int err = 0;
+
+	if (offset + 4 * count > resource_size(r)
+			|| (offset + 4 * count < offset))
+		err = -EPERM;
+
+	return err;
+}
+
 int nvhost_read_module_regs(struct nvhost_device *ndev,
 			u32 offset, int count, u32 *values)
 {
 	void __iomem *p = ndev->aperture + offset;
+	int err;
 
 	/* verify offset */
-	struct resource *r = nvhost_get_resource(ndev, IORESOURCE_MEM, 0);
-	if (offset + 4 * count >= resource_size(r))
-		return -EPERM;
+	err = validate_reg(ndev, offset, count);
+	if (err)
+		return err;
 
 	nvhost_module_busy(ndev);
 	while (count--) {
@@ -75,11 +88,12 @@ int nvhost_write_module_regs(struct nvhost_device *ndev,
 			u32 offset, int count, const u32 *values)
 {
 	void __iomem *p = ndev->aperture + offset;
+	int err;
 
 	/* verify offset */
-	struct resource *r = nvhost_get_resource(ndev, IORESOURCE_MEM, 0);
-	if (offset + 4 * count >= resource_size(r))
-		return -EPERM;
+	err = validate_reg(ndev, offset, count);
+	if (err)
+		return err;
 
 	nvhost_module_busy(ndev);
 	while (count--) {
