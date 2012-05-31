@@ -50,10 +50,15 @@
 #include "nvhost_job.h"
 #include "nvhost_hwctx.h"
 
-void nvhost_read_module_regs(struct nvhost_device *ndev,
+int nvhost_read_module_regs(struct nvhost_device *ndev,
 			u32 offset, int count, u32 *values)
 {
 	void __iomem *p = ndev->aperture + offset;
+
+	/* verify offset */
+	struct resource *r = nvhost_get_resource(ndev, IORESOURCE_MEM, 0);
+	if (offset + 4 * count >= resource_size(r))
+		return -EPERM;
 
 	nvhost_module_busy(ndev);
 	while (count--) {
@@ -62,12 +67,19 @@ void nvhost_read_module_regs(struct nvhost_device *ndev,
 	}
 	rmb();
 	nvhost_module_idle(ndev);
+
+	return 0;
 }
 
-void nvhost_write_module_regs(struct nvhost_device *ndev,
+int nvhost_write_module_regs(struct nvhost_device *ndev,
 			u32 offset, int count, const u32 *values)
 {
 	void __iomem *p = ndev->aperture + offset;
+
+	/* verify offset */
+	struct resource *r = nvhost_get_resource(ndev, IORESOURCE_MEM, 0);
+	if (offset + 4 * count >= resource_size(r))
+		return -EPERM;
 
 	nvhost_module_busy(ndev);
 	while (count--) {
@@ -76,6 +88,8 @@ void nvhost_write_module_regs(struct nvhost_device *ndev,
 	}
 	wmb();
 	nvhost_module_idle(ndev);
+
+	return 0;
 }
 
 struct nvhost_channel_userctx {
