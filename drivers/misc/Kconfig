@@ -606,6 +606,12 @@ config CABLE_DETECT_ACCESSORY
 	---help---
         USB accessory detection
 
+config THERM_EST
+	bool "Thermal estimator driver"
+	default n
+	---help---
+	Thermal driver which estimates temperature based of other sensors.
+
 source "drivers/misc/c2port/Kconfig"
 source "drivers/misc/eeprom/Kconfig"
 source "drivers/misc/cb710/Kconfig"
