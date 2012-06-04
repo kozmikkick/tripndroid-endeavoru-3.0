@@ -24,6 +24,7 @@
 
 #define LIGHTSENSOR_IOCTL_GET_ENABLED	_IOR(LIGHTSENSOR_IOCTL_MAGIC, 1, int *)
 #define LIGHTSENSOR_IOCTL_ENABLE	_IOW(LIGHTSENSOR_IOCTL_MAGIC, 2, int *)
+#define LIGHTSENSOR_IOCTL_SET_DELAY	_IOW(LIGHTSENSOR_IOCTL_MAGIC, 3, int *)
 
 struct lightsensor_mpp_config_data {
 	uint32_t lightsensor_mpp;
