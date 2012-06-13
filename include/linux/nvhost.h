@@ -44,7 +44,7 @@ enum nvhost_power_sysfs_attributes {
 
 struct nvhost_device_id {
 	char name[NVHOST_NAME_SIZE];
-	unsigned long driver_data;
+	unsigned long version;
 };
 
 struct nvhost_clock {
@@ -60,11 +60,8 @@ enum nvhost_device_powerstate_t {
 };
 
 struct nvhost_device {
-	/* device name: its format is of type -
-	 * <name><ip-version>.<instance>
-	 * e.g.: gr3d01 = gr3d ip version 01 used in tegra2
-	 * no instance number means hardware supports single instance */
-	const char	*name;
+	const char	*name;		/* device name */
+	int		version;	/* ip version number of device */
 	struct device	dev;		/* Linux device struct */
 	int		id;		/* Separates clients of same hw */
 	int		index;		/* Hardware channel number */
