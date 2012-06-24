@@ -5064,6 +5064,7 @@ static void tegra_clk_resume(void)
 
 	/* Since EMC clock is not restored, and may not preserve parent across
 	   suspend, update current state, and mark EMC DFS as out of sync */
+	tegra3_pll_m_override_update(&tegra_pll_m, false);
 	p = tegra_clk_emc.parent;
 	tegra3_periph_clk_init(&tegra_clk_emc);
 

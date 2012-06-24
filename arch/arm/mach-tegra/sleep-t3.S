@@ -518,7 +518,7 @@ tegra3_cpu_clk32k:
 	tst	r0, #PMC_CTRL_SIDE_EFFECT_LP0
 	beq	lp1_clocks_prepare
 
-	/* enable PLLM via PMC in LP0 */
+	/* enable PLLM auto-restart via PMC in LP0; restore override settings */
 	ldr	r0, [r4, #PMC_PLLP_WB0_OVERRIDE]
 	orr	r0, r0, #((1 << 12) | (1 << 11))
 	str	r0, [r4, #PMC_PLLP_WB0_OVERRIDE]
