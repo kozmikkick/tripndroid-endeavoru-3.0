@@ -66,6 +66,7 @@
 #include <mach/thermal.h>
 #include <mach/mhl.h>
 #include <mach/cable_detect.h>
+#include <mach/touch.h>
 
 #include <media/rawchip/rawchip.h>
 
@@ -83,7 +84,6 @@
 #include "fuse.h"
 #include "wakeups-t3.h"
 #include "pm.h"
-#include "touch.h"
 
 #ifdef CONFIG_TEGRA_HAPTIC2
 #include <linux/pm8xxx-haptic2.h>
