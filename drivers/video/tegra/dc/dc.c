@@ -3187,6 +3187,12 @@ static int tegra_dc_suspend(struct nvhost_device *ndev, pm_message_t state)
 
 	mutex_lock(&dc->lock);
 
+	// TripNRaVeR: endeavoru: protect power on/off
+	if (ndev->id == 0 &&
+		dc->out &&
+		dc->out->disable)
+		dc->out->disable();
+
 	if (dc->out_ops && dc->out_ops->suspend)
 		dc->out_ops->suspend(dc);
 
@@ -3230,6 +3236,14 @@ static int tegra_dc_resume(struct nvhost_device *ndev)
 
 	if (dc->out_ops && dc->out_ops->resume)
 		dc->out_ops->resume(dc);
+
+	// TripNRaVeR: endeavoru: protect power on/off
+ 	if (ndev->id == 0 &&
+ 		dc->out &&
+ 		dc->out->bridge_reset &&
+ 		resume_from_deep_suspend)
+ 		dc->out->bridge_reset();
+
 	mutex_unlock(&dc->lock);
 
 	return 0;
