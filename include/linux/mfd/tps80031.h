@@ -196,6 +196,10 @@ struct tps80031_platform_data {
 	bool use_power_off;
 	struct tps80031_pupd_init_data *pupd_init_data;
 	int pupd_init_data_size;
+#ifdef CONFIG_PM
+	void (*suspend_work)(void);
+	void (*resume_work)(void);
+#endif
 };
 
 struct tps80031_bg_platform_data {

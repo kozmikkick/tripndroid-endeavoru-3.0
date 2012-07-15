@@ -529,6 +529,13 @@ unsigned long tps80031_get_chip_info(struct device *dev)
 }
 EXPORT_SYMBOL_GPL(tps80031_get_chip_info);
 
+int (*tps80031_is_cable_in)(void) = NULL;
+EXPORT_SYMBOL_GPL(tps80031_is_cable_in);
+
+int tps80031_vbus_on = 0;
+EXPORT_SYMBOL_GPL(tps80031_vbus_on);
+
+
 int tps80031_get_pmu_version(struct device *dev)
 {
 	struct tps80031 *tps80031 = dev_get_drvdata(dev);
@@ -849,6 +856,10 @@ static irqreturn_t tps80031_charge_control_irq(int irq, void *data)
 				"status %d\n", __func__, ret);
 		return IRQ_NONE;
 	}
+	if (org_sts & BIT(2))
+		tps80031_vbus_on = 1;
+	else
+		tps80031_vbus_on = 0;
 
 	/* Get change from last interrupt and mask for interested interrupt
 	 * for charge control interrupt */
@@ -1223,6 +1234,7 @@ static int __devinit tps80031_i2c_probe(struct i2c_client *client,
 	int jtag_ver;
 	int ep_ver;
 	int i;
+	u8 org_sts;
 
 	if (!pdata) {
 		dev_err(&client->dev, "tps80031 requires platform data\n");
@@ -1307,6 +1319,11 @@ static int __devinit tps80031_i2c_probe(struct i2c_client *client,
 		pm_power_off = tps80031_power_off;
 
 	tps80031_dev = tps80031;
+
+	if (org_sts & BIT(2))
+		tps80031_vbus_on = 1;
+	else
+		tps80031_vbus_on = 0;
 
 	return 0;
 
