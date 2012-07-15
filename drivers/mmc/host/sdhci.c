@@ -1135,11 +1135,24 @@ out:
 	host->clock = clock;
 }
 
+#if defined(CONFIG_MACH_ENDEAVORU)
+static int wifi_is_on = 0;
+extern int enterprise_wifi_power(int on);
+void set_wifi_is_on (int on){
+    wifi_is_on = on;
+}
+EXPORT_SYMBOL(set_wifi_is_on);
+#endif
+
 static void sdhci_set_power(struct sdhci_host *host, unsigned short power)
 {
 	u8 pwr = 0;
 
 	if (power != (unsigned short)-1) {
+#if defined(CONFIG_MACH_ENDEAVORU)
+	if(host->mmc->index==1)
+		enterprise_wifi_power(1);
+#endif
 		switch (1 << power) {
 		case MMC_VDD_165_195:
 			pwr = SDHCI_POWER_180;
@@ -1155,6 +1168,12 @@ static void sdhci_set_power(struct sdhci_host *host, unsigned short power)
 		default:
 			BUG();
 		}
+	}
+	else {
+#if defined(CONFIG_MACH_ENDEAVORU)
+		if(host->mmc->index==1)
+			enterprise_wifi_power(0);
+#endif
 	}
 
 	if (host->pwr == pwr)
@@ -1850,18 +1869,13 @@ int sdhci_enable(struct mmc_host *mmc)
 {
 	struct sdhci_host *host = mmc_priv(mmc);
 
-	if (!mmc->card)
+	if (!mmc->card || mmc->card->type == MMC_TYPE_SDIO)
 		return 0;
 
 	if (mmc->ios.clock) {
-		if (mmc->card->type != MMC_TYPE_SDIO) {
-			if (host->ops->set_clock)
-				host->ops->set_clock(host, mmc->ios.clock);
-			sdhci_set_clock(host, mmc->ios.clock);
-		} else {
-			if (host->ops->set_card_clock)
-				host->ops->set_card_clock(host, mmc->ios.clock);
-		}
+		if (host->ops->set_clock)
+			host->ops->set_clock(host, mmc->ios.clock);
+		sdhci_set_clock(host, mmc->ios.clock);
 	}
 
 	return 0;
@@ -1871,18 +1885,12 @@ int sdhci_disable(struct mmc_host *mmc, int lazy)
 {
 	struct sdhci_host *host = mmc_priv(mmc);
 
-	if (!mmc->card)
+	if (!mmc->card || mmc->card->type == MMC_TYPE_SDIO)
 		return 0;
 
-	/* For SDIO cards, only disable the card clock. */
-	if (mmc->card->type != MMC_TYPE_SDIO) {
-		sdhci_set_clock(host, 0);
-		if (host->ops->set_clock)
-			host->ops->set_clock(host, 0);
-	} else {
-		if (host->ops->set_card_clock)
-			host->ops->set_card_clock(host, 0);
-	}
+	sdhci_set_clock(host, 0);
+	if (host->ops->set_clock)
+		host->ops->set_clock(host, 0);
 
 	return 0;
 }
@@ -2330,34 +2338,20 @@ out:
 int sdhci_suspend_host(struct sdhci_host *host, pm_message_t state)
 {
 	int ret = 0;
-	bool has_tuning_timer;
 	struct mmc_host *mmc = host->mmc;
 
 	sdhci_disable_card_detection(host);
 
 	/* Disable tuning since we are suspending */
-	has_tuning_timer = host->version >= SDHCI_SPEC_300 &&
-		host->tuning_count && host->tuning_mode == SDHCI_TUNING_MODE_1;
-	if (has_tuning_timer) {
+	if (host->version >= SDHCI_SPEC_300 && host->tuning_count &&
+	    host->tuning_mode == SDHCI_TUNING_MODE_1) {
 		host->flags &= ~SDHCI_NEEDS_RETUNING;
 		mod_timer(&host->tuning_timer, jiffies +
 			host->tuning_count * HZ);
 	}
 
-	if (mmc->card) {
+	if (mmc->card)
 		ret = mmc_suspend_host(host->mmc);
-		if (ret) {
-			if (has_tuning_timer) {
-				host->flags |= SDHCI_NEEDS_RETUNING;
-				mod_timer(&host->tuning_timer, jiffies +
-						host->tuning_count * HZ);
-			}
-
-			sdhci_enable_card_detection(host);
-
-			return ret;
-		}
-	}
 
 	if (mmc->pm_flags & MMC_PM_KEEP_POWER)
 		host->card_int_set = sdhci_readl(host, SDHCI_INT_ENABLE) &
@@ -2657,6 +2651,15 @@ int sdhci_add_host(struct sdhci_host *host)
 	if ((host->quirks & SDHCI_QUIRK_BROKEN_CARD_DETECTION) &&
 	    mmc_card_is_removable(mmc) && !(host->ops->get_cd))
 		mmc->caps |= MMC_CAP_NEEDS_POLL;
+#if defined(CONFIG_MACH_ENDEAVORU)
+	if(host->mmc->index==1) {
+		mmc->caps |= MMC_CAP_NONREMOVABLE;
+		mmc->caps |= MMC_CAP_DISABLE;
+		mmc->caps |= MMC_CAP_POWER_OFF_CARD;
+		mmc->caps |= MMC_PM_KEEP_POWER;
+        host->flags |= MMC_PM_KEEP_POWER;
+	}
+#endif
 
 	/* UHS-I mode(s) supported by the host controller. */
 	if (host->version >= SDHCI_SPEC_300)
@@ -2746,7 +2749,8 @@ int sdhci_add_host(struct sdhci_host *host)
 
 		if (max_current_180 > 150)
 			mmc->caps |= MMC_CAP_SET_XPC_180;
-
+// TripNRaVeR
+#if 0
 		/* Maximum current capabilities of the host at 1.8V */
 		if (max_current_180 >= 800)
 			mmc->caps |= MMC_CAP_MAX_CURRENT_800;
@@ -2756,6 +2760,7 @@ int sdhci_add_host(struct sdhci_host *host)
 			mmc->caps |= MMC_CAP_MAX_CURRENT_400;
 		else
 			mmc->caps |= MMC_CAP_MAX_CURRENT_200;
+#endif
 	}
 
 	mmc->ocr_avail = ocr_avail;
@@ -2857,14 +2862,17 @@ int sdhci_add_host(struct sdhci_host *host)
 	if (ret)
 		goto untasklet;
 
-	host->vmmc = regulator_get(mmc_dev(mmc), "vmmc");
+	// TripNRaVeR: we dont support vmmc
+	// host->vmmc = regulator_get(mmc_dev(mmc), "vmmc");
+	host->vmmc = NULL;
+	/*
 	if (IS_ERR(host->vmmc)) {
 		printk(KERN_INFO "%s: no vmmc regulator found\n", mmc_hostname(mmc));
 		host->vmmc = NULL;
 	} else {
 		regulator_enable(host->vmmc);
 	}
-
+	*/
 	sdhci_init(host, 0);
 
 #ifdef CONFIG_MMC_DEBUG
