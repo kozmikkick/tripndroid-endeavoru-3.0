@@ -1909,6 +1909,15 @@ int tegra_dc_set_fb_mode(struct tegra_dc *dc,
 }
 EXPORT_SYMBOL(tegra_dc_set_fb_mode);
 
+void tegra_dc_turn_off_pwm(struct tegra_dc *dc)
+{
+ 	unsigned long out_sel = tegra_dc_readl(dc,  DC_CMD_DISPLAY_POWER_CONTROL);
+ 	printk(KERN_INFO "[BKL] POWER_CONTROL = 0x%lx\n", out_sel);
+ 	out_sel &= 0xffbffff;
+ 	printk(KERN_INFO "[BKL] POWER_CONTROL = 0x%lx\n", out_sel);
+ 	tegra_dc_writel(dc, out_sel,  DC_CMD_DISPLAY_POWER_CONTROL);
+}
+
 void
 tegra_dc_config_pwm(struct tegra_dc *dc, struct tegra_dc_pwm_params *cfg)
 {
