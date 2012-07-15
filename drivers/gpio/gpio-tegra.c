@@ -33,6 +33,7 @@
 
 #include <mach/iomap.h>
 #include <mach/pinmux.h>
+#include <mach/board_htc.h>
 
 #include "../../../arch/arm/mach-tegra/pm-irq.h"
 
@@ -73,12 +74,15 @@
 #define GPIO_MSK_INT_LVL(x)	(GPIO_REG(x) + 0xE0)
 #endif
 
-#define GPIO_INT_LVL_MASK		0x010101
+#define GPIO_INT_LVL_MASK			0x010101
 #define GPIO_INT_LVL_EDGE_RISING	0x000101
 #define GPIO_INT_LVL_EDGE_FALLING	0x000100
 #define GPIO_INT_LVL_EDGE_BOTH		0x010100
 #define GPIO_INT_LVL_LEVEL_HIGH		0x000001
 #define GPIO_INT_LVL_LEVEL_LOW		0x000000
+#define GPIO_DUMP_ENABLE_BIT 		0x01
+
+static int gpio_dump_enable = 0;
 
 struct tegra_gpio_bank {
 	int bank;
@@ -495,6 +499,9 @@ static int __init tegra_gpio_init(void)
 		irq_set_chained_handler(bank->irq, tegra_gpio_irq_handler);
 
 	}
+
+	if (get_extra_kernel_flag() & GPIO_DUMP_ENABLE_BIT)
+		gpio_dump_enable = 1;
 
 	return 0;
 }
