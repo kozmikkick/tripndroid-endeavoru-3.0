@@ -66,6 +66,7 @@
 #endif
 
 extern int global_wakeup_state;
+extern int resume_from_deep_suspend;
 
 static int no_vsync;
 static struct fb_videomode tegra_dc_hdmi_fallback_mode = {
