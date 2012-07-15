@@ -143,7 +143,6 @@ struct ehci_hcd {			/* one per controller */
 #ifdef CONFIG_USB_EHCI_TEGRA
 	unsigned		controller_resets_phy:1;
 	unsigned		controller_remote_wakeup:1;
-	unsigned		broken_hostpc_phcd:1;
 #endif
 
 	/* required for usb32 quirk */
@@ -768,7 +767,7 @@ static inline void ehci_sync_mem(void)
 	mb();
 }
 #else
-static inline void ehci_sync_mem()
+static inline void ehci_sync_mem(void)
 {
 }
 #endif
