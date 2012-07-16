@@ -60,6 +60,8 @@ module_param(debug_lp0, bool, S_IRUGO | S_IWUSR);
 static bool warn_prevent_lp0;
 module_param(warn_prevent_lp0, bool, S_IRUGO | S_IWUSR);
 
+int global_wakeup_state;
+
 bool tegra_pm_irq_lp0_allowed(void)
 {
 	return (tegra_prevent_lp0 == 0);
@@ -227,7 +229,7 @@ static void tegra_pm_irq_syscore_resume_helper(
 
 		pr_info("Resume caused by WAKE%d, %s\n", (wake + 32 * index),
 			desc->action->name);
-
+		global_wakeup_state = (wake + 32 * index);
 		tegra_wake_irq_count[wake + 32 * index]++;
 
 		generic_handle_irq(irq);
