@@ -159,6 +159,7 @@ ieee80211_scan_rx(struct ieee80211_sub_if_data *sdata, struct sk_buff *skb)
 	__le16 fc;
 	bool presp, beacon = false;
 	struct ieee802_11_elems elems;
+	struct cfg80211_bss *cbss = NULL;
 
 	if (skb->len < 2)
 		return RX_DROP_UNUSABLE;
@@ -209,8 +210,11 @@ ieee80211_scan_rx(struct ieee80211_sub_if_data *sdata, struct sk_buff *skb)
 	bss = ieee80211_bss_info_update(sdata->local, rx_status,
 					mgmt, skb->len, &elems,
 					channel, beacon);
-	if (bss)
+	if (bss) {
+		cbss = container_of((void *)bss, struct cfg80211_bss, priv);
+		cfg80211_send_intermediate_result(sdata->dev, cbss);
 		ieee80211_rx_bss_put(sdata->local, bss);
+	}
 
 	/* If we are on-operating-channel, and this packet is for the
 	 * current channel, pass the pkt on up the stack so that
@@ -254,6 +258,7 @@ static bool ieee80211_prep_hw_scan(struct ieee80211_local *local)
 					 req->ie, req->ie_len, band,
 					 req->rates[band], 0);
 	local->hw_scan_req->ie_len = ielen;
+	local->hw_scan_req->no_cck = req->no_cck;
 
 	return true;
 }
@@ -409,6 +414,9 @@ static int __ieee80211_start_scan(struct ieee80211_sub_if_data *sdata,
 
 		local->hw_scan_req->ssids = req->ssids;
 		local->hw_scan_req->n_ssids = req->n_ssids;
+		local->hw_scan_req->max_dwell = req->max_dwell;
+		local->hw_scan_req->min_dwell = req->min_dwell;
+		local->hw_scan_req->num_probe = req->num_probe;
 		ies = (u8 *)local->hw_scan_req +
 			sizeof(*local->hw_scan_req) +
 			req->n_channels * sizeof(req->channels[0]);
@@ -660,7 +668,8 @@ static void ieee80211_scan_state_send_probe(struct ieee80211_local *local,
 			local->scan_req->ssids[i].ssid,
 			local->scan_req->ssids[i].ssid_len,
 			local->scan_req->ie, local->scan_req->ie_len,
-			local->scan_req->rates[band], false);
+			local->scan_req->rates[band], false,
+			local->scan_req->no_cck);
 
 	/*
 	 * After sending probe requests, wait for probe responses
@@ -927,11 +936,12 @@ int ieee80211_request_sched_scan_stop(struct ieee80211_sub_if_data *sdata)
 	}
 
 	if (local->sched_scanning) {
-		for (i = 0; i < IEEE80211_NUM_BANDS; i++)
+		for (i = 0; i < IEEE80211_NUM_BANDS; i++) {
 			kfree(local->sched_scan_ies.ie[i]);
+			local->sched_scan_ies.ie[i] = NULL;
+		}
 
 		drv_sched_scan_stop(local, sdata);
-		local->sched_scanning = false;
 	}
 out:
 	mutex_unlock(&sdata->local->mtx);
@@ -963,8 +973,10 @@ void ieee80211_sched_scan_stopped_work(struct work_struct *work)
 		return;
 	}
 
-	for (i = 0; i < IEEE80211_NUM_BANDS; i++)
+	for (i = 0; i < IEEE80211_NUM_BANDS; i++) {
 		kfree(local->sched_scan_ies.ie[i]);
+		local->sched_scan_ies.ie[i] = NULL;
+	}
 
 	local->sched_scanning = false;
 
