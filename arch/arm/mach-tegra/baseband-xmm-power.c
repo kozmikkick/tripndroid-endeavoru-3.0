@@ -206,7 +206,6 @@ static struct regulator *enterprise_dsi_reg = NULL;//for avdd_csi_dsi
 static spinlock_t xmm_lock;
 static bool system_suspending;
 
-static int reenable_autosuspend; //ICS only
 static struct work_struct autopm_resume_work;
 static int htcpcbid=0;
 
@@ -1143,11 +1142,6 @@ irqreturn_t baseband_xmm_power_ipc_ap_wake_irq(int irq, void *dev_id)
 						(baseband_power_driver_data->
 						modem.xmm.ipc_bb_wake, 0);
 					pr_debug("gpio slave wakeup done ->\n");
-					if (reenable_autosuspend && usbdev) {
-						reenable_autosuspend = false;
-						queue_work(workqueue,
-							&autopm_resume_work);
-					}
 				}
 				if ((baseband_xmm_powerstate ==
 							BBXMM_PS_L2TOL0) ||
@@ -1852,7 +1846,6 @@ static int baseband_xmm_power_driver_handle_resume(
 	} else {
 		pr_info("CP L3 -> L0\n");
 	}
-	reenable_autosuspend = true;
 	
 	return 0;
 
