@@ -387,7 +387,7 @@ static int sta_info_finish_insert(struct sta_info *sta,
 			spin_unlock_irqrestore(&local->sta_lock, flags);
 		}
 
-		list_add(&sta->list, &local->sta_list);
+		list_add_rcu(&sta->list, &local->sta_list);
 	} else {
 		sta->dummy = false;
 	}
@@ -877,7 +877,7 @@ static int __must_check __sta_info_destroy(struct sta_info *sta)
 	ret = sta_info_hash_del(local, sta);
 	/* this might still be the pending list ... which is fine */
 	if (!ret)
-		list_del(&sta->list);
+		list_del_rcu(&sta->list);
 	spin_unlock_irqrestore(&local->sta_lock, flags);
 	if (ret)
 		return ret;
