@@ -160,10 +160,6 @@ static struct regulator_consumer_supply tps80031_vbus_supply_common[] = {
 	REGULATOR_SUPPLY("usb_vbus", NULL),
 };
 
-static struct regulator_consumer_supply tps80031_battery_charge_supply[] = {
-	REGULATOR_SUPPLY("usb_bat_chg", NULL),
-};
-
 #define TPS_PDATA_INIT(_id, _sname, _minmv, _maxmv, _supply_reg, _always_on,		\
 	_boot_on, _apply_uv, _init_uV, _init_enable, _init_apply,			\
 	_flags, _ectrl, _delay)								\
