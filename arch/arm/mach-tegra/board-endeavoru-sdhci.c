@@ -39,7 +39,7 @@
 #define ENTERPRISE_WLAN_RST	TEGRA_GPIO_PV3
 #define ENTERPRISE_WLAN_WOW	TEGRA_GPIO_PO4
 
-//#define ENTERPRISE_SD_CD TEGRA_GPIO_PI5
+#define ENTERPRISE_SD_CD TEGRA_GPIO_PI5
 
 static void (*wifi_status_cb)(int card_present, void *dev_id);
 static void *wifi_status_cb_devid;
@@ -64,8 +64,6 @@ static struct wl12xx_platform_data enterprise_wlan_data __initdata = {
 };
 /* HTC_WIFI_END */
 
-// No uSD
-#if 0
 static struct resource sdhci_resource0[] = {
 	[0] = {
 		.start  = INT_SDMMC1,
@@ -78,7 +76,6 @@ static struct resource sdhci_resource0[] = {
 		.flags	= IORESOURCE_MEM,
 	},
 };
-#endif
 
 static struct resource sdhci_resource2[] = {
 	[0] = {
@@ -106,36 +103,51 @@ static struct resource sdhci_resource3[] = {
 	},
 };
 
-// No uSD
-#if 0
+#ifdef CONFIG_MMC_EMBEDDED_SDIO
+static struct embedded_sdio_data embedded_sdio_data0 = {
+	.cccr   = {
+		.sdio_vsn       = 2,
+		.multi_block    = 1,
+		.low_speed      = 0,
+		.wide_bus       = 0,
+		.high_power     = 1,
+		.high_speed     = 1,
+	},
+	.cis  = {
+		.vendor         = 0x02d0,
+		.device         = 0x4329,
+	},
+};
+#endif
+
 static struct tegra_sdhci_platform_data tegra_sdhci_platform_data0 = {
 	.mmc_data = {
 		.register_status_notify	= enterprise_wifi_status_register,
+#ifdef CONFIG_MMC_EMBEDDED_SDIO
 		.embedded_sdio = &embedded_sdio_data0,
+#endif
 		/* FIXME need to revert the built_in change
 		once we use get the signal strength fix of
 		bcmdhd driver from broadcom for bcm4329 chipset*/
 		.built_in = 0,
 	},
+#ifndef CONFIG_MMC_EMBEDDED_SDIO
+	.pm_flags = MMC_PM_KEEP_POWER,
+#endif
 	.cd_gpio = -1,
 	.wp_gpio = -1,
 	.power_gpio = -1,
+	.tap_delay = 0x0F,
 	.max_clk_limit = 45000000,
+	.ddr_clk_limit = 41000000,
 };
-#endif
 
 static struct tegra_sdhci_platform_data tegra_sdhci_platform_data2 = {
-	.mmc_data = {
-		.status = enterprise_wifi_status,
-		.register_status_notify	= enterprise_wifi_status_register,
-		/* HTC_WIFI_START */
-		//.embedded_sdio = &embedded_sdio_data0,
-		/* HTC_WIFI_END */
-		.built_in = 1,
-	},
 	.cd_gpio = -1,
 	.wp_gpio = -1,
 	.power_gpio = -1,
+	.tap_delay = 0x0F,
+	.ddr_clk_limit = 41000000,
 };
 
 static struct tegra_sdhci_platform_data tegra_sdhci_platform_data3 = {
@@ -143,13 +155,13 @@ static struct tegra_sdhci_platform_data tegra_sdhci_platform_data3 = {
 	.wp_gpio = -1,
 	.power_gpio = -1,
 	.is_8bit = 1,
+	.tap_delay = 0x0F,
+	.ddr_clk_limit = 41000000,
 	.mmc_data = {
 		.built_in = 1,
 	}
 };
 
-// No uSD
-#if 0
 static struct platform_device tegra_sdhci_device0 = {
 	.name		= "sdhci-tegra",
 	.id		= 0,
@@ -159,7 +171,6 @@ static struct platform_device tegra_sdhci_device0 = {
 		.platform_data = &tegra_sdhci_platform_data0,
 	},
 };
-#endif
 
 static struct platform_device tegra_sdhci_device2 = {
 	.name		= "sdhci-tegra",
@@ -283,6 +294,8 @@ int __init enterprise_sdhci_init(void)
 {
 	platform_device_register(&tegra_sdhci_device3);
 	platform_device_register(&tegra_sdhci_device2);
+
+	platform_device_register(&tegra_sdhci_device0);
 	enterprise_wifi_init();
 	return 0;
 }
