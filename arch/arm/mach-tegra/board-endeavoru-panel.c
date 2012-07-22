@@ -153,7 +153,7 @@ static struct platform_tegra_pwm_backlight_data enterprise_disp1_backlight_data 
 	.gpio_conf_to_sfio	= TEGRA_GPIO_PW1,
 	.switch_to_sfio		= &tegra_gpio_disable,
 	.max_brightness		= 255,
-	.dft_brightness		= 255,
+	.dft_brightness		= 85,
 	.notify		= enterprise_backlight_notify,
 	.period			= 0xFF,
 	.clk_div		= 20,
