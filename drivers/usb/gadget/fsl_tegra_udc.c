@@ -151,19 +151,6 @@ void fsl_udc_clk_disable(void)
 	clk_disable(udc_clk);
 }
 
-void fsl_udc_clk_pull_high(bool pull_high)
-{
-	if (pull_high) {
-		clk_set_rate(sclk_clk, 240000000);;
-		clk_set_rate(emc_clk, 533000000);
-	}
-	else {
-		clk_set_rate(sclk_clk, 80000000);
-		clk_set_rate(emc_clk, 100000000);
-	}
-}
-EXPORT_SYMBOL(fsl_udc_clk_pull_high);
-
 bool fsl_udc_charger_detect(void)
 {
 	return tegra_usb_phy_charger_detect(phy);
