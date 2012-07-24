@@ -35,7 +35,6 @@
 #include "board.h"
 #include "devices.h"
 #include <mach/board_htc.h>
-#include <linux/pm_qos_params.h>
 
 #include "board-endeavoru.h"
 #include "gpio-names.h"
@@ -94,9 +93,6 @@ static ssize_t host_dbg_store(struct device *dev,
     return size;
 }
 /*============================================================*/
-struct pm_qos_request_list modem_boost_cpu_freq_req;
-EXPORT_SYMBOL_GPL(modem_boost_cpu_freq_req);
-#define BOOST_CPU_FREQ_MIN	1500000
 
 EXPORT_SYMBOL(modem_ver);
 
