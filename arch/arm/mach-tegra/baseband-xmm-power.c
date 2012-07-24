@@ -874,28 +874,21 @@ static void baseband_xmm_power_init1_work(struct work_struct *work)
 	}
 
 	/* wait 100 ms */
-	msleep(100);
+	mdelay(100);
 
 	/* set IPC_HSIC_ACTIVE low */
 	gpio_set_value(baseband_power_driver_data->
 		modem.xmm.ipc_hsic_active, 0);
 
 	/* wait 10 ms */
-	msleep(10);
+	mdelay(10);
 
 	/* set IPC_HSIC_ACTIVE high */
 	gpio_set_value(baseband_power_driver_data->
 		modem.xmm.ipc_hsic_active, 1);
 
 	/* wait 20 ms */
-	msleep(20);
-
-#ifdef BB_XMM_OEM1
-	/* set IPC_HSIC_ACTIVE low */
-	gpio_set_value(baseband_power_driver_data->
-		modem.xmm.ipc_hsic_active, 0);
-	printk(KERN_INFO"%s merge need check set IPC_HSIC_ACTIVE low\n", __func__);
-#endif /* BB_XMM_OEM1 */
+	mdelay(20);
 
 	pr_debug("%s }\n", __func__);
 }
