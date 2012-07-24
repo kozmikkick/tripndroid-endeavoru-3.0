@@ -129,11 +129,11 @@ static __initdata struct tegra_pingroup_config endeavoru_pinmux_common[] = {
     // For A project
 
 	/* SDMMC1 pinmux */
-	DEFAULT_PINMUX(SDMMC1_CLK,      SDMMC1,          NORMAL,     NORMAL,     OUTPUT),
+	DEFAULT_PINMUX(SDMMC1_CLK,      SDMMC1,          NORMAL,     NORMAL,     OUTPUT), // AUD_REMO_OE
 	DEFAULT_PINMUX(SDMMC1_CMD,      SDMMC1,          PULL_UP,    NORMAL,     INPUT),
-	DEFAULT_PINMUX(SDMMC1_DAT3,     SDMMC1,          NORMAL,     NORMAL,     OUTPUT),
-	DEFAULT_PINMUX(SDMMC1_DAT2,     SDMMC1,          NORMAL,     NORMAL,     INPUT),
-	DEFAULT_PINMUX(SDMMC1_DAT1,     SDMMC1,          NORMAL,     TRISTATE,   INPUT),
+	DEFAULT_PINMUX(SDMMC1_DAT3,     UARTE,           NORMAL,     NORMAL,     OUTPUT), // AUD_REMO_TX
+	DEFAULT_PINMUX(SDMMC1_DAT2,     UARTE,           NORMAL,     NORMAL,     INPUT), // AUD_REMO_RX
+	DEFAULT_PINMUX(SDMMC1_DAT1,     RSVD,            NORMAL,     TRISTATE,   INPUT), // NFC_IRQ
 	DEFAULT_PINMUX(SDMMC1_DAT0,     SDMMC1,          PULL_UP,    NORMAL,     INPUT),
 
 	/* SDMMC3 pinmux */
