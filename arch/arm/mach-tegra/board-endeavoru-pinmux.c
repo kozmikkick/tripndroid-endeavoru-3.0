@@ -257,9 +257,6 @@ static __initdata struct tegra_pingroup_config endeavoru_pinmux_common[] = {
 	DEFAULT_PINMUX(LCD_VSYNC,       DISPLAYA,        PULL_DOWN, NORMAL,     INPUT), // MDM_AP_USB_UART_OE
 	DEFAULT_PINMUX(LCD_WR_N,        DISPLAYA,        NORMAL,    NORMAL,     INPUT), // NC
 
-	DEFAULT_PINMUX(DAP4_DOUT,       I2S3,            NORMAL,    NORMAL,     OUTPUT),
-	DEFAULT_PINMUX(DAP4_SCLK,       I2S3,            NORMAL,    NORMAL,     OUTPUT),
-
 	DEFAULT_PINMUX(KB_ROW0,         KBC,            PULL_UP,   NORMAL,     INPUT), // NC
     	DEFAULT_PINMUX(KB_ROW1,         KBC,            NORMAL,    NORMAL,     OUTPUT), // PER_TORCH_EN
 	DEFAULT_PINMUX(KB_ROW2,         RSVD,           NORMAL,    NORMAL,     OUTPUT), // GYRO SLEEP
@@ -303,15 +300,23 @@ static __initdata struct tegra_pingroup_config endeavoru_pinmux_common[] = {
 	DEFAULT_PINMUX(CLK3_REQ,        DEV3,            NORMAL,    NORMAL,     INPUT), // NC
 	DEFAULT_PINMUX(CLK_32K_OUT,     BLINK,           NORMAL,    NORMAL,     OUTPUT), // NC
 
-    DEFAULT_PINMUX(DAP1_FS,         I2S0,            NORMAL,    NORMAL,     OUTPUT), // MDM_AP2BB_RST#
-    DEFAULT_PINMUX(DAP1_DIN,        I2S0,            NORMAL,    NORMAL,     OUTPUT), // MDM_AP2BB_HOST_ACTIVE
-    DEFAULT_PINMUX(DAP1_DOUT,       I2S0,            NORMAL, 	NORMAL,     INPUT), // MDM_BB_FATAL_INT
-    DEFAULT_PINMUX(DAP1_SCLK,       I2S0,            NORMAL,    NORMAL,     OUTPUT), // MDM_AP2BB_PWRON
+	DEFAULT_PINMUX(DAP1_FS,         I2S0,            NORMAL,       NORMAL,  OUTPUT), // MDM_AP2BB_RST
+	DEFAULT_PINMUX(DAP1_DIN,        I2S0,            NORMAL,       NORMAL,  OUTPUT), // MDM_AP2BB_HOST_ACTIVE
+	DEFAULT_PINMUX(DAP1_DOUT,       I2S0,            NORMAL,       NORMAL,  INPUT), // MDM_BB_FATAL_INT
+	DEFAULT_PINMUX(DAP1_SCLK,       I2S0,            NORMAL,       NORMAL,  OUTPUT), // MDM_AP2BB_PWRON
+	DEFAULT_PINMUX(DAP2_FS,         I2S1,            PULL_DOWN,    NORMAL,  INPUT), // AUD_AIC3008_I2S_LRCK
+	DEFAULT_PINMUX(DAP2_SCLK,       I2S1,            PULL_DOWN,    NORMAL,  INPUT), // AUD_AIC3008_I2S_SCK
+	DEFAULT_PINMUX(DAP2_DIN,        I2S1,            PULL_DOWN,    NORMAL,  INPUT), // AUD_AIC3008_I2S_DIN
+	DEFAULT_PINMUX(DAP2_DOUT,       I2S1,            PULL_DOWN,    NORMAL,  INPUT), // AUD_AIC3008_I2S_DOUT
 
-    DEFAULT_PINMUX(DAP2_FS,         I2S1,            PULL_DOWN,    NORMAL,     INPUT), // AUD_AIC3008_I2S_LRCK
-    DEFAULT_PINMUX(DAP2_SCLK,       I2S1,            PULL_DOWN,    NORMAL,     INPUT), // AUD_AIC3008_I2S_SCK
-    DEFAULT_PINMUX(DAP2_DIN,        I2S1,            PULL_DOWN,    NORMAL,     INPUT), // AUD_AIC3008_I2S_DIN
-    DEFAULT_PINMUX(DAP2_DOUT,       I2S1,            PULL_DOWN,    NORMAL,     INPUT), // AUD_AIC3008_I2S_DOUT
+	DEFAULT_PINMUX(DAP3_FS,         I2S2,            NORMAL,       NORMAL,     INPUT), // AUD_AP_PCM_SYNC
+	DEFAULT_PINMUX(DAP3_DIN,        I2S2,            NORMAL,       NORMAL,     INPUT),
+	DEFAULT_PINMUX(DAP3_DOUT,       I2S2,            NORMAL,       NORMAL,     INPUT), // AUD_AP_PCM_DOUT
+	DEFAULT_PINMUX(DAP3_SCLK,       I2S2,            NORMAL,       NORMAL,     INPUT),
+	DEFAULT_PINMUX(DAP4_FS,         I2S3,            PULL_DOWN,    NORMAL,     INPUT), // AUD_BTPCM_SYNC
+	DEFAULT_PINMUX(DAP4_DIN,        I2S3,            PULL_DOWN,    NORMAL,     INPUT), // AUD_BTPCM_DOUT
+	DEFAULT_PINMUX(DAP4_DOUT,       RSVD,            NORMAL,       NORMAL,     OUTPUT), // AUD_SPK_EN
+	DEFAULT_PINMUX(DAP4_SCLK,       RSVD,            NORMAL,       NORMAL,     OUTPUT), // AUD_LINEOUT_EN
 
     DEFAULT_PINMUX(SPDIF_OUT,       SPDIF,            NORMAL,    NORMAL,    OUTPUT), // NC
     DEFAULT_PINMUX(SPDIF_IN,        SPDIF,            NORMAL,    NORMAL,     INPUT), // NC
@@ -367,13 +372,7 @@ static __initdata struct tegra_pingroup_config endeavoru_pinmux_common[] = {
     DEFAULT_PINMUX(HDMI_INT,        RSVD,            NORMAL,    TRISTATE,    INPUT),            //MHL_HPD
 
     //Port P
-    DEFAULT_PINMUX(DAP3_FS,         I2S2,            NORMAL,    NORMAL,     INPUT),             //AUD_AP_PCM_SYNC
-    DEFAULT_PINMUX(DAP3_DIN,        I2S2,            NORMAL,    NORMAL,     INPUT),
-    DEFAULT_PINMUX(DAP3_DOUT,       I2S2,            NORMAL,    NORMAL,     INPUT),             //AUD_AP_PCM_DOUT
-    DEFAULT_PINMUX(DAP3_SCLK,       I2S2,            NORMAL,    NORMAL,     INPUT),
 
-    DEFAULT_PINMUX(DAP4_FS,         I2S3,            PULL_DOWN,    NORMAL,     INPUT),             //AUD_BTPCM_SYNC
-    DEFAULT_PINMUX(DAP4_DIN,        I2S3,            PULL_DOWN,    NORMAL,     INPUT),             //AUD_BTPCM_DOUT
 
     //Port Q
     DEFAULT_PINMUX(KB_COL0,         KBC,             PULL_UP,    NORMAL,     INPUT),                //NC
