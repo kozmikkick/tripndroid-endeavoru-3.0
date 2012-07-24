@@ -190,7 +190,6 @@ static struct wake_lock wakelock;
 static struct usb_device *usbdev;
 static bool CP_initiated_L2toL0;
 static bool modem_power_on;
-static bool first_time = true;
 static int power_onoff;
 static void baseband_xmm_power_L2_resume(void);
 static DEFINE_MUTEX(baseband_xmm_onoff_lock);
@@ -391,9 +390,6 @@ static int gpio_o_l_uart(int gpio, char* name)
 
 void modem_on_for_uart_config(void)
 {
-
-
-	pr_debug(MODULE_NAME "%s ,first_time=%s uart_pin_pull_low=%d\n", __func__,first_time?"true":"false",uart_pin_pull_state);
 	if(uart_pin_pull_state==0){
 	//if uart pin pull low, then we put back to normal
 	pr_debug(MODULE_NAME "%s tegra_gpio_disable for UART\n", __func__);
@@ -403,8 +399,6 @@ void modem_on_for_uart_config(void)
 	tegra_gpio_disable(TEGRA_GPIO_PB1);
 	uart_pin_pull_state=1;//set back to UART
 	}
-
-
 }
 
 int modem_off_for_uart_config(void)
@@ -553,7 +547,6 @@ static int baseband_xmm_power_on(struct platform_device *device)
 
 	/* reset the state machine */
 	baseband_xmm_powerstate = BBXMM_PS_INIT;
-//	first_time = true;
 	modem_sleep_flag = false;
 
 	/* HTC use IPC_AP_WAKE_INIT2 */
