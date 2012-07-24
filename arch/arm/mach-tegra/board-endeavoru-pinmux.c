@@ -260,18 +260,17 @@ static __initdata struct tegra_pingroup_config endeavoru_pinmux_common[] = {
 	DEFAULT_PINMUX(DAP4_DOUT,       I2S3,            NORMAL,    NORMAL,     OUTPUT),
 	DEFAULT_PINMUX(DAP4_SCLK,       I2S3,            NORMAL,    NORMAL,     OUTPUT),
 
-	DEFAULT_PINMUX(KB_ROW0,         KBC,            NORMAL,    TRISTATE,   INPUT), // NC
+	DEFAULT_PINMUX(KB_ROW0,         KBC,            PULL_UP,   NORMAL,     INPUT), // NC
     	DEFAULT_PINMUX(KB_ROW1,         KBC,            NORMAL,    NORMAL,     OUTPUT), // PER_TORCH_EN
-	DEFAULT_PINMUX(KB_ROW2,         KBC,            NORMAL,    NORMAL,     OUTPUT),
-	DEFAULT_PINMUX(KB_ROW3,         KBC,            NORMAL,    NORMAL,     OUTPUT),
-    	DEFAULT_PINMUX(KB_ROW4,         KBC,            NORMAL,    NORMAL,     INPUT),
-    	DEFAULT_PINMUX(KB_ROW5,         KBC,            NORMAL,    NORMAL,     INPUT),
-    	DEFAULT_PINMUX(KB_ROW6,         KBC,            NORMAL,    TRISTATE,   INPUT), // CAM_CAM1_ID
-	DEFAULT_PINMUX(KB_ROW7,         KBC,            NORMAL,    TRISTATE,   INPUT), // CAM_FRONT_CAM_ID
-
+	DEFAULT_PINMUX(KB_ROW2,         RSVD,           NORMAL,    NORMAL,     OUTPUT), // GYRO SLEEP
+	DEFAULT_PINMUX(KB_ROW3,         RSVD,           NORMAL,    NORMAL,     OUTPUT), // HAPTIC_EN
+    	DEFAULT_PINMUX(KB_ROW4,         RSVD,           NORMAL,    NORMAL,     INPUT), // NC
+    	DEFAULT_PINMUX(KB_ROW5,         RSVD,           NORMAL,    NORMAL,     INPUT), // NC
+    	DEFAULT_PINMUX(KB_ROW6,         RSVD,           NORMAL,    TRISTATE,   INPUT), // CAM_CAM1_ID
+	DEFAULT_PINMUX(KB_ROW7,         RSVD,           NORMAL,    TRISTATE,   INPUT), // CAM_FRONT_CAM_ID
 	DEFAULT_PINMUX(KB_ROW8,         KBC,            PULL_UP,   NORMAL,     INPUT), // DSP_VOL_UP
-	DEFAULT_PINMUX(KB_ROW9,         KBC,            NORMAL,    NORMAL,     INPUT), // NC
-	DEFAULT_PINMUX(KB_ROW10,        KBC,            NORMAL,    NORMAL,     INPUT), // CON_USB_ID_1
+	DEFAULT_PINMUX(KB_ROW9,         RSVD,           NORMAL,    NORMAL,     INPUT), // NC
+	DEFAULT_PINMUX(KB_ROW10,        RSVD,           NORMAL,    NORMAL,     INPUT), // CON_USB_ID_1
 
 	DEFAULT_PINMUX(SPI1_MISO,       SPI1,            NORMAL,    NORMAL,     OUTPUT),
 
