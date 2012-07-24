@@ -2139,24 +2139,6 @@ USB_DEBUG("## %s",__func__);
 	return 0;
 }
 
-//++ htc ++
-/* Clear up all ep queues */
-static int reset_queues_mute(struct fsl_udc *udc)
-{
-	u8 pipe;
-USB_DEBUG("## %s",__func__);
-	for (pipe = 0; pipe < udc->max_pipes; pipe++)
-		udc_reset_ep_queue(udc, pipe);
-
-	/* report disconnect; the driver is already quiesced */
-	spin_unlock(&udc->lock);
-	if (udc->driver && udc->driver->mute_disconnect)
-		udc->driver->mute_disconnect(&udc->gadget);
-	spin_lock(&udc->lock);
-
-	return 0;
-}
-//-- htc --
 /* Process reset interrupt */
 static void reset_irq(struct fsl_udc *udc)
 {
@@ -2205,8 +2187,7 @@ static void reset_irq(struct fsl_udc *udc)
 	VDBG("Bus reset");
 	/* Reset all the queues, include XD, dTD, EP queue
 	 * head and TR Queue */
-	//reset_queues(udc);
-	reset_queues_mute(udc);//htc
+	reset_queues(udc);
 	udc->usb_state = USB_STATE_DEFAULT;
 #else
 	if (fsl_readl(&dr_regs->portsc1) & PORTSCX_PORT_RESET) {
