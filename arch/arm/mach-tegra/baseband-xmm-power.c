@@ -1326,60 +1326,6 @@ static struct notifier_block usb_xmm_nb = {
 	.notifier_call = usb_xmm_notify,
 };
 
-static int baseband_xmm_power_pm_notifier_event(struct notifier_block *this,
-					unsigned long event, void *ptr)
-{
-    struct baseband_power_platform_data *data = baseband_power_driver_data;
-	unsigned long flags;
-
-	if (!data)
-		return NOTIFY_DONE;
-
-	pr_debug("%s: event %ld\n", __func__, event);
-	switch (event) {
-	case PM_SUSPEND_PREPARE:
-		pr_debug("%s : PM_SUSPEND_PREPARE\n", __func__);
-		if (wake_lock_active(&wakelock)) {
-			pr_info("%s: wakelock was active, aborting suspend\n",__func__);
-			return NOTIFY_STOP;
-		}
-		spin_lock_irqsave(&xmm_lock, flags);
-		if (wakeup_pending) {
-			wakeup_pending = false;
-			spin_unlock_irqrestore(&xmm_lock, flags);
-			pr_info("%s : XMM busy : Abort system suspend\n",
-				 __func__);
-			return NOTIFY_STOP;
-		}
-		system_suspending = true;
-		spin_unlock_irqrestore(&xmm_lock, flags);
-		return NOTIFY_OK;
-	case PM_POST_SUSPEND:
-			pr_debug("%s : PM_POST_SUSPEND\n", __func__);
-			spin_lock_irqsave(&xmm_lock, flags);
-			system_suspending = false;
-			if (wakeup_pending &&
-			(baseband_xmm_powerstate == BBXMM_PS_L2)) {
-			wakeup_pending = false;
-			spin_unlock_irqrestore(&xmm_lock, flags);
-			pr_info("%s : Service Pending CP wakeup\n",
-				__func__);
-			CP_initiated_L2toL0 = true;
-			baseband_xmm_set_power_status
-				(BBXMM_PS_L2TOL0);
-			return NOTIFY_OK;
-		}
-		wakeup_pending = false;
-		spin_unlock_irqrestore(&xmm_lock, flags);
-		return NOTIFY_OK;
-	}
-	return NOTIFY_DONE;
-}
-
-static struct notifier_block baseband_xmm_power_pm_notifier = {
-	.notifier_call = baseband_xmm_power_pm_notifier_event,
-};
-
 static int baseband_xmm_power_driver_probe(struct platform_device *device)
 {
 	struct baseband_power_platform_data *data
@@ -1550,7 +1496,6 @@ static int baseband_xmm_power_driver_probe(struct platform_device *device)
 	spin_unlock_irqrestore(&xmm_lock, flags);
 
 	usb_register_notify(&usb_xmm_nb);
-	register_pm_notifier(&baseband_xmm_power_pm_notifier);
 
 	/*HTC*/
 	/*set Radio fatal Pin PN2 to OutPut Low*/
@@ -1586,7 +1531,6 @@ static int baseband_xmm_power_driver_remove(struct platform_device *device)
 	if (!data)
 		return 0;
 
-	unregister_pm_notifier(&baseband_xmm_power_pm_notifier);
 	usb_unregister_notify(&usb_xmm_nb);
 
 	/* free work structure */
