@@ -505,68 +505,29 @@ int config_gpio_for_power_on(void)
 
 extern void platfrom_set_flight_mode_onoff(bool mode_on);
 
-
 static int baseband_modem_power_on(struct baseband_power_platform_data *data)
 {
-#ifdef BB_XMM_OEM1
 	/* HTC: called in atomic context */
 	int ret=0, i=0;
-
-	pr_info("%s VP: 03/08 22.52{\n", __func__);
-	if (!data) {
-		pr_err("%s: data is NULL\n", __func__);
-		return -1;
-	}
 
 	/* reset / power on sequence */
 	gpio_set_value(BB_VDD_EN, 1); /* give modem power */
 	auto_sleep(1);
-	gpio_set_value(data->modem.xmm.bb_rst, 0); /* set to low first */
-	//pr_debug("%s(%d)\n", __func__, __LINE__);
 
-	for (i = 0; i < 7; i++) /* 5 ms BB_RST low */
+	for (i = 0; i < 7; i++)
 		udelay(1000);
 
 	ret = gpio_get_value(AP2BB_RST_PWRDWNn);
-	//pr_debug("%s(%d) get AP2BB_RST_PWRDWNn=%d \n", __func__, __LINE__, ret);
-	//pr_debug("%s(%d) set AP2BB_RST_PWRDWNn=1\n", __func__, __LINE__);
-	gpio_set_value(AP2BB_RST_PWRDWNn, 1); /* 20 ms RST_PWRDWNn high */
-	auto_sleep(25); /* need 20 but 40 is more safe */ //steven markded
 
-	//pr_debug("%s(%d) set modem.xmm.bb_rst=1\n", __func__, __LINE__);
-	gpio_set_value(data->modem.xmm.bb_rst, 1); /* 1 ms BB_RST high */
-	auto_sleep(40); /* need 20 but 40 is more safe */
+	gpio_set_value(AP2BB_RST_PWRDWNn, 1);
+	mdelay(20);
 
-	//pr_debug("%s(%d) set modem.xmm.bb_on=1 duration is 60us\n", __func__, __LINE__);
-	gpio_set_value(data->modem.xmm.bb_on, 1); /* power on sequence */
-	udelay(60);
-
-	gpio_set_value(data->modem.xmm.bb_on, 0);
-	//pr_debug("%s(%d) set modem.xmm.bb_on=0\n", __func__, __LINE__);
-	auto_sleep(10);
-	pr_info("%s }\n", __func__);
-
-	pr_info("%s:VP pm qos request CPU 1.5GHz\n", __func__);
-	pm_qos_update_request(&modem_boost_cpu_freq_req, (s32)BOOST_CPU_FREQ_MIN);
-
-#else  /* !BB_XMM_OEM1 */
-
-	/* set IPC_HSIC_ACTIVE active */
-	gpio_set_value(baseband_power_driver_data->
-		modem.xmm.ipc_hsic_active, 1);
-
-	/* wait 20 ms */
-	msleep(20);
-
-	/* reset / power on sequence */
-	msleep(40);
 	gpio_set_value(data->modem.xmm.bb_rst, 1);
-	msleep(1);
+	mdelay(1);
 	gpio_set_value(data->modem.xmm.bb_on, 1);
 	udelay(40);
 	gpio_set_value(data->modem.xmm.bb_on, 0);
 
-#endif /* !BB_XMM_OEM1 */
 	return 0;
 }
 
