@@ -274,19 +274,25 @@ static __initdata struct tegra_pingroup_config endeavoru_pinmux_common[] = {
 
 	DEFAULT_PINMUX(SPI1_MISO,       SPI1,            NORMAL,    NORMAL,     OUTPUT),
 
-	DEFAULT_PINMUX(GPIO_PBB0,       RSVD1,           NORMAL,    NORMAL,     INPUT),
-	DEFAULT_PINMUX(GPIO_PBB7,       I2S4,            NORMAL,    NORMAL,     INPUT),
-	DEFAULT_PINMUX(GPIO_PCC1,       RSVD1,           NORMAL,    NORMAL,     INPUT),
-
-	DEFAULT_PINMUX(GPIO_PU0,        UARTA,           NORMAL,    NORMAL,     INPUT),
-	DEFAULT_PINMUX(GPIO_PU1,        UARTA,           NORMAL,    NORMAL,     INPUT),
-	DEFAULT_PINMUX(GPIO_PU2,        UARTA,           NORMAL,    NORMAL,     INPUT),
-	DEFAULT_PINMUX(GPIO_PU3,        UARTA,           NORMAL,    NORMAL,     INPUT),
-
+	DEFAULT_PINMUX(GPIO_PCC1,       RSVD,            NORMAL,    NORMAL,     INPUT), // CAM_SEL
+	DEFAULT_PINMUX(GPIO_PCC2,       RSVD2,           PULL_UP,   NORMAL,     INPUT), // PWR_THEMP_ALERT_INT
+	DEFAULT_PINMUX(GPIO_PU0,        RSVD,            NORMAL,    NORMAL,     INPUT), // CON_BT_EN
+	DEFAULT_PINMUX(GPIO_PU1,        RSVD,            NORMAL,    NORMAL,     INPUT), // NC
+	DEFAULT_PINMUX(GPIO_PU2,        RSVD,            NORMAL,    NORMAL,     INPUT), // NC
+	DEFAULT_PINMUX(GPIO_PU3,        RSVD,            NORMAL,    NORMAL,     INPUT), // NC
+	DEFAULT_PINMUX(GPIO_PU4,        RSVD1,           NORMAL,    NORMAL,     INPUT), // PWR_MBAT_IN
+	DEFAULT_PINMUX(GPIO_PU5,        RSVD1,           PULL_UP,   NORMAL,     INPUT), // PER_CAPSENSOR_INT_CPU
+	DEFAULT_PINMUX(GPIO_PU6,        PWM3,            PULL_UP,   TRISTATE,   INPUT), // DSP_AP_KPDPWR
 	DEFAULT_PINMUX(GPIO_PV0,        RSVD,            NORMAL,    NORMAL,     INPUT), // MDM_BB2AP_SUSPEND_REQ
 	DEFAULT_PINMUX(GPIO_PV1,        RSVD,            PULL_UP,   NORMAL,     INPUT), // DSP_TP_ATT
 	DEFAULT_PINMUX(GPIO_PV2,        RSVD1,           NORMAL,    NORMAL,     OUTPUT), // CON_WIFI_EN
 	DEFAULT_PINMUX(GPIO_PV3,        RSVD1,           NORMAL,    NORMAL,     OUTPUT), // NC
+	DEFAULT_PINMUX(GPIO_PBB0,       RSVD,            NORMAL,    NORMAL,     INPUT), // CAM_CAM1_RST
+	DEFAULT_PINMUX(GPIO_PBB3,       VGP3,            NORMAL,    NORMAL,     OUTPUT), // PER_FLASH_EN
+	DEFAULT_PINMUX(GPIO_PBB4,       RSVD,            NORMAL,    NORMAL,     INPUT), // CAM_VCAM_VDDIO_1V8_EN
+	DEFAULT_PINMUX(GPIO_PBB5,       RSVD,            NORMAL,    NORMAL,     INPUT), // CAM_CAM1_VCM_PD
+	DEFAULT_PINMUX(GPIO_PBB6,       RSVD,            NORMAL,    NORMAL,     INPUT), // AUD_REMO_PRES
+	DEFAULT_PINMUX(GPIO_PBB7,       RSVD,            NORMAL,    NORMAL,     INPUT), // CAM_FRONT_CAM_STANDBY
 
 	DEFAULT_PINMUX(CRT_VSYNC,       CRT,             NORMAL,    NORMAL,     OUTPUT),
 
@@ -314,10 +320,6 @@ static __initdata struct tegra_pingroup_config endeavoru_pinmux_common[] = {
     DEFAULT_PINMUX(SPI2_CS2_N,      SPI2,            PULL_UP,   TRISTATE,     INPUT), // DSP_VOL_DOWN
 
     DEFAULT_PINMUX(GMI_AD8,         PWM0,            NORMAL,    NORMAL,     OUTPUT), // NC
-    DEFAULT_PINMUX(GPIO_PCC2,       I2S4,            PULL_UP,   NORMAL,     INPUT), // PWR_THEMP_ALERT_INT#
-    DEFAULT_PINMUX(GPIO_PU4,        PWM1,            NORMAL,    NORMAL,     INPUT), // PWR_MBAT_IN
-    DEFAULT_PINMUX(GPIO_PU5,        PWM2,            PULL_UP,   NORMAL,     INPUT), // PER_CAPSENSOR_INT_CPU
-    DEFAULT_PINMUX(GPIO_PU6,        PWM3,            PULL_UP,   TRISTATE,   INPUT), // DSP_AP_KPDPWR
 
     DEFAULT_PINMUX(ULPI_DATA0,      ULPI,           NORMAL,     NORMAL,     OUTPUT), // BSP_AP_DEBUG_TX
     DEFAULT_PINMUX(ULPI_DATA1,      ULPI,           NORMAL,     NORMAL,     INPUT), // BSP_AP_DEBUG_RX
@@ -332,11 +334,6 @@ static __initdata struct tegra_pingroup_config endeavoru_pinmux_common[] = {
     DEFAULT_PINMUX(ULPI_DIR,        ULPI,            NORMAL,    NORMAL,     OUTPUT), // LED_DRV_TRIG
     DEFAULT_PINMUX(ULPI_NXT,        ULPI,            NORMAL,    NORMAL,     OUTPUT), // MHL_3V3_EN
     DEFAULT_PINMUX(ULPI_STP,        ULPI,            NORMAL,    NORMAL,     INPUT), // PEH_V_SRIO_1V8_EN
-
-    DEFAULT_PINMUX(GPIO_PBB3,       VGP3,            NORMAL,    NORMAL,     OUTPUT), // PER_FLASH_EN
-    DEFAULT_PINMUX(GPIO_PBB4,       VGP4,            NORMAL,    NORMAL,     INPUT), // CAM_VCAM_VDDIO_1V8_EN
-    DEFAULT_PINMUX(GPIO_PBB5,       VGP5,            NORMAL,    NORMAL,     INPUT), // CAM_CAM1_VCM_PD
-    DEFAULT_PINMUX(GPIO_PBB6,       VGP6,            NORMAL,    NORMAL,     INPUT), // AUD_REMO_PRES
 
 // TripNRaVeR: pci-e testing, leave it for now
 	DEFAULT_PINMUX(PEX_L0_PRSNT_N,  PCIE,            NORMAL,    NORMAL,     INPUT),
