@@ -179,46 +179,42 @@ static __initdata struct tegra_pingroup_config endeavoru_pinmux_common[] = {
 	DEFAULT_PINMUX(LCD_PWR1,        RSVD,        	 NORMAL,    NORMAL,     OUTPUT), // MDM_AP2BB_RST_PWRDWN
 	DEFAULT_PINMUX(LCD_DC1,         RSVD,        	 NORMAL,    NORMAL,     INPUT), // AUD_A1V8_EN
 
-	DEFAULT_PINMUX(GMI_AD0,         GMI,             NORMAL,    NORMAL,     INPUT),
-	DEFAULT_PINMUX(GMI_AD1,         GMI,             NORMAL,    NORMAL,     INPUT),
-	DEFAULT_PINMUX(GMI_AD2,         GMI,             NORMAL,    NORMAL,     INPUT),
-	DEFAULT_PINMUX(GMI_AD3,         GMI,             NORMAL,    NORMAL,     INPUT),
-	DEFAULT_PINMUX(GMI_AD4,         GMI,             NORMAL,    NORMAL,     INPUT),
-	DEFAULT_PINMUX(GMI_AD5,         GMI,             NORMAL,    NORMAL,     INPUT),
-	DEFAULT_PINMUX(GMI_AD6,         GMI,             NORMAL,    NORMAL,     INPUT),
-	DEFAULT_PINMUX(GMI_AD7,         GMI,             NORMAL,    NORMAL,     INPUT),
-	DEFAULT_PINMUX(GMI_AD9,         NAND,            NORMAL,    NORMAL,     INPUT),
-	DEFAULT_PINMUX(GMI_AD10,        NAND,            NORMAL,    NORMAL,     OUTPUT),
-	DEFAULT_PINMUX(GMI_AD11,        GMI,             NORMAL,    NORMAL,     INPUT),
-	DEFAULT_PINMUX(GMI_AD12,        NAND,            NORMAL,    NORMAL,     INPUT),
-    	DEFAULT_PINMUX(GMI_AD13,        NAND,            NORMAL,    NORMAL,     INPUT),
-	DEFAULT_PINMUX(GMI_AD14,        NAND,            NORMAL,    NORMAL,     INPUT),
-	DEFAULT_PINMUX(GMI_AD15,        NAND,            PULL_UP,   TRISTATE,   INPUT),
+	DEFAULT_PINMUX(GMI_AD0,         RSVD,            NORMAL,    NORMAL,     INPUT), // SYS_BOOT_SEL_0
+	DEFAULT_PINMUX(GMI_AD1,         RSVD,            NORMAL,    NORMAL,     INPUT), // SYS_BOOT_SEL_1
+	DEFAULT_PINMUX(GMI_AD2,         RSVD,            NORMAL,    NORMAL,     INPUT), // SYS_BOOT_SEL_2
+	DEFAULT_PINMUX(GMI_AD3,         RSVD,            NORMAL,    NORMAL,     INPUT), // SYS_BOOT_SEL_3
+	DEFAULT_PINMUX(GMI_AD4,         RSVD,            NORMAL,    NORMAL,     INPUT), // SYS_RAM_CODE_0
+	DEFAULT_PINMUX(GMI_AD5,         RSVD,            NORMAL,    NORMAL,     INPUT), // SYS_RAM_CODE_1
+	DEFAULT_PINMUX(GMI_AD6,         RSVD,            NORMAL,    NORMAL,     INPUT), // SYS_RAM_CODE_2
+	DEFAULT_PINMUX(GMI_AD7,         RSVD,            NORMAL,    NORMAL,     INPUT), // SYS_RAM_CODE_3
+	DEFAULT_PINMUX(GMI_AD8,         PWM0,            NORMAL,    NORMAL,     OUTPUT), // NC
+	DEFAULT_PINMUX(GMI_AD9,         RSVD,            NORMAL,    NORMAL,     INPUT), // NC
+	DEFAULT_PINMUX(GMI_AD10,        NAND,            NORMAL,    NORMAL,     OUTPUT), // NC
+	DEFAULT_PINMUX(GMI_AD11,        RSVD,            NORMAL,    NORMAL,     INPUT), // NC
+	DEFAULT_PINMUX(GMI_AD12,        RSVD,            NORMAL,    NORMAL,     INPUT), // NC
+    	DEFAULT_PINMUX(GMI_AD13,        RSVD,            NORMAL,    NORMAL,     INPUT), // NC
+	DEFAULT_PINMUX(GMI_AD14,        RSVD,            NORMAL,    NORMAL,     INPUT), // DSP_TP_RST
+	DEFAULT_PINMUX(GMI_AD15,        NAND,            PULL_UP,   TRISTATE,   INPUT), // NC
 	DEFAULT_PINMUX(GMI_A16,         UARTD,           NORMAL,    NORMAL,     OUTPUT), //MDM_TX
-
 	DEFAULT_PINMUX(GMI_A17,         UARTD,           NORMAL,    NORMAL,     INPUT), // MDM_IMC_UART_RX
 	DEFAULT_PINMUX(GMI_A18,         UARTD,           NORMAL,    NORMAL,     INPUT), // MDM_IMC_UART_CTS
-
+	DEFAULT_PINMUX(GMI_A19,         UARTD,           NORMAL,    NORMAL,     OUTPUT), // MDM_RTS
 	DEFAULT_PINMUX(GMI_CS0_N,       GMI,             NORMAL,    NORMAL,     INPUT), // MDM_BB2AP_HOST_WAKEUP
-	DEFAULT_PINMUX(GMI_CS6_N,       GMI,             NORMAL,    NORMAL,     INPUT), // NC
-
-    DEFAULT_PINMUX(GMI_WR_N,        NAND,            NORMAL,    NORMAL,     INPUT), // external pull high
-    DEFAULT_PINMUX(GMI_OE_N,        NAND,            NORMAL,    NORMAL,     INPUT), // external pull high
-    DEFAULT_PINMUX(GMI_ADV_N,       NAND,            NORMAL,    NORMAL,     INPUT), // external pull down
-
-	DEFAULT_PINMUX(GMI_WP_N,        GMI,           PULL_UP,   NORMAL,     INPUT), // MHL_INT
-
-	DEFAULT_PINMUX(GMI_DQS,         RSVD3,           NORMAL,    NORMAL,   INPUT),
-	DEFAULT_PINMUX(GMI_CLK,         GMI,             NORMAL,    NORMAL,   INPUT),
-	DEFAULT_PINMUX(GMI_WAIT,        GMI,             NORMAL,    NORMAL,   INPUT),
-
-	DEFAULT_PINMUX(GMI_RST_N,       GMI,           PULL_UP,   TRISTATE,   INPUT), // NC
-
-	DEFAULT_PINMUX(GMI_CS1_N,       GMI,            PULL_DOWN, NORMAL,     INPUT), // PEH_COMP_INT
-	DEFAULT_PINMUX(GMI_CS2_N,       GMI,            NORMAL,    NORMAL,     INPUT),
-	DEFAULT_PINMUX(GMI_CS3_N,       GMI,            NORMAL,    NORMAL,     INPUT),
-	DEFAULT_PINMUX(GMI_CS4_N,       GMI,            PULL_UP,   NORMAL,     INPUT), // PER_PS_INT
-	DEFAULT_PINMUX(GMI_CS7_N,       GMI,            PULL_UP,   NORMAL,     INPUT), // PEH_GYR_INT
+	DEFAULT_PINMUX(GMI_CS1_N,       RSVD,            PULL_DOWN, NORMAL,     INPUT), // PEH_COMP_INT
+	DEFAULT_PINMUX(GMI_CS2_N,       RSVD,            NORMAL,    NORMAL,     INPUT),
+	DEFAULT_PINMUX(GMI_CS3_N,       RSVD,            NORMAL,    NORMAL,     INPUT),
+	DEFAULT_PINMUX(GMI_CS4_N,       RSVD,            PULL_UP,   NORMAL,     INPUT), // PER_PS_INT
+	DEFAULT_PINMUX(GMI_CS7_N,       RSVD,            PULL_UP,   NORMAL,     INPUT), // PEH_GYR_INT
+	DEFAULT_PINMUX(GMI_CS6_N,       RSVD,            NORMAL,    NORMAL,     INPUT), // NC
+	DEFAULT_PINMUX(GMI_WR_N,        RSVD,            NORMAL,    NORMAL,     INPUT), // external pull high
+	DEFAULT_PINMUX(GMI_OE_N,        RSVD,            NORMAL,    NORMAL,     INPUT), // external pull high
+	DEFAULT_PINMUX(GMI_ADV_N,       RSVD,            NORMAL,    NORMAL,     INPUT), // external pull down
+	DEFAULT_PINMUX(GMI_WP_N,        RSVD1,           PULL_UP,   NORMAL,     INPUT), // MHL_INT
+	DEFAULT_PINMUX(GMI_DQS,         RSVD,            NORMAL,    NORMAL,     INPUT), // NC
+	DEFAULT_PINMUX(GMI_CLK,         RSVD,            NORMAL,    NORMAL,     INPUT), // NC
+	DEFAULT_PINMUX(GMI_WAIT,        RSVD,            NORMAL,    NORMAL,     INPUT), // NC
+	DEFAULT_PINMUX(GMI_RST_N,       RSVD3,           PULL_UP,   TRISTATE,   INPUT), // NC
+	DEFAULT_PINMUX(GMI_IORDY,       RSVD1,           NORMAL,   TRISTATE,     INPUT), // SIM_DET
 
 	DEFAULT_PINMUX(LCD_CS1_N,       DISPLAYA,        PULL_UP,   NORMAL,     INPUT),
 
@@ -330,8 +326,6 @@ static __initdata struct tegra_pingroup_config endeavoru_pinmux_common[] = {
 	DEFAULT_PINMUX(SPI2_CS1_N,      RSVD,            PULL_UP,   NORMAL,       INPUT), // AUD_HP_DET
 	DEFAULT_PINMUX(SPI2_CS2_N,      RSVD,            PULL_UP,   TRISTATE,     INPUT), // DSP_VOL_DOWN
 
-    DEFAULT_PINMUX(GMI_AD8,         PWM0,            NORMAL,    NORMAL,     OUTPUT), // NC
-
     DEFAULT_PINMUX(ULPI_DATA0,      ULPI,           NORMAL,     NORMAL,     OUTPUT), // BSP_AP_DEBUG_TX
     DEFAULT_PINMUX(ULPI_DATA1,      ULPI,           NORMAL,     NORMAL,     INPUT), // BSP_AP_DEBUG_RX
     DEFAULT_PINMUX(ULPI_DATA2,      ULPI,           NORMAL,     NORMAL,     INPUT), // NC
@@ -360,14 +354,12 @@ static __initdata struct tegra_pingroup_config endeavoru_pinmux_common[] = {
 
     
     // DEFAULT_PINMUX(GMI_IORDY,       RSVD1,           PULL_DOWN, NORMAL,     OUTPUT),                        //MDM_SIM_DET
-    DEFAULT_PINMUX(GMI_IORDY,       RSVD1,           NORMAL,   TRISTATE,     INPUT),  //SIM_DET#  //should use this setting after EVM
 
 // Have been config in hboot, no need config in kernel
 //  DEFAULT_PINMUX(UART2_CTS_N,     RSVD,        PULL_UP,    NORMAL,     INPUT),                //NC
 //  DEFAULT_PINMUX(UART2_RTS_N,     RSVD,            NORMAL,    NORMAL,     INPUT),             //NC
 
     //Port K
-    DEFAULT_PINMUX(GMI_A19,         UARTD,           NORMAL,    NORMAL,     OUTPUT),            //MDM_RTS
 
     //Port M
     DEFAULT_PINMUX(LCD_D20,         DISPLAYA,        NORMAL, NORMAL,     INPUT),             //MDM_V_DCIN_MODEM_EN
