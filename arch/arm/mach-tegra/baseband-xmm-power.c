@@ -1686,7 +1686,6 @@ static void __exit baseband_xmm_power_exit(void)
 {
 	pr_debug("%s\n", __func__);
 	platform_driver_unregister(&baseband_power_driver);
-	pm_qos_remove_request(&modem_boost_cpu_freq_req);
 }
 
 module_init(baseband_xmm_power_init)
