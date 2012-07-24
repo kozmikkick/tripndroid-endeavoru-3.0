@@ -136,8 +136,6 @@ MODULE_PARM_DESC(autosuspend_delay,
 	else\
 		msleep(x);
 
-static bool short_autosuspend;
-
 static struct usb_device_id xmm_pm_ids[] = {
 	{ USB_DEVICE(VENDOR_ID, PRODUCT_ID),
 	.driver_info = 0 },
