@@ -933,55 +933,32 @@ static void baseband_xmm_power_L2_resume(void)
 	struct baseband_power_platform_data *data = baseband_power_driver_data;
 	int value;
 	int delay = 1000; /* maxmum delay in msec */
-	unsigned long flags;
-
 
 	pr_debug("%s\n", __func__);
 
 	if (!baseband_power_driver_data)
 		return;
-	/* claim the wakelock here to avoid any system suspend */
-	if (!wake_lock_active(&wakelock))
-		wake_lock(&wakelock);
 
 	modem_sleep_flag = false;
-	spin_lock_irqsave(&xmm_lock, flags);
-	wakeup_pending = false;
-	spin_unlock_irqrestore(&xmm_lock, flags);
 
 	if (CP_initiated_L2toL0)  {
 		pr_info("CP L2->L0\n");
 		CP_initiated_L2toL0 = false;
 		queue_work(workqueue, &L2_resume_work);
-#if 0
-		if (usbdev) {
-			struct usb_interface *intf;
-			intf = usb_ifnum_to_if(usbdev, 0);
-			pr_info("%s: cnt %d intf=%p &intf->dev=%p kobje=%s\n",
-					__func__, atomic_read(&intf->dev.power.usage_count),intf,&intf->dev,kobject_name(&intf->dev.kobj));
-			}
-#endif
 	} else {
 		/* set the slave wakeup request */
 		pr_info("AP L2->L0\n");
-		value = gpio_get_value(data->modem.xmm.ipc_ap_wake);
-		if (value) {
-			pr_debug("waiting for host wakeup from CP...\n");
-			/* wake bb */
-			gpio_set_value(data->modem.xmm.ipc_bb_wake, 1);
-			do {
-				mdelay(1);
-				value = gpio_get_value(
-					data->modem.xmm.ipc_ap_wake);
-				delay--;
-			} while ((value) && (delay));
-			if (delay)
-				pr_debug("Get gpio host wakeup low <-\n");
-			else
-				pr_info("!!AP L2->L0 Failed\n");
-		} else {
-			pr_info("CP already ready\n");
-		}
+		gpio_set_value(data->modem.xmm.ipc_bb_wake, 1);
+		pr_debug("waiting for host wakeup from CP...\n");
+		do {
+			mdelay(1);
+			value = gpio_get_value(data->modem.xmm.ipc_ap_wake);
+			delay--;
+		} while ((value) && (delay));
+		if (delay)
+			pr_debug("gpio host wakeup low <-\n");
+		else
+			pr_info("!!AP L2->L0 Failed\n");
 	}
 }
 
