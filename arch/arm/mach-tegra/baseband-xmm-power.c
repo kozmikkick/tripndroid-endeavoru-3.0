@@ -536,46 +536,24 @@ static int baseband_xmm_power_on(struct platform_device *device)
 	struct baseband_power_platform_data *data
 		= (struct baseband_power_platform_data *)
 			device->dev.platform_data;
-	int ret; /* HTC: ENR#U wakeup src fix */
-	int value;
+	int ret;
 
-	pr_debug(MODULE_NAME "%s{\n", __func__);
+	pr_debug("%s {\n", __func__);
 
 	/* check for platform data */
 	if (!data) {
 		pr_err("%s: !data\n", __func__);
 		return -EINVAL;
 	}
-
-	if (baseband_xmm_powerstate != BBXMM_PS_UNINIT) {
-		pr_err("%s: baseband_xmm_powerstate != BBXMM_PS_UNINIT\n",
-			__func__);
+	if (baseband_xmm_powerstate != BBXMM_PS_UNINIT)
 		return -EINVAL;
-	}
-#if 1 /*HTC*/	
-	pr_debug(MODULE_NAME " htc_get_pcbid_info= %d\n",htcpcbid );
-	if(htcpcbid < PROJECT_PHASE_XE) {
-		enable_avdd_dsi_csi_power();
-	}
-#endif
-
-	///*HTC*/
-	/*set Radio fatal Pin to Iput*/
-	ret=gpio_direction_input(TEGRA_GPIO_PN2);
-	if (ret < 0)
-				pr_err("%s: set Radio fatal Pin to Iput error\n", __func__);
-
-	/*set BB2AP_SUSPEND_REQ Pin (TEGRA_GPIO_PV0) to Iput*/
-	ret=gpio_direction_input(TEGRA_GPIO_PV0);
-	if (ret < 0)
-				pr_err("%s: set BB2AP_SUSPEND_REQ Pin to Iput error\n", __func__);
 
 	/*config back the uart pin*/
 	config_gpio_for_power_on();
 
 	/* reset the state machine */
 	baseband_xmm_powerstate = BBXMM_PS_INIT;
-	first_time = true;
+//	first_time = true;
 	modem_sleep_flag = false;
 
 	/* HTC use IPC_AP_WAKE_INIT2 */
@@ -584,18 +562,17 @@ static int baseband_xmm_power_on(struct platform_device *device)
 	else
 		ipc_ap_wake_state = IPC_AP_WAKE_INIT2;
 
-	/* pr_info("%s - %d\n", __func__, __LINE__); */
-
 	/* register usb host controller */
 	if (!modem_flash) {
-		/* pr_info("%s - %d\n", __func__, __LINE__); */
+		pr_debug("%s - %d\n", __func__, __LINE__);
 		/* register usb host controller only once */
 		if (register_hsic_device) {
-			pr_debug("%s(%d)register usb host controller\n", __func__, __LINE__);
+			pr_debug("%s: register usb host controller\n",
+				__func__);
 			modem_power_on = true;
 			if (data->hsic_register)
 				data->modem.xmm.hsic_device =
-					data->hsic_register();
+						data->hsic_register();
 			else
 				pr_err("%s: hsic_register is missing\n",
 					__func__);
@@ -604,9 +581,9 @@ static int baseband_xmm_power_on(struct platform_device *device)
 			/* register usb host controller */
 			if (data->hsic_register)
 				data->modem.xmm.hsic_device =
-						data->hsic_register();
+							data->hsic_register();
 			/* turn on modem */
-			pr_info("%s call baseband_modem_power_on\n", __func__);
+			pr_debug("%s call baseband_modem_power_on\n", __func__);
 			baseband_modem_power_on(data);
 		}
 	}
