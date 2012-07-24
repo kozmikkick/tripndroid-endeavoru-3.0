@@ -269,8 +269,6 @@ static __initdata struct tegra_pingroup_config endeavoru_pinmux_common[] = {
 	DEFAULT_PINMUX(KB_ROW9,         RSVD,           NORMAL,    NORMAL,     INPUT), // NC
 	DEFAULT_PINMUX(KB_ROW10,        RSVD,           NORMAL,    NORMAL,     INPUT), // CON_USB_ID_1
 
-	DEFAULT_PINMUX(SPI1_MISO,       SPI1,            NORMAL,    NORMAL,     OUTPUT),
-
 	DEFAULT_PINMUX(GPIO_PCC1,       RSVD,            NORMAL,    NORMAL,     INPUT), // CAM_SEL
 	DEFAULT_PINMUX(GPIO_PCC2,       RSVD2,           PULL_UP,   NORMAL,     INPUT), // PWR_THEMP_ALERT_INT
 	DEFAULT_PINMUX(GPIO_PU0,        RSVD,            NORMAL,    NORMAL,     INPUT), // CON_BT_EN
@@ -321,10 +319,16 @@ static __initdata struct tegra_pingroup_config endeavoru_pinmux_common[] = {
     DEFAULT_PINMUX(SPDIF_OUT,       SPDIF,            NORMAL,    NORMAL,    OUTPUT), // NC
     DEFAULT_PINMUX(SPDIF_IN,        SPDIF,            NORMAL,    NORMAL,     INPUT), // NC
 
-    DEFAULT_PINMUX(SPI1_SCK,        SPI1,            PULL_UP,   NORMAL,     INPUT), // PWR_CHG_INT
-
-    DEFAULT_PINMUX(SPI2_CS1_N,      SPI2,            PULL_UP,   NORMAL,       INPUT), // AUD_HP_DET
-    DEFAULT_PINMUX(SPI2_CS2_N,      SPI2,            PULL_UP,   TRISTATE,     INPUT), // DSP_VOL_DOWN
+	DEFAULT_PINMUX(SPI1_SCK,        RSVD,            PULL_UP,   NORMAL,       INPUT), // PWR_CHG_INT
+	DEFAULT_PINMUX(SPI1_MISO,       RSVD,            NORMAL,    NORMAL,       OUTPUT), // AUDIO_MCLK_EN
+	DEFAULT_PINMUX(SPI1_MOSI,       SPI1,            NORMAL,    NORMAL,       INPUT), // NC
+	DEFAULT_PINMUX(SPI1_CS0_N,      SPI1,            NORMAL,    NORMAL,       INPUT), // NC
+	DEFAULT_PINMUX(SPI2_MOSI,       SPI2,            NORMAL,    NORMAL,       OUTPUT), // AUD_SPI_DO
+	DEFAULT_PINMUX(SPI2_MISO,       SPI2,            NORMAL,    NORMAL,       INPUT), // AUD_SPI_DI
+	DEFAULT_PINMUX(SPI2_SCK,        SPI2,            NORMAL,    NORMAL,       OUTPUT), // AUD_SPI_CLK
+	DEFAULT_PINMUX(SPI2_CS0_N,      SPI2,            NORMAL,    NORMAL,       OUTPUT), // AUD_SPI_CS
+	DEFAULT_PINMUX(SPI2_CS1_N,      RSVD,            PULL_UP,   NORMAL,       INPUT), // AUD_HP_DET
+	DEFAULT_PINMUX(SPI2_CS2_N,      RSVD,            PULL_UP,   TRISTATE,     INPUT), // DSP_VOL_DOWN
 
     DEFAULT_PINMUX(GMI_AD8,         PWM0,            NORMAL,    NORMAL,     OUTPUT), // NC
 
@@ -394,13 +398,7 @@ static __initdata struct tegra_pingroup_config endeavoru_pinmux_common[] = {
     DEFAULT_PINMUX(UART3_RXD,       UARTC,           PULL_UP,   NORMAL,     INPUT),             //CON_BT_RX
 
     //Port X
-    DEFAULT_PINMUX(SPI2_MOSI,   SPI2,        NORMAL,    NORMAL, OUTPUT),             //AUD_SPI_DO
-    DEFAULT_PINMUX(SPI2_MISO,   SPI2,        NORMAL,    NORMAL, INPUT),             //AUD_SPI_DI
-    DEFAULT_PINMUX(SPI2_SCK,    SPI2,        NORMAL,    NORMAL, OUTPUT),             //AUD_SPI_CLK
-    DEFAULT_PINMUX(SPI2_CS0_N,  SPI2,        NORMAL,    NORMAL, OUTPUT),             //AUD_SPI_CS#
 
-    DEFAULT_PINMUX(SPI1_MOSI,       SPI1,            NORMAL,    NORMAL,     INPUT),             //NC
-    DEFAULT_PINMUX(SPI1_CS0_N,      SPI1,            NORMAL,    NORMAL,     INPUT),             //NC
 
     //Port Z
     
