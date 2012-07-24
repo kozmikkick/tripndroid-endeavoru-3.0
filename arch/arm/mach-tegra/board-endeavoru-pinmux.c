@@ -176,13 +176,8 @@ static __initdata struct tegra_pingroup_config endeavoru_pinmux_common[] = {
     I2C_PINMUX(CAM_I2C_SCL,         I2C3,    NORMAL,     NORMAL,    INPUT,    DISABLE,    DISABLE), // CAM_I2C_SCL
     I2C_PINMUX(CAM_I2C_SDA,         I2C3,    NORMAL,     NORMAL,    INPUT,    DISABLE,    DISABLE), // CAM_I2C_SDA
 
-	DEFAULT_PINMUX(LCD_PWR1,        DISPLAYA,        NORMAL,    NORMAL,     OUTPUT),
-	DEFAULT_PINMUX(LCD_DC1,         DISPLAYA,        NORMAL,    NORMAL,     INPUT),
-
-	DEFAULT_PINMUX(LCD_D8,          DISPLAYA,        PULL_DOWN, NORMAL,     INPUT),
-	DEFAULT_PINMUX(LCD_D14,         DISPLAYA,        NORMAL,    NORMAL,     INPUT),
-	DEFAULT_PINMUX(LCD_D15,         DISPLAYA,        NORMAL,    NORMAL,     OUTPUT),
-	DEFAULT_PINMUX(LCD_D19,         DISPLAYA,        NORMAL,    NORMAL,     OUTPUT),
+	DEFAULT_PINMUX(LCD_PWR1,        RSVD,        	 NORMAL,    NORMAL,     OUTPUT), // MDM_AP2BB_RST_PWRDWN
+	DEFAULT_PINMUX(LCD_DC1,         RSVD,        	 NORMAL,    NORMAL,     INPUT), // AUD_A1V8_EN
 
 	DEFAULT_PINMUX(GMI_AD0,         GMI,             NORMAL,    NORMAL,     INPUT),
 	DEFAULT_PINMUX(GMI_AD1,         GMI,             NORMAL,    NORMAL,     INPUT),
@@ -229,31 +224,38 @@ static __initdata struct tegra_pingroup_config endeavoru_pinmux_common[] = {
 
 	DEFAULT_PINMUX(LCD_D0,          DISPLAYA,        NORMAL,    NORMAL,     OUTPUT), // MHL_USB_SEL
 	DEFAULT_PINMUX(LCD_D1,          DISPLAYA,        NORMAL,    NORMAL,     INPUT), // NC
-	DEFAULT_PINMUX(LCD_D2,          DISPLAYA,        NORMAL,    NORMAL,     OUTPUT), // PEH_CAP_INT
+	DEFAULT_PINMUX(LCD_D2,          RSVD1,        	 NORMAL,    NORMAL,     OUTPUT), // PEH_CAP_INT
 	DEFAULT_PINMUX(LCD_D3,          DISPLAYA,        NORMAL,    NORMAL,     INPUT), // NC
 	DEFAULT_PINMUX(LCD_D4,          DISPLAYA,        NORMAL,    NORMAL,     INPUT), // MHL_1V2_EN
 	DEFAULT_PINMUX(LCD_D5,          DISPLAYA,        NORMAL,    NORMAL,     INPUT), // DSP_LCM_1V8_EN
 	DEFAULT_PINMUX(LCD_D6,          RSVD1,           NORMAL,    NORMAL,     INPUT), // MHL_RST
 	DEFAULT_PINMUX(LCD_D7,          DISPLAYA,        NORMAL,    NORMAL,     INPUT), // PEH_VIBRATOR_ON
+	DEFAULT_PINMUX(LCD_D8,          RSVD,        	 PULL_DOWN, NORMAL,     INPUT), // CAM_VCM_2V85_PWR
+	DEFAULT_PINMUX(LCD_D9,          DISPLAYA,        NORMAL,    NORMAL,   	INPUT),
+	DEFAULT_PINMUX(LCD_D10,         DISPLAYA,        NORMAL,    NORMAL,   	INPUT), // NC
+	DEFAULT_PINMUX(LCD_D11,         DISPLAYA,        NORMAL,    NORMAL,   	INPUT), // NC
+	DEFAULT_PINMUX(LCD_D12,         DISPLAYA,        NORMAL,    NORMAL,   	INPUT), // NC
+	DEFAULT_PINMUX(LCD_D13,         DISPLAYA,        NORMAL,    NORMAL,   	INPUT), // NC
+	DEFAULT_PINMUX(LCD_D14,         RSVD,        	 NORMAL,    NORMAL,     INPUT), // CAM_CAM2_CORE_1V8_EN
+	DEFAULT_PINMUX(LCD_D15,         RSVD,        	 NORMAL,    NORMAL,     OUTPUT), // SYS_PMU_MSECURE
 	DEFAULT_PINMUX(LCD_D16,         DISPLAYA,        NORMAL,    NORMAL,     INPUT), // DSP_LCD_ID0
 	DEFAULT_PINMUX(LCD_D17,         DISPLAYA,        NORMAL,    NORMAL,     INPUT), // DSP_LCD_ID1
-	DEFAULT_PINMUX(LCD_D18,         DISPLAYA,        NORMAL,    NORMAL,     INPUT),
-	DEFAULT_PINMUX(LCD_D21,         DISPLAYA,        NORMAL,    NORMAL,     OUTPUT),
-	DEFAULT_PINMUX(LCD_D22,         RSVD1,           NORMAL,    NORMAL,     OUTPUT),
-	DEFAULT_PINMUX(LCD_D23,         DISPLAYA,        NORMAL,    NORMAL,     INPUT),
-
+	DEFAULT_PINMUX(LCD_D18,         RSVD,        	 NORMAL,    NORMAL,     INPUT), // CAM_FRONT_CAM_RST
+	DEFAULT_PINMUX(LCD_D19,         DISPLAYA,        NORMAL,    NORMAL,     INPUT), // NC
+	DEFAULT_PINMUX(LCD_D21,         RSVD,        	 NORMAL,    NORMAL,     OUTPUT), // NFC_VEN
+	DEFAULT_PINMUX(LCD_D22,         RSVD,            NORMAL,    NORMAL,     OUTPUT), // NFC_DL_MODE
+	DEFAULT_PINMUX(LCD_D23,         RSVD,        	 NORMAL,    NORMAL,     INPUT), // CAM_V_CAM_VAA_2V85_EN
 	DEFAULT_PINMUX(LCD_DE,          DISPLAYA,        NORMAL,    NORMAL,     INPUT), // DSP_LCM_DE
 	DEFAULT_PINMUX(LCD_DC0,         DISPLAYA,        NORMAL,    NORMAL,     INPUT), // DSP_LCD_RST
-	DEFAULT_PINMUX(LCD_CS0_N,       DISPLAYA,        NORMAL,    NORMAL,     INPUT), // NC
+	DEFAULT_PINMUX(LCD_CS0_N,       RSVD,        	 NORMAL,    NORMAL,     INPUT), // NC
 	DEFAULT_PINMUX(LCD_SDOUT,       DISPLAYA,        NORMAL,    NORMAL,     INPUT), // NC
-
-    	DEFAULT_PINMUX(LCD_PWR0,        DISPLAYA,        NORMAL,    NORMAL,     INPUT), // AUD_3V3_EN
+    	DEFAULT_PINMUX(LCD_PWR0,        RSVD,        	 NORMAL,    NORMAL,     INPUT), // AUD_3V3_EN
 	DEFAULT_PINMUX(LCD_PWR2,        DISPLAYA,        NORMAL,    NORMAL,     OUTPUT), // MDM_AP2BB_SLAVE_WAKEUP_1
     	DEFAULT_PINMUX(LCD_PCLK,        DISPLAYA,        NORMAL,    NORMAL,     INPUT), // NC
-	DEFAULT_PINMUX(LCD_SCK,         DISPLAYA,        PULL_UP,   TRISTATE,   OUTPUT), // NC
-
-	DEFAULT_PINMUX(LCD_HSYNC,       DISPLAYA,        NORMAL,       NORMAL,     INPUT), // NC
-	DEFAULT_PINMUX(LCD_VSYNC,       DISPLAYA,        PULL_DOWN,    NORMAL,     INPUT), // MDM_AP_USB_UART_OE
+	DEFAULT_PINMUX(LCD_SCK,         RSVD,        	 PULL_UP,   TRISTATE,   OUTPUT), // NC
+	DEFAULT_PINMUX(LCD_HSYNC,       DISPLAYA,        NORMAL,    NORMAL,     INPUT), // NC
+	DEFAULT_PINMUX(LCD_VSYNC,       DISPLAYA,        PULL_DOWN, NORMAL,     INPUT), // MDM_AP_USB_UART_OE
+	DEFAULT_PINMUX(LCD_WR_N,        DISPLAYA,        NORMAL,    NORMAL,     INPUT), // NC
 
 	DEFAULT_PINMUX(DAP4_DOUT,       I2S3,            NORMAL,    NORMAL,     OUTPUT),
 	DEFAULT_PINMUX(DAP4_SCLK,       I2S3,            NORMAL,    NORMAL,     OUTPUT),
@@ -360,11 +362,7 @@ static __initdata struct tegra_pingroup_config endeavoru_pinmux_common[] = {
     DEFAULT_PINMUX(UART2_RXD,       IRDA,            NORMAL,    NORMAL,     INPUT),                         //
 
     // Port F
-    DEFAULT_PINMUX(LCD_D9,          DISPLAYA,        NORMAL,    NORMAL,     INPUT),                         //
-    DEFAULT_PINMUX(LCD_D10,         DISPLAYA,        NORMAL,    NORMAL,   INPUT),                         //NC
-    DEFAULT_PINMUX(LCD_D11,         DISPLAYA,        NORMAL,    NORMAL,   INPUT),                         //NC
-    DEFAULT_PINMUX(LCD_D12,         DISPLAYA,        NORMAL,    NORMAL,   INPUT),                         //NC
-    DEFAULT_PINMUX(LCD_D13,         DISPLAYA,        NORMAL,    NORMAL,   INPUT),                         //NC
+
     
     // DEFAULT_PINMUX(GMI_IORDY,       RSVD1,           PULL_DOWN, NORMAL,     OUTPUT),                        //MDM_SIM_DET
     DEFAULT_PINMUX(GMI_IORDY,       RSVD1,           NORMAL,   TRISTATE,     INPUT),  //SIM_DET#  //should use this setting after EVM
@@ -420,7 +418,7 @@ static __initdata struct tegra_pingroup_config endeavoru_pinmux_common[] = {
     DEFAULT_PINMUX(SPI1_CS0_N,      SPI1,            NORMAL,    NORMAL,     INPUT),             //NC
 
     //Port Z
-    DEFAULT_PINMUX(LCD_WR_N,        DISPLAYA,        NORMAL,    NORMAL,     INPUT),             //NC
+    
 
     DEFAULT_PINMUX(SYS_CLK_REQ,     SYSCLK,          NORMAL,    NORMAL,     OUTPUT),            //SYS
 
