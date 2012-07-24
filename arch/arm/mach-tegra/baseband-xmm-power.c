@@ -1680,21 +1680,7 @@ static struct platform_driver baseband_power_driver = {
 
 static int __init baseband_xmm_power_init(void)
 {
-	/* HTC */
-	host_dbg_flag = 0;
-	pr_info("%s - host_dbg_flag=0x%x\n",
-		__func__, host_dbg_flag);
-
-	pr_debug(MODULE_NAME "%s 0x%lx\n", __func__, modem_ver);
-
-	/* HTC: disable wakeup src */
-	pr_debug(MODULE_NAME "%s - platfrom_set_flight_mode_onoff - on\n",
-		__func__);
-	/* HTC remove platfrom_set_flight_mode_onoff(true); for ENR */
-
-	printk("%s:VP adding pm qos request \n", __func__);
-	pm_qos_add_request(&modem_boost_cpu_freq_req, PM_QOS_CPU_FREQ_MIN, (s32)PM_QOS_CPU_FREQ_MIN_DEFAULT_VALUE);
-
+	pr_debug("%s\n", __func__);
 	return platform_driver_register(&baseband_power_driver);
 }
 
