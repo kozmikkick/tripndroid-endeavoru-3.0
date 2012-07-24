@@ -1574,58 +1574,46 @@ static int baseband_xmm_power_driver_handle_resume(
 			struct baseband_power_platform_data *data)
 {
 	int value;
-	unsigned long flags;
-	unsigned long timeout;
 	int delay = 1000; /* maxmum delay in msec */
+	unsigned long flags;
 
-
-	//pr_debug("%s\n", __func__);
-
-	/* check for platform data */
+	pr_debug("%s\n", __func__);
 	if (!data)
 		return 0;
 
 	/* check if modem is on */
 	if (power_onoff == 0) {
-		pr_info("%s - flight mode - nop\n", __func__);
+		pr_debug("%s - flight mode - nop\n", __func__);
 		return 0;
 	}
 
 	modem_sleep_flag = false;
-	spin_lock_irqsave(&xmm_lock, flags);
-	/* Clear wakeup pending flag */
-	wakeup_pending = false;
-	spin_unlock_irqrestore(&xmm_lock, flags);
 
 	/* L3->L0 */
 	baseband_xmm_set_power_status(BBXMM_PS_L3TOL0);
 	value = gpio_get_value(data->modem.xmm.ipc_ap_wake);
 	if (value) {
 		pr_info("AP L3 -> L0\n");
-		pr_debug("waiting for host wakeup...\n");
-		timeout = jiffies + msecs_to_jiffies(delay);
 		/* wake bb */
 		gpio_set_value(data->modem.xmm.ipc_bb_wake, 1);
-		pr_debug("Set bb_wake high ->\n");
+
+		pr_debug("waiting for host wakeup...\n");
 		do {
-			udelay(100);
+			mdelay(1);
 			value = gpio_get_value(data->modem.xmm.ipc_ap_wake);
-			if (!value)
-				break;
-		} while (time_before(jiffies, timeout));
-		if (!value) {
+			delay--;
+		} while ((value) && (delay));
+		if (delay)
 			pr_debug("gpio host wakeup low <-\n");
-			pr_debug("%s enable short_autosuspend\n", __func__);
-			short_autosuspend = true;
-		}
-		else
-			pr_info("!!AP L3->L0 Failed\n");
 	} else {
 		pr_info("CP L3 -> L0\n");
+		spin_lock_irqsave(&xmm_lock, flags);
+		/* Clear wakeup pending flag */
+		wakeup_pending = false;
+		spin_unlock_irqrestore(&xmm_lock, flags);
 	}
-	
-	return 0;
 
+	return 0;
 }
 
 #ifdef CONFIG_PM
