@@ -296,10 +296,12 @@ static __initdata struct tegra_pingroup_config endeavoru_pinmux_common[] = {
 
 	DEFAULT_PINMUX(CRT_VSYNC,       CRT,             NORMAL,    NORMAL,     OUTPUT),
 
-	DEFAULT_PINMUX(CLK1_OUT,        EXTPERIPH1,      NORMAL,    NORMAL,     INPUT),
-	DEFAULT_PINMUX(CLK2_OUT,        EXTPERIPH2,      NORMAL,    NORMAL,     INPUT),
-	DEFAULT_PINMUX(CLK2_REQ,        DAP,             NORMAL,    NORMAL,     OUTPUT),
-	DEFAULT_PINMUX(CLK3_REQ,        DEV3,            NORMAL,    TRISTATE,   INPUT),
+	DEFAULT_PINMUX(CLK1_OUT,        RSVD,      	 NORMAL,    NORMAL,     INPUT), // AUD_MCLK
+	DEFAULT_PINMUX(CLK2_OUT,        RSVD,      	 NORMAL,    NORMAL,     INPUT), // AUD_AIC3008_RST
+	DEFAULT_PINMUX(CLK2_REQ,        RSVD,            NORMAL,    NORMAL,     OUTPUT), // AUD_DOCK_OUT_EN
+	DEFAULT_PINMUX(CLK3_OUT,        EXTPERIPH3,  	 NORMAL,    NORMAL,     OUTPUT), // NC
+	DEFAULT_PINMUX(CLK3_REQ,        DEV3,            NORMAL,    NORMAL,     INPUT), // NC
+	DEFAULT_PINMUX(CLK_32K_OUT,     BLINK,           NORMAL,    NORMAL,     OUTPUT), // NC
 
     DEFAULT_PINMUX(DAP1_FS,         I2S0,            NORMAL,    NORMAL,     OUTPUT), // MDM_AP2BB_RST#
     DEFAULT_PINMUX(DAP1_DIN,        I2S0,            NORMAL,    NORMAL,     OUTPUT), // MDM_AP2BB_HOST_ACTIVE
@@ -337,7 +339,7 @@ static __initdata struct tegra_pingroup_config endeavoru_pinmux_common[] = {
 
 // TripNRaVeR: bring the mess below inline with tegra defaults!!!
     // Port A
-    DEFAULT_PINMUX(CLK_32K_OUT,     BLINK,           NORMAL,    NORMAL,     OUTPUT),                        //NC
+
     DEFAULT_PINMUX(UART3_CTS_N,     UARTC,           PULL_UP,   NORMAL,     INPUT),                         //BT_UART_CTS
 
     // Port C
@@ -410,7 +412,6 @@ static __initdata struct tegra_pingroup_config endeavoru_pinmux_common[] = {
     DEFAULT_PINMUX(CAM_MCLK,        VI_ALT2,     NORMAL,   NORMAL,    INPUT),              //CAM_MCLK
 
     //Port EE
-    DEFAULT_PINMUX(CLK3_OUT,        EXTPERIPH3,  NORMAL,    NORMAL,     OUTPUT),            //NC
     DEFAULT_PINMUX(HDMI_CEC,        CEC,            NORMAL,    NORMAL,     INPUT),              //NC
 };
 
