@@ -1843,6 +1843,7 @@ static void __init tegra_endeavoru_init(void)
 		}
 	}
 	enterprise_suspend_init();
+	enterprise_bpc_mgmt_init();
 	tegra_release_bootloader_fb();
 #ifdef CONFIG_TEGRA_HAPTIC2
 	haptic_vibrator_init(board_id);
