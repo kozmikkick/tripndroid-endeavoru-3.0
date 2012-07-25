@@ -1689,22 +1689,6 @@ static void enterprise_modem_init(void)
 		}
 		tegra_gpio_enable(TEGRA_GPIO_PI5);
 		gpio_export(TEGRA_GPIO_PI5, true);
-	
-			/*enable core dumo dectect++*/
-			printk(KERN_INFO"%s: gpio config for core dump when radio fatal error.", __func__);
-			/* TEGRA_GPIO_PN2*/
-				ret = gpio_request(TEGRA_GPIO_PN2, "core_dump");
-				if (ret < 0)
-					pr_err("[FLT] %s: gpio_request failed for gpio %s\n",
-						__func__, "core_dump");
-				ret = gpio_direction_input(TEGRA_GPIO_PN2);
-				if (ret < 0) {
-					pr_err("[FLT] %s: gpio_direction_input failed %d\n", __func__, ret);
-					gpio_free(TEGRA_GPIO_PN2);
-					return;
-				}
-				tegra_gpio_enable(TEGRA_GPIO_PN2);
-				gpio_export(TEGRA_GPIO_PN2, true);
 }
 
 static void enterprise_baseband_init(void)
