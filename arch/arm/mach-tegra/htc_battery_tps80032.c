@@ -1314,7 +1314,7 @@ static int __init htc_battery_init(void)
 #if WK_MBAT_IN
 	is_mbat_in = 1;
 #endif
-	usb_register_notifier(&usb_status_notifier);
+//	usb_register_notifier(&usb_status_notifier);
 	platform_driver_register(&htc_battery_driver);
 
 	/* init battery parameters. */

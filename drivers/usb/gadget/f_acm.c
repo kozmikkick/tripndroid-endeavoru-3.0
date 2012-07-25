@@ -39,12 +39,6 @@
  * descriptors (roughly equivalent to CDC Unions) may sometimes help.
  */
 
-struct acm_ep_descs {
-	struct usb_endpoint_descriptor	*in;
-	struct usb_endpoint_descriptor	*out;
-	struct usb_endpoint_descriptor	*notify;
-};
-
 struct f_acm {
 	struct gserial			port;
 	u8				ctrl_id, data_id;
@@ -58,11 +52,7 @@ struct f_acm {
 	 */
 	spinlock_t			lock;
 
-	struct acm_ep_descs		fs;
-	struct acm_ep_descs		hs;
-
 	struct usb_ep			*notify;
-	struct usb_endpoint_descriptor	*notify_desc;
 	struct usb_request		*notify_req;
 
 	struct usb_cdc_line_coding	port_line_coding;	/* 8-N-1 etc */
@@ -405,23 +395,27 @@ static int acm_set_alt(struct usb_function *f, unsigned intf, unsigned alt)
 			usb_ep_disable(acm->notify);
 		} else {
 			VDBG(cdev, "init acm ctrl interface %d\n", intf);
-			acm->notify_desc = ep_choose(cdev->gadget,
-					acm->hs.notify,
-					acm->fs.notify);
+			if (config_ep_by_speed(cdev->gadget, f, acm->notify))
+				return -EINVAL;
 		}
-		usb_ep_enable(acm->notify, acm->notify_desc);
+		usb_ep_enable(acm->notify);
 		acm->notify->driver_data = acm;
 
 	} else if (intf == acm->data_id) {
 		if (acm->port.in->driver_data) {
 			DBG(cdev, "reset acm ttyGS%d\n", acm->port_num);
 			gserial_disconnect(&acm->port);
-		} else {
+		}
+		if (!acm->port.in->desc || !acm->port.out->desc) {
 			DBG(cdev, "activate acm ttyGS%d\n", acm->port_num);
-			acm->port.in_desc = ep_choose(cdev->gadget,
-					acm->hs.in, acm->fs.in);
-			acm->port.out_desc = ep_choose(cdev->gadget,
-					acm->hs.out, acm->fs.out);
+			if (config_ep_by_speed(cdev->gadget, f,
+					       acm->port.in) ||
+			    config_ep_by_speed(cdev->gadget, f,
+					       acm->port.out)) {
+				acm->port.in->desc = NULL;
+				acm->port.out->desc = NULL;
+				return -EINVAL;
+			}
 		}
 		gserial_connect(&acm->port, acm->port_num);
 
@@ -629,17 +623,10 @@ acm_bind(struct usb_configuration *c, struct usb_function *f)
 	acm->notify_req->complete = acm_cdc_notify_complete;
 	acm->notify_req->context = acm;
 
-	/* copy descriptors, and track endpoint copies */
+	/* copy descriptors */
 	f->descriptors = usb_copy_descriptors(acm_fs_function);
 	if (!f->descriptors)
 		goto fail;
-
-	acm->fs.in = usb_find_endpoint(acm_fs_function,
-			f->descriptors, &acm_fs_in_desc);
-	acm->fs.out = usb_find_endpoint(acm_fs_function,
-			f->descriptors, &acm_fs_out_desc);
-	acm->fs.notify = usb_find_endpoint(acm_fs_function,
-			f->descriptors, &acm_fs_notify_desc);
 
 	/* support all relevant hardware speeds... we expect that when
 	 * hardware is dual speed, all bulk-capable endpoints work at
@@ -653,15 +640,8 @@ acm_bind(struct usb_configuration *c, struct usb_function *f)
 		acm_hs_notify_desc.bEndpointAddress =
 				acm_fs_notify_desc.bEndpointAddress;
 
-		/* copy descriptors, and track endpoint copies */
+		/* copy descriptors */
 		f->hs_descriptors = usb_copy_descriptors(acm_hs_function);
-
-		acm->hs.in = usb_find_endpoint(acm_hs_function,
-				f->hs_descriptors, &acm_hs_in_desc);
-		acm->hs.out = usb_find_endpoint(acm_hs_function,
-				f->hs_descriptors, &acm_hs_out_desc);
-		acm->hs.notify = usb_find_endpoint(acm_hs_function,
-				f->hs_descriptors, &acm_hs_notify_desc);
 	}
 
 	DBG(cdev, "acm ttyGS%d: %s speed IN/%s OUT/%s NOTIFY/%s\n",
@@ -697,6 +677,7 @@ acm_unbind(struct usb_configuration *c, struct usb_function *f)
 		usb_free_descriptors(f->hs_descriptors);
 	usb_free_descriptors(f->descriptors);
 	gs_free_req(acm->notify, acm->notify_req);
+	kfree(acm->port.func.name);
 	kfree(acm);
 }
 
@@ -768,7 +749,11 @@ int acm_bind_config(struct usb_configuration *c, u8 port_num)
 	acm->port.disconnect = acm_disconnect;
 	acm->port.send_break = acm_send_break;
 
-	acm->port.func.name = "acm";
+	acm->port.func.name = kasprintf(GFP_KERNEL, "acm%u", port_num);
+	if (!acm->port.func.name) {
+		kfree(acm);
+		return -ENOMEM;
+	}
 	acm->port.func.strings = acm_strings;
 	/* descriptors are per-instance copies */
 	acm->port.func.bind = acm_bind;

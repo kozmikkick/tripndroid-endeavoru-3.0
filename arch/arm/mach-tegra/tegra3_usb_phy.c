@@ -1959,7 +1959,7 @@ int uhsic_phy_bus_port_power(struct tegra_usb_phy *phy)
 	writel(val, base + USB_USBCMD);
 
 	if (usb_phy_reg_status_wait(base + UHSIC_STAT_CFG0,
-			UHSIC_CONNECT_DETECT, UHSIC_CONNECT_DETECT, 25000)) {
+			UHSIC_CONNECT_DETECT, UHSIC_CONNECT_DETECT, 500000) < 0) {
 		pr_err("%s: timeout waiting for UHSIC_CONNECT_DETECT\n",
 								__func__);
 		return -ETIMEDOUT;

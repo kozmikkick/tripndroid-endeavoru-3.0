@@ -40,9 +40,6 @@
 /* vdd_cpu voltage follower */
 #define BOARD_SKU_VF_BIT	0x0400
 
-/* SKU Information */
-#define BOARD_SKU_B11	0xb11
-
 int enterprise_charge_init(void);
 int enterprise_sdhci_init(void);
 int endeavoru_pinmux_init(void);
@@ -52,10 +49,8 @@ int touch_init(void);
 int enterprise_kbc_init(void);
 int enterprise_emc_init(void);
 int enterprise_regulator_init(void);
-//int enterprise_modem_init(void);
 int enterprise_suspend_init(void);
 int enterprise_edp_init(void);
-void __init enterprise_tsensor_init(void);
 void enterprise_bpc_mgmt_init(void);
 
 /* Invensense MPU Definitions */
@@ -152,25 +147,23 @@ void enterprise_bpc_mgmt_init(void);
 #define TEGRA_GPIO_HP_DET	TEGRA_GPIO_PW3
 
 /* Baseband GPIO addresses */
-#define BB_VDD_EN                       TEGRA_GPIO_PM4
+#define BB_VDD_EN               	TEGRA_GPIO_PM4
 #define AP2BB_RST_PWRDWNn               TEGRA_GPIO_PC1
-#define AP2BB_RSTn                      TEGRA_GPIO_PN0
-#define AP2BB_PWRON                     TEGRA_GPIO_PN3
 #define BB2AP_RADIO_FATAL               TEGRA_GPIO_PN2
 
-#define BB_GPIO_BB_EN                   AP2BB_PWRON
-#define BB_GPIO_BB_RST                  AP2BB_RSTn
-#define BB_GPIO_SPI_INT                 TEGRA_GPIO_PN1
-#define BB_GPIO_SPI_SS                  TEGRA_GPIO_PV0 //wakeup
-#define BB_GPIO_AWR                     TEGRA_GPIO_PC6
-#define BB_GPIO_CWR                     TEGRA_GPIO_PJ0
+#define BB_GPIO_MDM_PWRON_AP2BB		TEGRA_GPIO_PN3
+#define BB_GPIO_RESET_AP2BB		TEGRA_GPIO_PN0
+#define BB_GPIO_LCD_PWR1		TEGRA_GPIO_PN1
+#define BB_GPIO_LCD_PWR2		TEGRA_GPIO_PV0
+#define BB_GPIO_HS1_AP2BB		TEGRA_GPIO_PE3
+#define BB_GPIO_HS1_BB2AP		TEGRA_GPIO_PJ0
 
-#define XMM6260_GPIO_BB_ON              BB_GPIO_BB_EN
-#define XMM6260_GPIO_BB_RST             BB_GPIO_BB_RST
-#define XMM6260_GPIO_IPC_HSIC_ACTIVE    BB_GPIO_SPI_INT
-#define XMM6260_GPIO_IPC_HSIC_SUS_REQ   BB_GPIO_SPI_SS
-#define XMM6260_GPIO_IPC_BB_WAKE        BB_GPIO_AWR
-#define XMM6260_GPIO_IPC_AP_WAKE        BB_GPIO_CWR
+#define XMM6260_GPIO_BB_ON			BB_GPIO_MDM_PWRON_AP2BB
+#define XMM6260_GPIO_BB_RST			BB_GPIO_RESET_AP2BB
+#define XMM6260_GPIO_IPC_HSIC_ACTIVE		BB_GPIO_LCD_PWR1
+#define XMM6260_GPIO_IPC_HSIC_SUS_REQ		BB_GPIO_LCD_PWR2
+#define XMM6260_GPIO_IPC_BB_WAKE		BB_GPIO_HS1_AP2BB
+#define XMM6260_GPIO_IPC_AP_WAKE		BB_GPIO_HS1_BB2AP
 
 /* NFC GPIO */
 #define RUBY_GPIO_NFC_INT       TEGRA_GPIO_PY6
@@ -202,7 +195,6 @@ void enterprise_bpc_mgmt_init(void);
 #define TEGRA_CUR_MON_MIN_CORES		2
 
 /* Baseband IDs */
-
 enum tegra_bb_type {
 	TEGRA_BB_PH450 = 1,
 	TEGRA_BB_XMM6260,
