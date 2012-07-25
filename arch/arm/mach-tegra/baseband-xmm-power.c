@@ -1190,18 +1190,16 @@ static int baseband_xmm_power_pm_notifier_event(struct notifier_block *this,
 		spin_unlock_irqrestore(&xmm_lock, flags);
 		return NOTIFY_OK;
 	case PM_POST_SUSPEND:
-			pr_debug("%s : PM_POST_SUSPEND\n", __func__);
-			spin_lock_irqsave(&xmm_lock, flags);
-			system_suspending = false;
-			if (wakeup_pending &&
+		pr_debug("%s : PM_POST_SUSPEND\n", __func__);
+		spin_lock_irqsave(&xmm_lock, flags);
+		system_suspending = false;
+		if (wakeup_pending &&
 			(baseband_xmm_powerstate == BBXMM_PS_L2)) {
 			wakeup_pending = false;
 			spin_unlock_irqrestore(&xmm_lock, flags);
-			pr_info("%s : Service Pending CP wakeup\n",
-				__func__);
+			pr_info("%s : Service Pending CP wakeup\n", __func__);
 			CP_initiated_L2toL0 = true;
-			baseband_xmm_set_power_status
-				(BBXMM_PS_L2TOL0);
+			baseband_xmm_set_power_status(BBXMM_PS_L2TOL0);
 			return NOTIFY_OK;
 		}
 		wakeup_pending = false;
