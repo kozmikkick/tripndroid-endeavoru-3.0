@@ -1403,9 +1403,8 @@ static int baseband_xmm_power_driver_handle_resume(
 			struct baseband_power_platform_data *data)
 {
 	int value;
-	unsigned long flags;
-	unsigned long timeout;
 	int delay = 10000; /* maxmum delay in msec */
+	unsigned long flags;
 
 	/* check for platform data */
 	if (!data)
@@ -1419,7 +1418,6 @@ static int baseband_xmm_power_driver_handle_resume(
 
 	modem_sleep_flag = false;
 	spin_lock_irqsave(&xmm_lock, flags);
-	/* Clear wakeup pending flag */
 	wakeup_pending = false;
 	spin_unlock_irqrestore(&xmm_lock, flags);
 
@@ -1429,21 +1427,18 @@ static int baseband_xmm_power_driver_handle_resume(
 	if (value) {
 		pr_info("AP L3 -> L0\n");
 		pr_debug("waiting for host wakeup...\n");
-		timeout = jiffies + msecs_to_jiffies(delay);
 		/* wake bb */
 		gpio_set_value(data->modem.xmm.ipc_bb_wake, 1);
-		pr_debug("Set bb_wake high ->\n");
 		do {
-			udelay(100);
+			mdelay(1);
 			value = gpio_get_value(data->modem.xmm.ipc_ap_wake);
-			if (!value)
-				break;
-		} while (time_before(jiffies, timeout));
-		if (!value) {
+			delay--;
+		} while ((value) && (delay));
+		if (delay)
 			pr_debug("gpio host wakeup low <-\n");
-		}
 		else
 			pr_info("!!AP L3->L0 Failed\n");
+
 	} else {
 		pr_info("CP L3 -> L0\n");
 	}
