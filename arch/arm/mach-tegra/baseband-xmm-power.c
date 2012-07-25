@@ -1224,10 +1224,10 @@ static int baseband_xmm_power_driver_probe(struct platform_device *device)
 	unsigned long flags;
 	int err, ret=0;
 
-	 pr_info(MODULE_NAME"%s 0316 hr_sleep and jiffe - CPU Freq. \n", __func__);
-	 pr_info(MODULE_NAME"enum_delay_ms=%ld\n", enum_delay_ms);
+	pr_debug("%s\n", __func__);
+	pr_debug("[XMM] enum_delay_ms=%ld\n", enum_delay_ms);
+
 	 htcpcbid=htc_get_pcbid_info();
-	 pr_info(MODULE_NAME"htcpcbid=%d\n", htcpcbid);
 
 	/* check for platform data */
 	if (!data)
