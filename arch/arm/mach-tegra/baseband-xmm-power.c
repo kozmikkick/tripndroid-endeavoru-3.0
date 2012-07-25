@@ -1255,104 +1255,60 @@ static int baseband_xmm_power_driver_probe(struct platform_device *device)
 	/* init spin lock */
 	spin_lock_init(&xmm_lock);
 	/* request baseband gpio(s) */
-	tegra_baseband_gpios[0].gpio = baseband_power_driver_data
-		->modem.xmm.bb_rst;
-	tegra_baseband_gpios[1].gpio = baseband_power_driver_data
-		->modem.xmm.bb_on;
-	tegra_baseband_gpios[2].gpio = baseband_power_driver_data
-		->modem.xmm.ipc_bb_wake;
-	tegra_baseband_gpios[3].gpio = baseband_power_driver_data
-		->modem.xmm.ipc_ap_wake;
-	tegra_baseband_gpios[4].gpio = baseband_power_driver_data
-		->modem.xmm.ipc_hsic_active;
-	tegra_baseband_gpios[5].gpio = baseband_power_driver_data
-		->modem.xmm.ipc_hsic_sus_req;
-
-	/*HTC request these gpio on probe only, config them when running power_on/off function*/
-	err = gpio_request_only_array(tegra_baseband_gpios,
-		ARRAY_SIZE(tegra_baseband_gpios));
+	tegra_baseband_gpios[0].gpio = data->modem.xmm.bb_rst;
+	tegra_baseband_gpios[1].gpio = data->modem.xmm.bb_on;
+	tegra_baseband_gpios[2].gpio = data->modem.xmm.ipc_bb_wake;
+	tegra_baseband_gpios[3].gpio = data->modem.xmm.ipc_ap_wake;
+	tegra_baseband_gpios[4].gpio = data->modem.xmm.ipc_hsic_active;
+	tegra_baseband_gpios[5].gpio = data->modem.xmm.ipc_hsic_sus_req;
+	err = gpio_request_array(tegra_baseband_gpios,
+				ARRAY_SIZE(tegra_baseband_gpios));
 	if (err < 0) {
 		pr_err("%s - request gpio(s) failed\n", __func__);
 		return -ENODEV;
 	}
-#if 1/*HTC*/
-	//assing for usb
-	tegra_baseband_gpios_power_off_modem[0].gpio = baseband_power_driver_data
-		->modem.xmm.bb_rst;
-	tegra_baseband_gpios_power_off_modem[1].gpio = baseband_power_driver_data
-		->modem.xmm.bb_on;
-	tegra_baseband_gpios_power_off_modem[2].gpio = baseband_power_driver_data
-		->modem.xmm.ipc_bb_wake;
-	tegra_baseband_gpios_power_off_modem[3].gpio = baseband_power_driver_data
-		->modem.xmm.ipc_ap_wake;
-	tegra_baseband_gpios_power_off_modem[4].gpio = baseband_power_driver_data
-		->modem.xmm.ipc_hsic_active;
-	tegra_baseband_gpios_power_off_modem[5].gpio = baseband_power_driver_data
-		->modem.xmm.ipc_hsic_sus_req;
-	//request UART
-	pr_debug("%s request UART\n", __func__);
-	err =gpio_request(TEGRA_GPIO_PJ7, "IMC_UART_TX");
-	err =gpio_request(TEGRA_GPIO_PK7, "IMC_UART_RTS");
-	err =gpio_request(TEGRA_GPIO_PB0  ,"IMC_UART_RX");
-	err =gpio_request(TEGRA_GPIO_PB1, "IMC_UART_CTS");
-
-	pr_debug("%s pull UART o d\n", __func__);
-	//for power consumation
-	//all the needed config put on power_on function
-	pr_debug("%s config_gpio_for_power_off\n", __func__);
-	err=config_gpio_for_power_off();
-	if (err < 0) {
-		pr_err("%s - config_gpio_for_power_off gpio(s)\n", __func__);
-		return -ENODEV;
-	}
-#endif/*HTC*/
 
 	/* request baseband irq(s) */
 	if (modem_flash && modem_pm) {
-		pr_info("%s: request_irq IPC_AP_WAKE_IRQ\n", __func__);
+		pr_debug("%s: request_irq IPC_AP_WAKE_IRQ\n", __func__);
 		ipc_ap_wake_state = IPC_AP_WAKE_UNINIT;
 		err = request_threaded_irq(
-			gpio_to_irq(data->modem.xmm.ipc_ap_wake),
-			baseband_xmm_power_ipc_ap_wake_irq,
-			NULL,
-			IRQF_TRIGGER_RISING | IRQF_TRIGGER_FALLING,
-			"IPC_AP_WAKE_IRQ",
-			NULL);
+				gpio_to_irq(data->modem.xmm.ipc_ap_wake),
+				NULL, baseband_xmm_power_ipc_ap_wake_irq,
+				IRQF_TRIGGER_RISING | IRQF_TRIGGER_FALLING,
+				"IPC_AP_WAKE_IRQ", NULL);
 		if (err < 0) {
 			pr_err("%s - request irq IPC_AP_WAKE_IRQ failed\n",
 				__func__);
 			return err;
 		}
-		ipc_ap_wake_state = IPC_AP_WAKE_IRQ_READY;
-		if (modem_ver >= XMM_MODEM_VER_1130) {
-			pr_debug("%s: ver > 1130: AP_WAKE_INIT1\n", __func__);
-			ipc_ap_wake_state = IPC_AP_WAKE_INIT1;
-		}
+		err = enable_irq_wake(gpio_to_irq(
+					data->modem.xmm.ipc_ap_wake));
+		if (err < 0)
+			pr_err("%s: enable_irq_wake error\n", __func__);
+
+		pr_debug("%s: AP_WAKE_INIT1\n", __func__);
+		/* ver 1130 or later starts in INIT1 state */
+		ipc_ap_wake_state = IPC_AP_WAKE_INIT1;
 	}
 
 	/* init work queue */
-	workqueue = create_singlethread_workqueue
-		("baseband_xmm_power_workqueue");
+	workqueue = create_singlethread_workqueue("baseband_xmm_power_workqueue");
 	if (!workqueue) {
 		pr_err("cannot create workqueue\n");
-		return -1;
+		return -ENOMEM;
 	}
-	 workqueue_susp = alloc_workqueue("baseband_xmm_power_autosusp", WQ_UNBOUND | WQ_HIGHPRI | WQ_NON_REENTRANT, 1);
-	if (!workqueue_susp) {
-	  pr_err("cannot create workqueue_susp\n");
-	  return -1;
-      }
+
 	baseband_xmm_power_work = (struct baseband_xmm_power_work_t *)
 		kmalloc(sizeof(struct baseband_xmm_power_work_t), GFP_KERNEL);
 	if (!baseband_xmm_power_work) {
 		pr_err("cannot allocate baseband_xmm_power_work\n");
-		return -1;
+		return -ENOMEM;
 	}
-	INIT_WORK((struct work_struct *) baseband_xmm_power_work,
-		baseband_xmm_power_work_func);
+
+	INIT_WORK((struct work_struct *) baseband_xmm_power_work, baseband_xmm_power_work_func);
 	baseband_xmm_power_work->state = BBXMM_WORK_INIT;
-	queue_work(workqueue,
-		(struct work_struct *) baseband_xmm_power_work);
+	queue_work(workqueue, (struct work_struct *) baseband_xmm_power_work);
 
 	/* init work objects */
 	INIT_WORK(&init1_work, baseband_xmm_power_init1_work);
@@ -1373,14 +1329,14 @@ static int baseband_xmm_power_driver_probe(struct platform_device *device)
 	register_pm_notifier(&baseband_xmm_power_pm_notifier);
 
 	/*set Radio fatal Pin PN2 to OutPut Low*/
-	ret=gpio_direction_output(TEGRA_GPIO_PN2,0);
-	if (ret < 0)
-		pr_err("%s: set Radio fatal Pin to Output error\n", __func__);
+//	ret=gpio_direction_output(TEGRA_GPIO_PN2,0);
+//	if (ret < 0)
+//		pr_err("%s: set Radio fatal Pin to Output error\n", __func__);
 
 	/*set BB2AP_SUSPEND_REQ Pin (TEGRA_GPIO_PV0) to OutPut Low*/
-	ret=gpio_direction_output(TEGRA_GPIO_PV0,0);
-	if (ret < 0)
-		pr_err("%s: set BB2AP_SUSPEND_REQ Pin to Output error\n", __func__);
+//	ret=gpio_direction_output(TEGRA_GPIO_PV0,0);
+//	if (ret < 0)
+//		pr_err("%s: set BB2AP_SUSPEND_REQ Pin to Output error\n", __func__);
 
 	//Request SIM det to wakeup Source wahtever in flight mode on/off
 	/*For SIM det*/
@@ -1390,6 +1346,7 @@ static int baseband_xmm_power_driver_probe(struct platform_device *device)
 		pr_err("%s: enable_irq_wake error\n", __func__);
 
 	pr_debug("%s }\n", __func__);
+
 	return 0;
 }
 
