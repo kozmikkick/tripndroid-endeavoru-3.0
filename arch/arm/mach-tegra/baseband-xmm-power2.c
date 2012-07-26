@@ -115,8 +115,7 @@ static struct htc_modem_info modem_info;
 
 #endif /* BB_XMM_OEM1 */
 
-static irqreturn_t baseband_xmm_power2_ver_lt_1130_ipc_ap_wake_irq2
-	(int irq, void *dev_id)
+static irqreturn_t baseband_xmm_power2_ver_lt_1130_ipc_ap_wake_irq2(int irq, void *dev_id)
 {
 	int value;
 
@@ -126,49 +125,24 @@ static irqreturn_t baseband_xmm_power2_ver_lt_1130_ipc_ap_wake_irq2
 	if (!baseband_power2_driver_data)
 		return IRQ_HANDLED;
 
-	value = gpio_get_value(baseband_power2_driver_data->
-		modem.xmm.ipc_ap_wake);
+	value = gpio_get_value(baseband_power2_driver_data->modem.xmm.ipc_ap_wake);
 
 	/* IPC_AP_WAKE state machine */
-	if (ipc_ap_wake_state < IPC_AP_WAKE_IRQ_READY) {
+	if (unlikely(ipc_ap_wake_state < IPC_AP_WAKE_IRQ_READY))
 		pr_err("%s - spurious irq\n", __func__);
-	} else if (ipc_ap_wake_state == IPC_AP_WAKE_IRQ_READY) {
+	else if (ipc_ap_wake_state == IPC_AP_WAKE_IRQ_READY) {
 		if (!value) {
-			pr_debug("%s - IPC_AP_WAKE_INIT1"
-				" - got falling edge\n",
-				__func__);
-			/* go to IPC_AP_WAKE_INIT1 state */
-			ipc_ap_wake_state = IPC_AP_WAKE_INIT1;
-			/* queue work */
-			baseband_xmm_power2_work->state =
-				BBXMM_WORK_INIT_FLASHLESS_PM_VER_LT_1130_STEP1;
-			queue_work(workqueue, (struct work_struct *)
-				baseband_xmm_power2_work);
-		} else {
-			pr_debug("%s - IPC_AP_WAKE_INIT1"
-				" - wait for falling edge\n",
-				__func__);
-		}
-	} else if (ipc_ap_wake_state == IPC_AP_WAKE_INIT1) {
-		if (!value) {
-			pr_debug("%s - IPC_AP_WAKE_INIT2"
-				" - wait for rising edge\n",
-				__func__);
-		} else {
-			pr_debug("%s - IPC_AP_WAKE_INIT2"
-				" - got rising edge\n",
+			pr_debug("%s: IPC_AP_WAKE_INIT1 got falling edge\n",
 				__func__);
 			/* go to IPC_AP_WAKE_INIT2 state */
 			ipc_ap_wake_state = IPC_AP_WAKE_INIT2;
 			/* queue work */
-			baseband_xmm_power2_work->state =
-				BBXMM_WORK_INIT_FLASHLESS_PM_VER_LT_1130_STEP2;
-			queue_work(workqueue, (struct work_struct *)
-				baseband_xmm_power2_work);
-		}
+			baseband_xmm_power2_work->state = BBXMM_WORK_INIT_FLASHLESS_PM_VER_LT_1130_STEP2;
+			queue_work(workqueue, (struct work_struct *) baseband_xmm_power2_work);
+		} else
+			pr_debug("%s: IPC_AP_WAKE_INIT1"
+				" wait for falling edge\n", __func__);
 	} else {
-		value = gpio_get_value(baseband_power2_driver_data->
-			modem.xmm.ipc_ap_wake);
 		if (!value) {
 			pr_debug("%s - falling\n", __func__);
 			ipc_ap_wake_state = IPC_AP_WAKE_L;
