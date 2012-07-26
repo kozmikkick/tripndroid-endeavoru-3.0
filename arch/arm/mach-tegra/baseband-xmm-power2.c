@@ -257,16 +257,13 @@ static void baseband_xmm_power2_flashless_pm_ver_ge_1130_step1(struct work_struc
 	pr_info("%s }\n", __func__);
 }
 
-static void baseband_xmm_power2_flashless_pm_ver_ge_1130_step2
-	(struct work_struct *work)
+static void baseband_xmm_power2_flashless_pm_ver_ge_1130_step2(struct work_struct *work)
 {
 	int X = XYZ / 1000000;
 	int Y = XYZ / 1000 - X * 1000;
 	int Z = XYZ % 1000;
 
 	pr_info("%s {\n", __func__);
-
-	pr_info("XYZ=%ld X=%d Y=%d Z=%d\n", XYZ, X, Y, Z);
 
 	/* check for platform data */
 	if (!baseband_power2_driver_data)
@@ -277,8 +274,7 @@ static void baseband_xmm_power2_flashless_pm_ver_ge_1130_step2
 
 	/* register usb host controller */
 	if (baseband_power2_driver_data->hsic_register)
-		baseband_power2_driver_data->modem.xmm.hsic_device =
-			baseband_power2_driver_data->hsic_register();
+		baseband_power2_driver_data->modem.xmm.hsic_device = baseband_power2_driver_data->hsic_register();
 	else
 		pr_err("%s: hsic_register is missing\n", __func__);
 
@@ -286,15 +282,10 @@ static void baseband_xmm_power2_flashless_pm_ver_ge_1130_step2
 	msleep(Z);
 
 	/* set IPC_HSIC_ACTIVE high */
-	gpio_set_value(baseband_power2_driver_data->
-		modem.xmm.ipc_hsic_active, 1);
-
-	/* printk(KERN_INFO"Mark recovery STEP3 %s \n", __func__); */
+	gpio_set_value(baseband_power2_driver_data->modem.xmm.ipc_hsic_active, 1);
 
 	/* queue work function to check if enumeration succeeded */
-	/* recovery behavior */
-	baseband_xmm_power2_work->state =
-		BBXMM_WORK_INIT_FLASHLESS_PM_VER_GE_1130_STEP3;
+	baseband_xmm_power2_work->state = BBXMM_WORK_INIT_FLASHLESS_PM_VER_GE_1130_STEP3;
 	queue_work(workqueue, (struct work_struct *)
 		baseband_xmm_power2_work);
 	pr_info("%s }\n", __func__);
