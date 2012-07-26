@@ -291,33 +291,6 @@ static void baseband_xmm_power2_flashless_pm_ver_ge_1130_step2(struct work_struc
 	pr_info("%s }\n", __func__);
 }
 
-#define FILE_EXIST 0
-#define FILE_NOT_EXIST -1
-static int file_open_check(const char *file)
-{
-	mm_segment_t oldfs;
-	struct file *filp;
-	int ret = FILE_EXIST;
-
-	oldfs = get_fs();
-	set_fs(KERNEL_DS);
-
-	filp = filp_open(file,
-		O_RDONLY, 0);
-	if (IS_ERR(filp) || (filp == NULL)) {
-		pr_info("open %s %ld\n", file, PTR_ERR(filp));
-		ret = FILE_NOT_EXIST;
-		goto open_fail;
-	}
-
-	/* open success */
-	filp_close(filp, NULL);
-
-open_fail:
-	set_fs(oldfs);
-	return ret;
-}
-
 static void baseband_xmm_power2_flashless_pm_ver_ge_1130_step3
 	(struct work_struct *work)
 {
