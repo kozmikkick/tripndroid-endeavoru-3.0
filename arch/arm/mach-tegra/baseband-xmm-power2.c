@@ -59,10 +59,6 @@ static void htc_modem_kobject_release(struct kobject *kobj)
     return;
 }
 
-static struct kobj_type htc_modem_ktype = {
-    .release = htc_modem_kobject_release,
-};
-
 static unsigned long XYZ = 1000 * 1000000 + 800 * 1000 + 500;
 
 module_param(modem_ver, ulong, 0644);
@@ -155,82 +151,6 @@ static irqreturn_t baseband_xmm_power2_ver_ge_1130_ipc_ap_wake_irq2(int irq, voi
 
 	return IRQ_HANDLED;
 }
-
-#ifdef BB_XMM_OEM1
-
-/*SIM detection IRQ*/
-static void radio_detect_work_handler(struct work_struct *work)
-{
-	int radiopower=0;
-	char message[20] = "RADIO=";
-	char *envp[] = { message, NULL };
-	int status;
-
-	pr_info("Enter radio_detect_work_handler\n");
-
-	/* Sleep 30 ms and then check if radio is turn off */
-	msleep(30);
-	radiopower =gpio_get_value(TEGRA_GPIO_PM4);
-
-	if (!radiopower) {
-		pr_info("radio is off, it's not coredump interrupt\n");
-		return;
-	}
-
-	if (!baseband_power2_driver_data) {
-		pr_info("baseband_power2_driver_data is null\n");
-		return ;
-	}
-
-	status = gpio_get_value(CORE_DUMP_DETECT);
-
-	pr_info("CORE_DUMP_DETECT = %d\n", status);
-		if (status) {
-			pr_info("CORE_DUMP_DETECT=High, Normal\n");
-			return ;
-		}
-		else {
-			strncat(message, "FATAL", 5);
-			pr_info("CORE_DUMP_DETECT=Low, radio fatal!!\n");
-		}
-
-    pr_info("[FLS] coredump uevent\n");
-    kobject_uevent_env(&modem_info.modem_core_dump_kobj, KOBJ_ADD,envp);
-
-}
-
-/*radio detection IRQ*/
-
-static irqreturn_t radio_det_irq(int irq, void *dev_id)
-{
-   int value = 0;
-
-		if (!baseband_power2_driver_data)
-    {
-			pr_info("no baseband_power2_driver_data\n");
-			return IRQ_HANDLED;
-		}
-
-    if (radio_detect_status < RADIO_STATUS_READY) {
-	pr_err("%s - spurious irq\n", __func__);
-    } else {
-	value = gpio_get_value(CORE_DUMP_DETECT/* 69*/);
-	if (!value) {
-	    pr_info("%s - falling\n", __func__);
-	    radio_detect_status = RADIO_STATUS_FATAL;
-	} else {
-	    pr_info("%s - rising\n", __func__);
-	    radio_detect_status = RADIO_STATUS_READY;
-	}
-    }
-    if (!value) {
-     queue_work(workqueue, &radio_detect_work_struct);
-   } else {
-    pr_info("rising is ignored");
-	}
-    return IRQ_HANDLED;
-}
-#endif /* BB_XMM_OEM1 */
 
 static void baseband_xmm_power2_flashless_pm_ver_ge_1130_step1(struct work_struct *work)
 {
@@ -476,11 +396,6 @@ static int baseband_xmm_power2_driver_probe(struct platform_device *device)
 		= (struct baseband_power_platform_data *)
 			device->dev.platform_data;
 
-	int err=0;
-	int err_radio;
-
-	pr_debug("%s 0309 - CPU Freq with data protect.\n", __func__);
-
 	if (data == NULL) {
 		pr_err("%s: no platform data\n", __func__);
 		return -EINVAL;
@@ -493,59 +408,12 @@ static int baseband_xmm_power2_driver_probe(struct platform_device *device)
 	/* save platform data */
 	baseband_power2_driver_data = data;
 
-	/* OEM specific initialization */
-#ifdef BB_XMM_OEM1
-		kobj_hsic_device =
-			 kobject_get(&baseband_power2_driver_data->modem.xmm.hsic_device->dev.kobj);
-		if (!kobj_hsic_device) {
-			pr_err("[FLS] can not get modem_kobject\n");
-			goto fail;
-		}
-
-		/* radio detect*/
-		radio_detect_status = RADIO_STATUS_UNKNOWN;
-		err_radio = request_irq(gpio_to_irq(CORE_DUMP_DETECT),
-			radio_det_irq,
-			/*IRQF_TRIGGER_RISING |*/ IRQF_TRIGGER_FALLING,
-			"RADIO_DETECT",
-			&modem_info);
-
-		if (err_radio < 0) {
-			pr_err("%s - request irq RADIO_DETECT failed\n",
-				__func__);
-			//return err;
-		}
-		radio_detect_status = RADIO_STATUS_READY;
-		err_radio = gpio_get_value(CORE_DUMP_DETECT/* 106*/);
-		pr_info("gpio CORE_DUMP_DETECT value is %d\n", err_radio);
-		modem_kset_radio = kset_create_and_add("modem_coreDump", NULL, kobj_hsic_device);
-		if (!modem_kset_radio) {
-			kobject_put(kobj_hsic_device);
-			pr_err("[FLS] can not allocate modem_kset_radiomodem_kset_radio%d\n", err);
-			goto fail;
-		}
-		pr_info("init and add core dump into kobject\n");
-		modem_info.modem_core_dump_kobj.kset = modem_kset_radio;
-		err = kobject_init_and_add(&modem_info.modem_core_dump_kobj,
-			&htc_modem_ktype, NULL, "htc_modem_radioio_det");
-		if (err) {
-			pr_err("init kobject modem_kset_radio failed.");
-			kobject_put(&modem_info.modem_core_dump_kobj);
-			kset_unregister(modem_kset_radio);
-			modem_kset_radio = NULL;
-			kobject_put(kobj_hsic_device);
-			goto fail;
-
-		}
-#endif /* BB_XMM_OEM1 */
-
 	/* init work queue */
 	pr_debug("%s: init work queue\n", __func__);
-	workqueue = create_singlethread_workqueue
-		("baseband_xmm_power2_workqueue");
-	if (!workqueue) {
-		pr_err("cannot create workqueue\n");
-		return -1;
+	workqueue = create_singlethread_workqueue("baseband_xmm_power2_workqueue");
+	if (unlikely(!workqueue)) {
+		pr_err("%s: cannot create workqueue\n", __func__);
+		return -ENOMEM;
 	}
 	baseband_xmm_power2_work = (struct baseband_xmm_power_work_t *)
 		kmalloc(sizeof(struct baseband_xmm_power_work_t), GFP_KERNEL);
@@ -553,18 +421,12 @@ static int baseband_xmm_power2_driver_probe(struct platform_device *device)
 		pr_err("cannot allocate baseband_xmm_power2_work\n");
 		return -1;
 	}
+	/* init work */
 	pr_debug("%s: BBXMM_WORK_INIT\n", __func__);
-	INIT_WORK((struct work_struct *) baseband_xmm_power2_work,
-		baseband_xmm_power2_work_func);
+	INIT_WORK((struct work_struct *) baseband_xmm_power2_work, baseband_xmm_power2_work_func);
 	baseband_xmm_power2_work->state = BBXMM_WORK_INIT;
 	queue_work(workqueue,
 		(struct work_struct *) baseband_xmm_power2_work);
-
-	/* OEM specific - init work queue */
-#ifdef BB_XMM_OEM1
-	INIT_WORK(&radio_detect_work_struct, radio_detect_work_handler);
-fail:
-#endif /* BB_XMM_OEM1 */
 
 	return 0;
 }
