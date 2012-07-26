@@ -151,7 +151,6 @@ static struct regulator *cam_a2v85_en = NULL;
 static struct regulator *cam_d1v2_en = NULL;
 static struct regulator *cam2_d1v2_en = NULL;
 
-#ifndef CONFIG_TEGRA_INTERNAL_TSENSOR_EDP_SUPPORT
 static int nct_get_temp(void *_data, long *temp)
 {
 	struct nct1008_data *data = _data;
@@ -211,22 +210,18 @@ static void nct1008_probe_callback(struct nct1008_data *data)
 
 	tegra_thermal_set_device(thermal_device);
 }
-#endif
 
 static struct nct1008_platform_data enterprise_nct1008_pdata = {
 	.supported_hwrev = true,
 	.ext_range = true,
 	.conv_rate = 0x08,
 	.offset = 8, /* 4 * 2C. Bug 844025 - 1C for device accuracies */
-#ifndef CONFIG_TEGRA_INTERNAL_TSENSOR_EDP_SUPPORT
 	.probe_callback = nct1008_probe_callback,
-#endif
 };
 
 static struct i2c_board_info enterprise_i2c4_nct1008_board_info[] = {
 	{
 		I2C_BOARD_INFO("nct1008", 0x4C),
-		//.irq = TEGRA_GPIO_TO_IRQ(TEGRA_GPIO_PH7),
 		.irq = TEGRA_GPIO_TO_IRQ(TEGRA_GPIO_PCC2),
 		.platform_data = &enterprise_nct1008_pdata,
 	}
@@ -236,23 +231,7 @@ static void enterprise_nct1008_init(void)
 {
 	int ret;
 
-#if 0
-	tegra_gpio_enable(TEGRA_GPIO_PH7);
-	ret = gpio_request(TEGRA_GPIO_PH7, "temp_alert");
-	if (ret < 0) {
-		pr_err("%s: gpio_request failed %d\n", __func__, ret);
-		return;
-	}
-
-	ret = gpio_direction_input(TEGRA_GPIO_PH7);
-	if (ret < 0) {
-		pr_err("%s: gpio_direction_input failed %d\n", __func__, ret);
-		gpio_free(TEGRA_GPIO_PH7);
-		return;
-	}
-#endif
-
-tegra_gpio_enable(TEGRA_GPIO_PCC2);
+	tegra_gpio_enable(TEGRA_GPIO_PCC2);
 	ret = gpio_request(TEGRA_GPIO_PCC2, "temp_alert");
 	if (ret < 0) {
 		pr_err("%s: gpio_request failed %d\n", __func__, ret);
@@ -269,6 +248,7 @@ tegra_gpio_enable(TEGRA_GPIO_PCC2);
 	i2c_register_board_info(4, enterprise_i2c4_nct1008_board_info,
 				ARRAY_SIZE(enterprise_i2c4_nct1008_board_info));
 }
+
 void config_ruby_gyro_diag_gpios(bool pulldown)
 {
 /*
