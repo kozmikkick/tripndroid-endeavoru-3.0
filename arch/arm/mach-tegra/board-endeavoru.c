@@ -1645,7 +1645,6 @@ static void enterprise_modem_init(void)
 		tegra_gpio_enable(BB_VDD_EN);
 		tegra_gpio_enable(AP2BB_RST_PWRDWNn);
 		tegra_gpio_enable(BB_GPIO_RESET_AP2BB);
-		tegra_gpio_enable(BB_GPIO_MDM_PWRON_AP2BB);
 
 		/* enable XMM6260 baseband gpio(s) */
 		tegra_gpio_enable(tegra_baseband_power_data.modem.generic
