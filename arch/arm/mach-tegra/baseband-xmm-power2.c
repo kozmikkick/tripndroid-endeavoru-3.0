@@ -41,24 +41,6 @@ MODULE_LICENSE("GPL");
 #define CORE_DUMP_DETECT TEGRA_GPIO_PN2
 #define DEBUG_LOG_LENGTH 1024
 
-static enum {
-	RADIO_STATUS_UNKNOWN,
-	RADIO_STATUS_READY,
-	RADIO_STATUS_FATAL,
-	RADIO_STATUS_MAX,
-} radio_detect_status;
-
-static struct work_struct radio_detect_work_struct;
-
-static struct kset *modem_kset_radio;
-static struct kobject* kobj_hsic_device;
-
-static void htc_modem_kobject_release(struct kobject *kobj)
-{
-    pr_err("htc_modem_kobject_release.\n");
-    return;
-}
-
 static unsigned long XYZ = 1000 * 1000000 + 800 * 1000 + 500;
 
 module_param(modem_ver, ulong, 0644);
