@@ -428,75 +428,48 @@ static int baseband_xmm_power_on(struct platform_device *device)
 
 static int baseband_xmm_power_off(struct platform_device *device)
 {
-	struct baseband_power_platform_data *data;
-	int ret; /* HTC: ENR#U wakeup src fix */
+	struct baseband_power_platform_data *data
+		= (struct baseband_power_platform_data *)
+			device->dev.platform_data;
+
+	int ret;
 	unsigned long flags;
 
 	pr_debug("%s {\n", __func__);
 
-	if (baseband_xmm_powerstate == BBXMM_PS_UNINIT) {
-		pr_err("%s: baseband_xmm_powerstate != BBXMM_PS_UNINIT\n",
-			__func__);
+	if (baseband_xmm_powerstate == BBXMM_PS_UNINIT)
 		return -EINVAL;
-	}
-
 	/* check for device / platform data */
 	if (!device) {
 		pr_err("%s: !device\n", __func__);
 		return -EINVAL;
 	}
-	data = (struct baseband_power_platform_data *)
-		device->dev.platform_data;
 	if (!data) {
-		pr_err("%s: !data\n", __func__);
+		pr_err("%s: !pdata\n", __func__);
 		return -EINVAL;
 	}
 	
 	ipc_ap_wake_state = IPC_AP_WAKE_UNINIT;
-	/* Set this flag to have proper flash-less first enumearation */
-	register_hsic_device = true;
-
-
-	/* HTC: ENR#U wakeup src fix */
-	pr_info("%s: Disable SIM DET ,before disable irq wake \n", __func__);
 	ret = disable_irq_wake(gpio_to_irq(data->modem.xmm.ipc_ap_wake));
 	if (ret < 0)
 		pr_err("%s: disable_irq_wake error\n", __func__);
-#if 1
-	/*HTC for RADIO FATAL*/
-	pr_info("%s: before disable irq wake RADIO FATAL\n", __func__);
-	ret = disable_irq_wake(gpio_to_irq(TEGRA_GPIO_PN2));
-	if (ret < 0)
-		pr_err("%s: disable_irq_wake error\n", __func__);
-#endif
+
 	/* unregister usb host controller */
-	pr_info("%s: hsic device: unregisterd\n", __func__);
 	if (data->hsic_unregister)
 		data->hsic_unregister(data->modem.xmm.hsic_device);
 	else
 		pr_err("%s: hsic_unregister is missing\n", __func__);
 
 	/* set IPC_HSIC_ACTIVE low */
-	gpio_set_value(baseband_power_driver_data->
-		modem.xmm.ipc_hsic_active, 0);
+	gpio_set_value(data->modem.xmm.ipc_hsic_active, 0);
 
 	/* wait 20 ms */
-	msleep(20);
+	mdelay(20);
 
-	//msleep(1);
-	msleep(20);
+	/* drive bb_rst low */
+	gpio_set_value(data->modem.xmm.bb_rst, 0);
+	mdelay(1);
 
-	gpio_set_value(BB_VDD_EN, 0); /* turn off the modem power */
-	msleep(68);//for IMC Modem discharge.
-
-#if 1/*HTC*/
-
-	//for power consumation
-	config_gpio_for_power_off();
-	pr_debug("%s config_gpio_for_power_off\n", __func__);
-#endif
-	/* HTC: remove platfrom_set_flight_mode_onoff for ENR */
-	/* platfrom_set_flight_mode_onoff(true); */
 	baseband_xmm_powerstate = BBXMM_PS_UNINIT;
 	modem_sleep_flag = false;
 	CP_initiated_L2toL0 = false;
@@ -504,17 +477,10 @@ static int baseband_xmm_power_off(struct platform_device *device)
 	wakeup_pending = false;
 	system_suspending = false;
 	spin_unlock_irqrestore(&xmm_lock, flags);
+	/* start registration process once again on xmm on */
+	register_hsic_device = true;
 
-	/*set Radio fatal Pin to OutPut Low*/
-	ret=gpio_direction_output(TEGRA_GPIO_PN2,0);
-	if (ret < 0)
-			pr_err("%s: set Radio fatal Pin to Output error\n", __func__);
-
-	/*set BB2AP_SUSPEND_REQ Pin (TEGRA_GPIO_PV0) to OutPut Low*/
-	ret=gpio_direction_output(TEGRA_GPIO_PV0,0);
-	if (ret < 0)
-			pr_err("%s: set BB2AP_SUSPEND_REQ Pin to Output error\n", __func__);	
-
+	config_gpio_for_power_off();
 	pr_debug("%s }\n", __func__);
 
 	return 0;
