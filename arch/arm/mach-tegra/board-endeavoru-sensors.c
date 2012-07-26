@@ -323,12 +323,7 @@ static struct i2c_board_info i2c_akm8975_devices_xc[] = {
 };
 
 /* MPU board file definition	*/
-#if (MPU_GYRO_TYPE == MPU_TYPE_MPU3050)
 #define MPU_GYRO_NAME		"mpu3050"
-#endif
-#if (MPU_GYRO_TYPE == MPU_TYPE_MPU6050)
-#define MPU_GYRO_NAME		"mpu6050"
-#endif
 static struct mpu_platform_data mpu_gyro_data = {
 	.int_config	= 0x10,
 	.level_shifter	= 0,
