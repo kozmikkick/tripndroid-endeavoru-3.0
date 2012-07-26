@@ -1638,7 +1638,6 @@ static struct platform_device simhotswap_device = {
 
 static void enterprise_modem_init(void)
 {
-	int ret;
 
 		pr_info("%s: enable baseband gpio(s)\n", __func__);
 
@@ -1665,24 +1664,6 @@ static void enterprise_modem_init(void)
 		platform_device_register(&tegra_baseband_power2_device);
 
 		platform_device_register(&simhotswap_device);
-		
-		// TEGRA_GPIO_PI5
-		printk(KERN_INFO"%s: gpio config for sim_det#.", __func__);
-
-		ret = gpio_request(TEGRA_GPIO_PI5, "sim_det#");
-		if (ret < 0)
-			pr_err("[FLT] %s: gpio_request failed for gpio %s\n",
-				__func__, "sin_init");
-		ret = gpio_direction_input(TEGRA_GPIO_PI5);
-
-
-		if (ret < 0) {
-			pr_err("[FLT] %s: gpio_direction_output failed %d\n", __func__, ret);
-			gpio_free(TEGRA_GPIO_PI5);
-			return;
-		}
-		tegra_gpio_enable(TEGRA_GPIO_PI5);
-		gpio_export(TEGRA_GPIO_PI5, true);
 }
 
 static void enterprise_baseband_init(void)
