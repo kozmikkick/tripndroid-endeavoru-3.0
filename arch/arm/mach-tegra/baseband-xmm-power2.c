@@ -490,19 +490,7 @@ static struct platform_driver baseband_power2_driver = {
 
 static int __init baseband_xmm_power2_init(void)
 {
-	pr_info(MODULE_NAME "%s 0219 - \n", __func__);
-
-#ifdef BB_XMM_OEM1
-    modem_info.device_id = -1;
-    modem_info.is_flashless = 0;
-
-    mutex_init(&modem_info.info_lock);
-    modem_info.is_open = 0;
-
-    wake_lock_init(&modem_info.modem_wake_lock, WAKE_LOCK_SUSPEND,
-	                            "htc_modem_6260");
-#endif /* BB_XMM_OEM1 */
-
+	pr_debug("%s\n", __func__);
 	return platform_driver_register(&baseband_power2_driver);
 }
 
