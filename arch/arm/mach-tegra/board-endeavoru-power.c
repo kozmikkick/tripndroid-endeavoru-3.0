@@ -389,7 +389,14 @@ static struct regulator_consumer_supply fixed_reg_vdd_fuse_en_supply[] = {
 //	REGULATOR_SUPPLY("lcd_vddio_en", NULL),
 //};
 
-/* TripNRaVeR: disable sdmmc_vdd_sel for now
+/* LCD-D17 (GPIO M1) from T30*/
+static struct regulator_consumer_supply gpio_reg_sdmmc3_vdd_sel_supply[] = {
+	REGULATOR_SUPPLY("vddio_sdmmc3_2v85_1v8", NULL),
+	REGULATOR_SUPPLY("sdmmc3_compu_pu", NULL),
+	REGULATOR_SUPPLY("vddio_sdmmc", "sdhci-tegra.2"),
+	REGULATOR_SUPPLY("vsys_3v7", NULL),
+};
+
 static struct gpio_regulator_state gpio_reg_sdmmc3_vdd_sel_states[] = {
 	{
 		.gpios = 0,
@@ -408,7 +415,6 @@ static struct gpio gpio_reg_sdmmc3_vdd_sel_gpios[] = {
 		.label = "sdmmc3_vdd_sel",
 	},
 };
-*/
 
 /* Macro for defining gpio regulator device data */
 #define GPIO_REG(_id, _name, _input_supply, _active_high,		\
@@ -452,8 +458,8 @@ static struct gpio gpio_reg_sdmmc3_vdd_sel_gpios[] = {
 		},							\
 	}
 
-//GPIO_REG(4, sdmmc3_vdd_sel,  tps80031_rails(SMPS4),
-//		true, false, 0, 1000, 3300);
+GPIO_REG(4, sdmmc3_vdd_sel,  tps80031_rails(SMPS4),
+		true, false, 0, 1000, 3300);
 
 /* Macro for defining fixed regulator sub device data */
 #define FIXED_REG(_id, _name, _input_supply, _gpio_nr, _active_high,	\
@@ -547,10 +553,10 @@ static struct platform_device *fixed_regs_devices_a03[] = {
 	ADD_FIXED_REG(vdd_fuse_en),
 };
 
-//#define ADD_GPIO_REG(_name) (&gpio_reg_##_name##_dev)
-//static struct platform_device *gpio_regs_devices[] = {
-//	ADD_GPIO_REG(sdmmc3_vdd_sel),
-//};
+#define ADD_GPIO_REG(_name) (&gpio_reg_##_name##_dev)
+static struct platform_device *gpio_regs_devices[] = {
+	ADD_GPIO_REG(sdmmc3_vdd_sel),
+};
 
 static int __init enterprise_fixed_regulator_init(void)
 {
@@ -572,7 +578,7 @@ static int __init enterprise_fixed_regulator_init(void)
 	}
 	return platform_add_devices(fixed_regs_devices, nfixreg_devs);
 }
-#if 0
+
 static int __init enterprise_gpio_regulator_init(void)
 {
 	int i, j;
@@ -588,7 +594,7 @@ static int __init enterprise_gpio_regulator_init(void)
 	return platform_add_devices(gpio_regs_devices,
 				    ARRAY_SIZE(gpio_regs_devices));
 }
-#endif
+
 static int __init enterprise_regulators_fixed_gpio_init(void)
 {
 	int ret;
@@ -596,8 +602,8 @@ static int __init enterprise_regulators_fixed_gpio_init(void)
 	ret = enterprise_fixed_regulator_init();
 	return ret;
 
-//	ret = enterprise_gpio_regulator_init();
-//	return ret;
+	ret = enterprise_gpio_regulator_init();
+	return ret;
 }
 subsys_initcall_sync(enterprise_regulators_fixed_gpio_init);
 
