@@ -197,7 +197,6 @@ obj-${CONFIG_MACH_ENDEAVORU}                 += tegra_flashlight.o
 obj-${CONFIG_MACH_ENDEAVORU}                 += devices_htc.o
 obj-${CONFIG_MACH_ENDEAVORU}                 += board-endeavoru-audio.o
 obj-${CONFIG_MACH_ENDEAVORU}                 += htc_wifi_nvs.o
-obj-${CONFIG_MACH_ENDEAVORU}                 += htc-gpio.o
 
 ifeq (${CONFIG_MACH_ENDEAVORU},y)
 obj-y += baseband-xmm-power.o
