@@ -59,27 +59,30 @@
 /************************ TPS80031 based regulator ****************/
 static struct regulator_consumer_supply tps80031_vio_supply_a03[] = {
 	REGULATOR_SUPPLY("vio_1v8", NULL),
-	REGULATOR_SUPPLY("vddio_gmi", NULL),
+	REGULATOR_SUPPLY("vddio_sys", NULL),
+	REGULATOR_SUPPLY("vddio_uart", NULL),
+	REGULATOR_SUPPLY("pwrdet_uart", NULL),
 	REGULATOR_SUPPLY("vddio_lcd", NULL),
 	REGULATOR_SUPPLY("pwrdet_lcd", NULL),
+	REGULATOR_SUPPLY("vddio_audio", NULL),
+	REGULATOR_SUPPLY("pwrdet_audio", NULL),
+	REGULATOR_SUPPLY("vddio_bb", NULL),
+	REGULATOR_SUPPLY("pwrdet_bb", NULL),
+	REGULATOR_SUPPLY("vddio_gmi", NULL),
+	REGULATOR_SUPPLY("vddio_cam", NULL),
+	REGULATOR_SUPPLY("pwrdet_cam", NULL),
 	REGULATOR_SUPPLY("vddio_sdmmc1", NULL),
 	REGULATOR_SUPPLY("pwrdet_sdmmc1", NULL),
 	REGULATOR_SUPPLY("vddio_sdmmc4", NULL),
 	REGULATOR_SUPPLY("pwrdet_sdmmc4", NULL),
-	REGULATOR_SUPPLY("vddio_sys", NULL),
-	REGULATOR_SUPPLY("vddio_cam", NULL),
-	REGULATOR_SUPPLY("pwrdet_cam", NULL),
-	REGULATOR_SUPPLY("vddio_bb", NULL),
-	REGULATOR_SUPPLY("pwrdet_bb", NULL),
-	REGULATOR_SUPPLY("vddio_uart", NULL),
-	REGULATOR_SUPPLY("pwrdet_uart", NULL),
-	REGULATOR_SUPPLY("vddio_audio", NULL),
-	REGULATOR_SUPPLY("pwrdet_audio", NULL),
-	REGULATOR_SUPPLY("avdd_osc", NULL),
-	REGULATOR_SUPPLY("avdd_usb_pll", NULL),
 	REGULATOR_SUPPLY("avdd_hdmi_pll", NULL),
-	REGULATOR_SUPPLY("vddio_sdmmc3", NULL),
+	REGULATOR_SUPPLY("vddio_gps", NULL),
+	REGULATOR_SUPPLY("vdd_lcd_buffered", NULL),
+	REGULATOR_SUPPLY("vddio_nand", NULL),
 	REGULATOR_SUPPLY("pwrdet_nand", NULL),
+	REGULATOR_SUPPLY("vddio_sd", NULL),
+	REGULATOR_SUPPLY("vdd_bat", NULL),
+	REGULATOR_SUPPLY("vdd_io", NULL),
 	REGULATOR_SUPPLY("pwrdet_pex_ctl", NULL),
 };
 
@@ -92,13 +95,17 @@ static struct regulator_consumer_supply tps80031_smps2_supply_common[] = {
 };
 
 static struct regulator_consumer_supply tps80031_smps3_supply_common[] = {
-	REGULATOR_SUPPLY("v_lpddr2_1v2", NULL),
+	REGULATOR_SUPPLY("en_vddio_ddr_1v2", NULL),
 	REGULATOR_SUPPLY("vddio_ddr", NULL),
+	REGULATOR_SUPPLY("vdd_lpddr", NULL),
 	REGULATOR_SUPPLY("ddr_comp_pu", NULL),
 };
 
 static struct regulator_consumer_supply tps80031_smps4_supply_a03[] = {
-        REGULATOR_SUPPLY("v_prereg_2v6", NULL),
+	REGULATOR_SUPPLY("vddio_sdmmc_2v85", NULL),
+	REGULATOR_SUPPLY("pwrdet_sdmmc3", NULL),
+	REGULATOR_SUPPLY("vdd_ddr_rx", NULL),
+	REGULATOR_SUPPLY("vddf_core_emmc", NULL),
 };
 
 static struct regulator_consumer_supply tps80031_vana_supply_common[] = {
@@ -106,47 +113,46 @@ static struct regulator_consumer_supply tps80031_vana_supply_common[] = {
 };
 
 static struct regulator_consumer_supply tps80031_ldo1_supply_a03[] = {
-	REGULATOR_SUPPLY("v_dsi_csi_1v2", NULL),
-	REGULATOR_SUPPLY("avdd_dsi_csi", NULL),
-	REGULATOR_SUPPLY("vddio_hsic", NULL),
+	REGULATOR_SUPPLY("vdd_ddr_hs", NULL),
 };
 
 static struct regulator_consumer_supply tps80031_ldo2_supply_common[] = {
-	REGULATOR_SUPPLY("v_vrtc_1v2", NULL),
 	REGULATOR_SUPPLY("vdd_rtc", NULL),
 };
 
 static struct regulator_consumer_supply tps80031_ldo3_supply_common[] = {
-	REGULATOR_SUPPLY("v_fuse_src_3v3", NULL),
-	REGULATOR_SUPPLY("vpp_fuse", NULL),
+	REGULATOR_SUPPLY("vdd_vbrtr", NULL),
 };
 
 static struct regulator_consumer_supply tps80031_ldo4_supply_a03[] = {
-	REGULATOR_SUPPLY("v_lcm_3v", NULL),
+	REGULATOR_SUPPLY("avdd_dsi_csi", NULL),
 	REGULATOR_SUPPLY("avdd_hsic", NULL),
 	REGULATOR_SUPPLY("pwrdet_mipi", NULL),
 };
 
 static struct regulator_consumer_supply tps80031_ldo5_supply_common[] = {
-	REGULATOR_SUPPLY("v_sr_2v85", NULL),
+	REGULATOR_SUPPLY("vdd_sensor", NULL),
+	REGULATOR_SUPPLY("vdd_compass", NULL),
+	REGULATOR_SUPPLY("vdd_als", NULL),
+	REGULATOR_SUPPLY("vdd_gyro", NULL),
+	REGULATOR_SUPPLY("vdd_touch", NULL),
+	REGULATOR_SUPPLY("vdd_proxim_diode", NULL),
 };
 
 static struct regulator_consumer_supply tps80031_ldo6_supply_a03[] = {
-	REGULATOR_SUPPLY("v_mmc_rx_2v85", NULL),
-	REGULATOR_SUPPLY("vdd_ddr_rx", NULL),
+	REGULATOR_SUPPLY("avdd_osc", NULL),
+	REGULATOR_SUPPLY("avdd_usb_pll", NULL),
 };
 
 static struct regulator_consumer_supply tps80031_ldo7_supply_a03[] = {
-	REGULATOR_SUPPLY("v_pllmeux_1v2", NULL),
-	REGULATOR_SUPPLY("vdd_plla_p_c", NULL),
-	REGULATOR_SUPPLY("vdd_pllm", NULL),
-	REGULATOR_SUPPLY("vdd_pllu_d", NULL),
-	REGULATOR_SUPPLY("vdd_pllx", NULL),
+	REGULATOR_SUPPLY("avdd_lcd", NULL),
 };
 
 static struct regulator_consumer_supply tps80031_ldoln_supply_a03[] = {
-	REGULATOR_SUPPLY("v_ddr_hs_1v0", NULL),
-	REGULATOR_SUPPLY("vdd_ddr_hs", NULL),
+	REGULATOR_SUPPLY("vdd_plla_p_c_s", NULL),
+	REGULATOR_SUPPLY("vdd_pllm", NULL),
+	REGULATOR_SUPPLY("vdd_pllu_d", NULL),
+	REGULATOR_SUPPLY("vdd_pllx", NULL),
 };
 
 static struct regulator_consumer_supply tps80031_ldousb_supply_a03[] = {
@@ -320,6 +326,11 @@ static struct i2c_board_info __initdata enterprise_regulators[] = {
 };
 
 /************************ GPIO based fixed regulator ****************/
+/* REGEN1 from PMU*/
+static struct regulator_consumer_supply fixed_reg_pmu_5v15_en_supply[] = {
+	REGULATOR_SUPPLY("vdd_5v15", NULL),
+};
+
 static struct regulator_consumer_supply fixed_reg_led_3v3_en_supply[] = {
 	REGULATOR_SUPPLY("v_led_3v3", NULL),
 };
@@ -384,17 +395,18 @@ static struct regulator_consumer_supply fixed_reg_vdd_fuse_en_supply[] = {
         REGULATOR_SUPPLY("vdd_fuse", NULL),
 };
 
-/* LCD_PWR0 (GPIO B2) from T30*/
-//static struct regulator_consumer_supply fixed_reg_lcd_1v8_en_supply[] = {
-//	REGULATOR_SUPPLY("lcd_vddio_en", NULL),
-//};
-
 /* LCD-D17 (GPIO M1) from T30*/
 static struct regulator_consumer_supply gpio_reg_sdmmc3_vdd_sel_supply[] = {
 	REGULATOR_SUPPLY("vddio_sdmmc3_2v85_1v8", NULL),
 	REGULATOR_SUPPLY("sdmmc3_compu_pu", NULL),
 	REGULATOR_SUPPLY("vddio_sdmmc", "sdhci-tegra.2"),
 	REGULATOR_SUPPLY("vsys_3v7", NULL),
+};
+
+/* LCD-D10 (GPIO F2) from T30*/
+static struct regulator_consumer_supply fixed_reg_vdd_sdmmc3_2v85_en_supply[] = {
+	REGULATOR_SUPPLY("en_vdd_sdmmc3", NULL),
+	REGULATOR_SUPPLY("vddio_sd_slot", "sdhci-tegra.2"),
 };
 
 static struct gpio_regulator_state gpio_reg_sdmmc3_vdd_sel_states[] = {
@@ -496,42 +508,48 @@ GPIO_REG(4, sdmmc3_vdd_sel,  tps80031_rails(SMPS4),
 		},							\
 	}
 
-FIXED_REG(0, led_3v3_en, NULL,
+FIXED_REG(0, pmu_5v15_en, NULL,
+		ENT_TPS80031_GPIO_REGEN1, true, 5000, 0 , 0);
+
+FIXED_REG(1, led_3v3_en, NULL,
 		ENT_TPS80031_GPIO_REGEN2, true, 3300, 1, 0);
-FIXED_REG(1, aud_a1v8_en, NULL,
+FIXED_REG(2, aud_a1v8_en, NULL,
 		TEGRA_GPIO_PD2, true, 1800, 1, 0);
-FIXED_REG(2, vib_3v_en, NULL,
+FIXED_REG(3, vib_3v_en, NULL,
 		TEGRA_GPIO_PE7, true, 3000, 1, 0);
-FIXED_REG(3, mhl_3v3_en, NULL,
+FIXED_REG(4, mhl_3v3_en, NULL,
 		TEGRA_GPIO_PY2, true, 3300, 0, 0);
-FIXED_REG(4, aud_3v3_en,  NULL,
+FIXED_REG(5, aud_3v3_en,  NULL,
 		TEGRA_GPIO_PB2, true, 3300, 0, 0);
-FIXED_REG(5, cam_vcm_2v85_en,  NULL,
+FIXED_REG(6, cam_vcm_2v85_en,  NULL,
 		TEGRA_GPIO_PM7, true, 2800, 0, 0);
-FIXED_REG(6, lcm_3v3_en,  NULL,
+FIXED_REG(7, lcm_3v3_en,  NULL,
 		TEGRA_GPIO_PE2, true, 3300, 1, 0);
-FIXED_REG(7, lcmio_1v8_en,  NULL,
+FIXED_REG(8, lcmio_1v8_en,  NULL,
 		TEGRA_GPIO_PE5, true, 1800, 1, 0);
-FIXED_REG(8, srio_1v8_en,  NULL,
+FIXED_REG(9, srio_1v8_en,  NULL,
 		TEGRA_GPIO_PY3, true, 1800, 1, 0);
-FIXED_REG(9, cam2_d1v2_en,  NULL,
+FIXED_REG(10, cam2_d1v2_en,  NULL,
 		TEGRA_GPIO_PF6, true, 1800, 0, 0);
-FIXED_REG(10, cam_d1v2_en,  NULL,
+FIXED_REG(11, cam_d1v2_en,  NULL,
 		TEGRA_GPIO_PF5, true, 1800, 0, 0);
-FIXED_REG(11, camio_1v8_en, NULL,
+FIXED_REG(12, camio_1v8_en, NULL,
 		TEGRA_GPIO_PBB4, true, 1800, 0, 0);
-FIXED_REG(12, cam_a2v85_en,  NULL,
+FIXED_REG(13, cam_a2v85_en,  NULL,
 		TEGRA_GPIO_PE3, true, 2800, 0, 0);
-FIXED_REG(13, mhl_1v2_en,  NULL,
+FIXED_REG(14, mhl_1v2_en,  NULL,
 		TEGRA_GPIO_PE4, true, 1200, 0, 0);
-FIXED_REG(14, sdmmc_2v85_en,  NULL,
+FIXED_REG(15, sdmmc_2v85_en,  NULL,
 		TEGRA_GPIO_PM3, true, 2800, 1, 0);
-FIXED_REG(15, vdd_fuse_en,  NULL,
+FIXED_REG(16, vdd_fuse_en,  NULL,
 		TEGRA_GPIO_PM0, true, 3300, 1, 0);
+FIXED_REG(17, vdd_sdmmc3_2v85_en,  NULL,
+		TEGRA_GPIO_PF2, true, 2850, 0, 0);
 
 #define ADD_FIXED_REG(_name)	(&fixed_reg_##_name##_dev)
 
 #define FIXED_REGS_COMMON		\
+	ADD_FIXED_REG(pmu_5v15_en),	\
 	ADD_FIXED_REG(sdmmc_2v85_en),	\
 	ADD_FIXED_REG(vib_3v_en),	\
 	ADD_FIXED_REG(led_3v3_en)
@@ -551,6 +569,7 @@ static struct platform_device *fixed_regs_devices_a03[] = {
 	ADD_FIXED_REG(cam_a2v85_en),
 	ADD_FIXED_REG(mhl_1v2_en),
 	ADD_FIXED_REG(vdd_fuse_en),
+	ADD_FIXED_REG(vdd_sdmmc3_2v85_en),
 };
 
 #define ADD_GPIO_REG(_name) (&gpio_reg_##_name##_dev)
@@ -600,7 +619,8 @@ static int __init enterprise_regulators_fixed_gpio_init(void)
 	int ret;
 
 	ret = enterprise_fixed_regulator_init();
-	return ret;
+	if (ret)
+		return ret;
 
 	ret = enterprise_gpio_regulator_init();
 	return ret;
