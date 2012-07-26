@@ -133,7 +133,8 @@ static __initdata struct tegra_pingroup_config endeavoru_pinmux_common[] = {
 	DEFAULT_PINMUX(SDMMC1_CMD,      SDMMC1,          PULL_UP,    NORMAL,     INPUT),
 	DEFAULT_PINMUX(SDMMC1_DAT3,     UARTE,           NORMAL,     NORMAL,     OUTPUT), // AUD_REMO_TX
 	DEFAULT_PINMUX(SDMMC1_DAT2,     UARTE,           NORMAL,     NORMAL,     INPUT), // AUD_REMO_RX
-	DEFAULT_PINMUX(SDMMC1_DAT1,     RSVD,            NORMAL,     TRISTATE,   INPUT), // NFC_IRQ
+//	DEFAULT_PINMUX(SDMMC1_DAT1,     RSVD,            NORMAL,     TRISTATE,   INPUT), // NFC_IRQ
+	DEFAULT_PINMUX(SDMMC1_DAT1,     SDMMC1,          PULL_UP,    NORMAL,     INPUT), // TripNRaVeR: NFC_IRQ
 	DEFAULT_PINMUX(SDMMC1_DAT0,     SDMMC1,          PULL_UP,    NORMAL,     INPUT),
 
 	/* SDMMC3 pinmux */
@@ -145,8 +146,10 @@ static __initdata struct tegra_pingroup_config endeavoru_pinmux_common[] = {
 	DEFAULT_PINMUX(SDMMC3_DAT3,     SDMMC3,          PULL_UP,    NORMAL,     INPUT),
 	DEFAULT_PINMUX(SDMMC3_DAT4,     SDMMC3,          PULL_UP,    NORMAL,     INPUT),
 	DEFAULT_PINMUX(SDMMC3_DAT5,     SDMMC3,          PULL_UP,    NORMAL,     INPUT),
-	DEFAULT_PINMUX(SDMMC3_DAT6,     RSVD1,           NORMAL,     NORMAL,     INPUT), // NC
-	DEFAULT_PINMUX(SDMMC3_DAT7,     RSVD1,           NORMAL,     NORMAL,     INPUT), // NC
+//	DEFAULT_PINMUX(SDMMC3_DAT6,     RSVD1,           NORMAL,     NORMAL,     INPUT), // NC
+	DEFAULT_PINMUX(SDMMC3_DAT6,     SDMMC3,          PULL_UP,    NORMAL,     INPUT), // TripNRaVeR
+//	DEFAULT_PINMUX(SDMMC3_DAT7,     RSVD1,           NORMAL,     NORMAL,     INPUT), // NC
+	DEFAULT_PINMUX(SDMMC3_DAT7,     SDMMC3,          PULL_UP,    NORMAL,     INPUT), // TripNRaVeR
 
 	/* SDMMC4 pinmux */
 	DEFAULT_PINMUX(SDMMC4_CLK,      SDMMC4,          NORMAL,     NORMAL,     INPUT), // BSP_EMMC_CLK
@@ -204,8 +207,10 @@ static __initdata struct tegra_pingroup_config endeavoru_pinmux_common[] = {
 	DEFAULT_PINMUX(GMI_CS2_N,       RSVD,            NORMAL,    NORMAL,     INPUT),
 	DEFAULT_PINMUX(GMI_CS3_N,       RSVD,            NORMAL,    NORMAL,     INPUT),
 	DEFAULT_PINMUX(GMI_CS4_N,       RSVD,            PULL_UP,   NORMAL,     INPUT), // PER_PS_INT
-	DEFAULT_PINMUX(GMI_CS7_N,       RSVD,            PULL_UP,   NORMAL,     INPUT), // PEH_GYR_INT
-	DEFAULT_PINMUX(GMI_CS6_N,       RSVD,            NORMAL,    NORMAL,     INPUT), // NC
+//	DEFAULT_PINMUX(GMI_CS7_N,       RSVD,            PULL_UP,   NORMAL,     INPUT), // PEH_GYR_INT
+//	DEFAULT_PINMUX(GMI_CS6_N,       RSVD,            NORMAL,    NORMAL,     INPUT), // NC
+	DEFAULT_PINMUX(GMI_CS7_N,       GMI,             PULL_DOWN,    NORMAL,     INPUT), // PEH_GYR_INT
+	DEFAULT_PINMUX(GMI_CS6_N,       GMI,             PULL_DOWN,    NORMAL,     INPUT), // TripNRaVeR: NC
 	DEFAULT_PINMUX(GMI_WR_N,        RSVD,            NORMAL,    NORMAL,     INPUT), // external pull high
 	DEFAULT_PINMUX(GMI_OE_N,        RSVD,            NORMAL,    NORMAL,     INPUT), // external pull high
 	DEFAULT_PINMUX(GMI_ADV_N,       RSVD,            NORMAL,    NORMAL,     INPUT), // external pull down
@@ -245,10 +250,12 @@ static __initdata struct tegra_pingroup_config endeavoru_pinmux_common[] = {
 	DEFAULT_PINMUX(LCD_DC0,         DISPLAYA,        NORMAL,    NORMAL,     INPUT), // DSP_LCD_RST
 	DEFAULT_PINMUX(LCD_CS0_N,       RSVD,        	 NORMAL,    NORMAL,     INPUT), // NC
 	DEFAULT_PINMUX(LCD_SDOUT,       DISPLAYA,        NORMAL,    NORMAL,     INPUT), // NC
-    	DEFAULT_PINMUX(LCD_PWR0,        RSVD,        	 NORMAL,    NORMAL,     INPUT), // AUD_3V3_EN
+//    	DEFAULT_PINMUX(LCD_PWR0,        RSVD,        	 NORMAL,    NORMAL,     INPUT), // AUD_3V3_EN
+	DEFAULT_PINMUX(LCD_PWR0,        DISPLAYA,        NORMAL,    NORMAL,     INPUT), // TripNRaVeR: AUD_3V3_EN
 	DEFAULT_PINMUX(LCD_PWR2,        DISPLAYA,        NORMAL,    NORMAL,     OUTPUT), // MDM_AP2BB_SLAVE_WAKEUP_1
     	DEFAULT_PINMUX(LCD_PCLK,        DISPLAYA,        NORMAL,    NORMAL,     INPUT), // NC
-	DEFAULT_PINMUX(LCD_SCK,         RSVD,        	 PULL_UP,   TRISTATE,   OUTPUT), // NC
+//	DEFAULT_PINMUX(LCD_SCK,         RSVD,        	 PULL_UP,   TRISTATE,   OUTPUT), // NC
+	DEFAULT_PINMUX(LCD_SCK,         DISPLAYA,        PULL_DOWN, TRISTATE,   OUTPUT), // TripNRaVeR: NC
 	DEFAULT_PINMUX(LCD_HSYNC,       DISPLAYA,        NORMAL,    NORMAL,     INPUT), // NC
 	DEFAULT_PINMUX(LCD_VSYNC,       DISPLAYA,        PULL_DOWN, NORMAL,     INPUT), // MDM_AP_USB_UART_OE
 	DEFAULT_PINMUX(LCD_WR_N,        DISPLAYA,        NORMAL,    NORMAL,     INPUT), // NC
@@ -258,12 +265,17 @@ static __initdata struct tegra_pingroup_config endeavoru_pinmux_common[] = {
 	DEFAULT_PINMUX(KB_ROW2,         RSVD,           NORMAL,    NORMAL,     OUTPUT), // GYRO SLEEP
 	DEFAULT_PINMUX(KB_ROW3,         RSVD,           NORMAL,    NORMAL,     OUTPUT), // HAPTIC_EN
     	DEFAULT_PINMUX(KB_ROW4,         RSVD,           NORMAL,    NORMAL,     INPUT), // NC
-    	DEFAULT_PINMUX(KB_ROW5,         RSVD,           NORMAL,    NORMAL,     INPUT), // NC
-    	DEFAULT_PINMUX(KB_ROW6,         RSVD,           NORMAL,    TRISTATE,   INPUT), // CAM_CAM1_ID
-	DEFAULT_PINMUX(KB_ROW7,         RSVD,           NORMAL,    TRISTATE,   INPUT), // CAM_FRONT_CAM_ID
+//    	DEFAULT_PINMUX(KB_ROW5,         RSVD,           NORMAL,    NORMAL,     INPUT), // NC
+    	DEFAULT_PINMUX(KB_ROW5,         KBC,            NORMAL,    NORMAL,     INPUT), // TripNRaVeR: NC
+//    	DEFAULT_PINMUX(KB_ROW6,         RSVD,           NORMAL,    TRISTATE,   INPUT), // CAM_CAM1_ID
+	DEFAULT_PINMUX(KB_ROW6,         KBC,            NORMAL,    TRISTATE,   INPUT), // TripNRaVeR: CAM_CAM1_ID
+//	DEFAULT_PINMUX(KB_ROW7,         RSVD,           NORMAL,    TRISTATE,   INPUT), // CAM_FRONT_CAM_ID
+	DEFAULT_PINMUX(KB_ROW7,         KBC,            NORMAL,    TRISTATE,   INPUT), // TripNRaVeR: CAM_FRONT_CAM_ID
 	DEFAULT_PINMUX(KB_ROW8,         KBC,            PULL_UP,   NORMAL,     INPUT), // DSP_VOL_UP
-	DEFAULT_PINMUX(KB_ROW9,         RSVD,           NORMAL,    NORMAL,     INPUT), // NC
-	DEFAULT_PINMUX(KB_ROW10,        RSVD,           NORMAL,    NORMAL,     INPUT), // CON_USB_ID_1
+//	DEFAULT_PINMUX(KB_ROW9,         RSVD,           NORMAL,    NORMAL,     INPUT), // NC
+	DEFAULT_PINMUX(KB_ROW9,         KBC,            NORMAL,    NORMAL,     INPUT), // TripNRaVeR: NC
+//	DEFAULT_PINMUX(KB_ROW10,        RSVD,           NORMAL,    NORMAL,     INPUT), // CON_USB_ID_1
+	DEFAULT_PINMUX(KB_ROW10,        KBC,            NORMAL,    NORMAL,     INPUT), // TripNRaVeR: CON_USB_ID_1
 
 	DEFAULT_PINMUX(GPIO_PCC1,       RSVD,            NORMAL,    NORMAL,     INPUT), // CAM_SEL
 	DEFAULT_PINMUX(GPIO_PCC2,       RSVD2,           PULL_UP,   NORMAL,     INPUT), // PWR_THEMP_ALERT_INT
@@ -280,9 +292,12 @@ static __initdata struct tegra_pingroup_config endeavoru_pinmux_common[] = {
 	DEFAULT_PINMUX(GPIO_PV3,        RSVD1,           NORMAL,    NORMAL,     OUTPUT), // NC
 	DEFAULT_PINMUX(GPIO_PBB0,       RSVD,            NORMAL,    NORMAL,     INPUT), // CAM_CAM1_RST
 	DEFAULT_PINMUX(GPIO_PBB3,       VGP3,            NORMAL,    NORMAL,     OUTPUT), // PER_FLASH_EN
-	DEFAULT_PINMUX(GPIO_PBB4,       RSVD,            NORMAL,    NORMAL,     INPUT), // CAM_VCAM_VDDIO_1V8_EN
-	DEFAULT_PINMUX(GPIO_PBB5,       RSVD,            NORMAL,    NORMAL,     INPUT), // CAM_CAM1_VCM_PD
-	DEFAULT_PINMUX(GPIO_PBB6,       RSVD,            NORMAL,    NORMAL,     INPUT), // AUD_REMO_PRES
+//	DEFAULT_PINMUX(GPIO_PBB4,       RSVD,            NORMAL,    NORMAL,     INPUT), // CAM_VCAM_VDDIO_1V8_EN
+	DEFAULT_PINMUX(GPIO_PBB4,       VGP4,            NORMAL,    NORMAL,     INPUT), // TripNRaVeR: CAM_VCAM_VDDIO_1V8_EN
+//	DEFAULT_PINMUX(GPIO_PBB5,       RSVD,            NORMAL,    NORMAL,     INPUT), // CAM_CAM1_VCM_PD
+	DEFAULT_PINMUX(GPIO_PBB5,       VGP5,            NORMAL,    NORMAL,     INPUT), // TripNRaVeR: CAM_CAM1_VCM_PD
+//	DEFAULT_PINMUX(GPIO_PBB6,       RSVD,            NORMAL,    NORMAL,     INPUT), // AUD_REMO_PRES
+	DEFAULT_PINMUX(GPIO_PBB6,       VGP6,            NORMAL,    NORMAL,     INPUT), // TripNRaVeR: AUD_REMO_PRES
 	DEFAULT_PINMUX(GPIO_PBB7,       RSVD,            NORMAL,    NORMAL,     INPUT), // CAM_FRONT_CAM_STANDBY
 
 	DEFAULT_PINMUX(CRT_VSYNC,       CRT,             NORMAL,    NORMAL,     OUTPUT),
@@ -315,7 +330,9 @@ static __initdata struct tegra_pingroup_config endeavoru_pinmux_common[] = {
     DEFAULT_PINMUX(SPDIF_OUT,       SPDIF,            NORMAL,    NORMAL,    OUTPUT), // NC
     DEFAULT_PINMUX(SPDIF_IN,        SPDIF,            NORMAL,    NORMAL,     INPUT), // NC
 
-	DEFAULT_PINMUX(SPI1_SCK,        RSVD,            PULL_UP,   NORMAL,       INPUT), // PWR_CHG_INT
+//	DEFAULT_PINMUX(SPI1_SCK,        RSVD,            PULL_UP,   NORMAL,       INPUT), // PWR_CHG_INT
+	DEFAULT_PINMUX(SPI1_SCK,        SPI1,            NORMAL,    NORMAL,       INPUT), // TripNRaVeR: PWR_CHG_INT
+
 	DEFAULT_PINMUX(SPI1_MISO,       RSVD,            NORMAL,    NORMAL,       OUTPUT), // AUDIO_MCLK_EN
 	DEFAULT_PINMUX(SPI1_MOSI,       SPI1,            NORMAL,    NORMAL,       INPUT), // NC
 	DEFAULT_PINMUX(SPI1_CS0_N,      SPI1,            NORMAL,    NORMAL,       INPUT), // NC
@@ -323,8 +340,10 @@ static __initdata struct tegra_pingroup_config endeavoru_pinmux_common[] = {
 	DEFAULT_PINMUX(SPI2_MISO,       SPI2,            NORMAL,    NORMAL,       INPUT), // AUD_SPI_DI
 	DEFAULT_PINMUX(SPI2_SCK,        SPI2,            NORMAL,    NORMAL,       OUTPUT), // AUD_SPI_CLK
 	DEFAULT_PINMUX(SPI2_CS0_N,      SPI2,            NORMAL,    NORMAL,       OUTPUT), // AUD_SPI_CS
-	DEFAULT_PINMUX(SPI2_CS1_N,      RSVD,            PULL_UP,   NORMAL,       INPUT), // AUD_HP_DET
-	DEFAULT_PINMUX(SPI2_CS2_N,      RSVD,            PULL_UP,   TRISTATE,     INPUT), // DSP_VOL_DOWN
+//	DEFAULT_PINMUX(SPI2_CS1_N,      RSVD,            PULL_UP,   NORMAL,       INPUT), // AUD_HP_DET
+	DEFAULT_PINMUX(SPI2_CS1_N,      SPI2,            PULL_UP,   NORMAL,       INPUT), // TripNRaVeR: AUD_HP_DET
+//	DEFAULT_PINMUX(SPI2_CS2_N,      RSVD,            PULL_UP,   TRISTATE,     INPUT), // DSP_VOL_DOWN
+	DEFAULT_PINMUX(SPI2_CS2_N,      SPI2,            PULL_UP,   TRISTATE,     INPUT), // TripNRaVeR: DSP_VOL_DOWN
 
     DEFAULT_PINMUX(ULPI_DATA0,      ULPI,           NORMAL,     NORMAL,     OUTPUT), // BSP_AP_DEBUG_TX
     DEFAULT_PINMUX(ULPI_DATA1,      ULPI,           NORMAL,     NORMAL,     INPUT), // BSP_AP_DEBUG_RX
