@@ -148,7 +148,6 @@ void enterprise_bpc_mgmt_init(void);
 
 /* Baseband GPIO addresses */
 #define BB_VDD_EN               	TEGRA_GPIO_PM4
-#define AP2BB_RST_PWRDWNn               TEGRA_GPIO_PC1
 
 #define BB_GPIO_MDM_PWRON_AP2BB		TEGRA_GPIO_PN3
 #define BB_GPIO_RESET_AP2BB		TEGRA_GPIO_PE1 // TEGRA_GPIO_PN0

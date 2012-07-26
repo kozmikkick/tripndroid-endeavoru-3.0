@@ -88,7 +88,6 @@ static struct gpio tegra_baseband_gpios[] = {
 	{ -1, GPIOF_IN,            "IPC_HSIC_SUS_REQ" },
 #ifdef BB_XMM_OEM1
 	{ BB_VDD_EN, GPIOF_OUT_INIT_LOW, "BB_VDD_EN" },
-	{ AP2BB_RST_PWRDWNn, GPIOF_OUT_INIT_LOW, "AP2BB_RST_PWRDWNn" },
 #endif
 };
 
@@ -103,7 +102,6 @@ static struct gpio tegra_baseband_gpios_power_off_modem[] = {
 	{ -1, GPIOF_IN,            "IPC_HSIC_SUS_REQ" },
 #ifdef BB_XMM_OEM1
 	{ BB_VDD_EN, GPIOF_OUT_INIT_LOW, "BB_VDD_EN" },
-	{ AP2BB_RST_PWRDWNn, GPIOF_OUT_INIT_LOW, "AP2BB_RST_PWRDWNn" },
 #endif
 };
 
@@ -333,7 +331,7 @@ extern void platfrom_set_flight_mode_onoff(bool mode_on);
 static int baseband_modem_power_on(struct baseband_power_platform_data *data)
 {
 	/* HTC: called in atomic context */
-	int ret=0, i=0;
+	int i=0;
 
 	/* reset / power on sequence */
 	gpio_set_value(BB_VDD_EN, 1); /* give modem power */
@@ -341,11 +339,6 @@ static int baseband_modem_power_on(struct baseband_power_platform_data *data)
 
 	for (i = 0; i < 7; i++)
 		udelay(1000);
-
-	ret = gpio_get_value(AP2BB_RST_PWRDWNn);
-
-	gpio_set_value(AP2BB_RST_PWRDWNn, 1);
-	mdelay(20);
 
 	gpio_set_value(data->modem.xmm.bb_rst, 1);
 	mdelay(1);

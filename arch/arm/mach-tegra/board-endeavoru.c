@@ -1643,7 +1643,6 @@ static void enterprise_modem_init(void)
 		pr_info("%s: enable baseband gpio(s)\n", __func__);
 		/* enable baseband gpio(s) */
 		tegra_gpio_enable(BB_VDD_EN);
-		tegra_gpio_enable(AP2BB_RST_PWRDWNn);
 
 		/* enable XMM6260 baseband gpio(s) */
 		tegra_gpio_enable(tegra_baseband_power_data.modem.generic
