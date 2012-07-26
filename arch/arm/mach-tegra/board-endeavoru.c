@@ -96,7 +96,6 @@
 #define PMC_WAKE_STATUS 0x14
 #define POWER_WAKEUP_ENR 7
 
-extern int global_wakeup_state;
 extern int resume_from_deep_suspend;
 
 extern unsigned engineer_id;
