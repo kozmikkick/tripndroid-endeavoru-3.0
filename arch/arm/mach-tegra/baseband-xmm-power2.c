@@ -232,16 +232,11 @@ static irqreturn_t radio_det_irq(int irq, void *dev_id)
 }
 #endif /* BB_XMM_OEM1 */
 
-static void baseband_xmm_power2_flashless_pm_ver_ge_1130_step1
-	(struct work_struct *work)
+static void baseband_xmm_power2_flashless_pm_ver_ge_1130_step1(struct work_struct *work)
 {
 	int X = XYZ / 1000000;
-	int Y = XYZ / 1000 - X * 1000;
-	int Z = XYZ % 1000;
 
 	pr_info("%s {\n", __func__);
-
-	pr_info("XYZ=%ld X=%d Y=%d Z=%d\n", XYZ, X, Y, Z);
 
 	/* check for platform data */
 	if (!baseband_power2_driver_data)
@@ -249,8 +244,7 @@ static void baseband_xmm_power2_flashless_pm_ver_ge_1130_step1
 
 	/* unregister usb host controller */
 	if (baseband_power2_driver_data->hsic_unregister)
-		baseband_power2_driver_data->hsic_unregister(
-			baseband_power2_driver_data->modem.xmm.hsic_device);
+		baseband_power2_driver_data->hsic_unregister(baseband_power2_driver_data->modem.xmm.hsic_device);
 	else
 		pr_err("%s: hsic_unregister is missing\n", __func__);
 
@@ -258,8 +252,7 @@ static void baseband_xmm_power2_flashless_pm_ver_ge_1130_step1
 	msleep(X);
 
 	/* set IPC_HSIC_ACTIVE low */
-	gpio_set_value(baseband_power2_driver_data->
-		modem.xmm.ipc_hsic_active, 0);
+	gpio_set_value(baseband_power2_driver_data->modem.xmm.ipc_hsic_active, 0);
 
 	pr_info("%s }\n", __func__);
 }
