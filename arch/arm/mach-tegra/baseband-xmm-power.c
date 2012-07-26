@@ -413,51 +413,45 @@ static int baseband_xmm_power_on(struct platform_device *device)
 		= (struct baseband_power_platform_data *)
 			device->dev.platform_data;
 	int ret;
-	//int value;
 
-	pr_debug(MODULE_NAME "%s{\n", __func__);
+	pr_debug("%s {\n", __func__);
 
 	/* check for platform data */
 	if (!data) {
-		pr_err("%s: !data\n", __func__);
+		pr_err("%s: !pdata\n", __func__);
 		return -EINVAL;
 	}
-
-	if (baseband_xmm_powerstate != BBXMM_PS_UNINIT) {
-		pr_err("%s: baseband_xmm_powerstate != BBXMM_PS_UNINIT\n",
-			__func__);
+	if (baseband_xmm_powerstate != BBXMM_PS_UNINIT)
 		return -EINVAL;
-	}
 
 	/*set Radio fatal Pin to Iput*/
-	ret=gpio_direction_input(TEGRA_GPIO_PN2);
-	if (ret < 0)
-				pr_err("%s: set Radio fatal Pin to Iput error\n", __func__);
+//	ret=gpio_direction_input(TEGRA_GPIO_PN2);
+//	if (ret < 0)
+//				pr_err("%s: set Radio fatal Pin to Iput error\n", __func__);
 
 	/*set BB2AP_SUSPEND_REQ Pin (TEGRA_GPIO_PV0) to Iput*/
-	ret=gpio_direction_input(TEGRA_GPIO_PV0);
-	if (ret < 0)
-				pr_err("%s: set BB2AP_SUSPEND_REQ Pin to Iput error\n", __func__);
+//	ret=gpio_direction_input(TEGRA_GPIO_PV0);
+//	if (ret < 0)
+//				pr_err("%s: set BB2AP_SUSPEND_REQ Pin to Iput error\n", __func__);
 
 	/*config back the uart pin*/
 	config_gpio_for_power_on();
 
 	/* reset the state machine */
 	baseband_xmm_powerstate = BBXMM_PS_INIT;
-	first_time = true;
 	modem_sleep_flag = false;
-
 	ipc_ap_wake_state = IPC_AP_WAKE_INIT2;
 
 	/* register usb host controller */
 	if (!modem_flash) {
+		pr_debug("%s - %d\n", __func__, __LINE__);
 		/* register usb host controller only once */
 		if (register_hsic_device) {
-			pr_debug("%s(%d)register usb host controller\n", __func__, __LINE__);
+			pr_debug("%s: register usb host controller\n",
+				__func__);
 			modem_power_on = true;
 			if (data->hsic_register)
-				data->modem.xmm.hsic_device =
-					data->hsic_register();
+				data->modem.xmm.hsic_device = data->hsic_register();
 			else
 				pr_err("%s: hsic_register is missing\n",
 					__func__);
@@ -465,28 +459,15 @@ static int baseband_xmm_power_on(struct platform_device *device)
 		} else {
 			/* register usb host controller */
 			if (data->hsic_register)
-				data->modem.xmm.hsic_device =
-						data->hsic_register();
+				data->modem.xmm.hsic_device = data->hsic_register();
 			/* turn on modem */
-			pr_info("%s call baseband_modem_power_on\n", __func__);
+			pr_debug("%s call baseband_modem_power_on\n", __func__);
 			baseband_modem_power_on(data);
 		}
 	}
-
-	/* HTC: ENR#U wakeup src fix */
-	pr_info("%s: before enable irq wake \n", __func__);
 	ret = enable_irq_wake(gpio_to_irq(data->modem.xmm.ipc_ap_wake));
 	if (ret < 0)
 		pr_err("%s: enable_irq_wake error\n", __func__);
-	/* HTC: remove platfrom_set_flight_mode_onoff(false); for ENR */
-#if 1
-	/*For SIM det*/
-	/*For Radio fatal*/
-	pr_info("%s: before enable irq wake Radio fatal \n", __func__);
-	ret = enable_irq_wake(gpio_to_irq(TEGRA_GPIO_PN2));
-	if (ret < 0)
-		pr_err("%s: enable_irq_wake error\n", __func__);
-#endif
 	pr_debug("%s }\n", __func__);
 
 	return 0;
