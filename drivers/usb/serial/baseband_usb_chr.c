@@ -398,13 +398,14 @@ static ssize_t baseband_ipc_file_write(struct baseband_ipc *ipc,
 		return -EIO;
 	}
 
+	// TripNRaVeR: dont fill the logs
 	/* do not accept write if previous tx not finished */
-	if (peek_ipc_tx_bufsiz(ipc, USB_CHR_TX_BUFSIZ) != 0) {
-		pr_info("%s: not accepting write of %u bytes"
-			" - previous tx not finished\n",
-			__func__, count);
-		return 0;
-	}
+        if (peek_ipc_tx_bufsiz(ipc, USB_CHR_TX_BUFSIZ) != 0) {
+        /*      pr_info("%s: not accepting write of %u bytes"
+                       " - previous tx not finished\n",
+                       __func__, count);*/
+               return 0;
+        }
 
 	/* acquire tx buffer semaphores */
 retry:
