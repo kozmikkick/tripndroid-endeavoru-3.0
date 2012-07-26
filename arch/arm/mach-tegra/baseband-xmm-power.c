@@ -953,9 +953,6 @@ static void baseband_xmm_power_work_func(struct work_struct *work)
 		 * software directly.
 		 */
 		break;
-	case BBXMM_WORK_INIT_FLASH_PM_VER_LT_1130_STEP1:
-		pr_debug("BBXMM_WORK_INIT_FLASH_PM_VER_LT_1130_STEP1\n");
-		break;
 	case BBXMM_WORK_INIT_FLASH_PM_VER_GE_1130_STEP1:
 		pr_debug("BBXMM_WORK_INIT_FLASH_PM_VER_GE_1130_STEP1\n");
 		break;

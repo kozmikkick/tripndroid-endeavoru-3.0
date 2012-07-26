@@ -115,7 +115,7 @@ static struct htc_modem_info modem_info;
 
 #endif /* BB_XMM_OEM1 */
 
-static irqreturn_t baseband_xmm_power2_ver_lt_1130_ipc_ap_wake_irq2(int irq, void *dev_id)
+static irqreturn_t baseband_xmm_power2_ver_ge_1130_ipc_ap_wake_irq2(int irq, void *dev_id)
 {
 	int value;
 
@@ -137,61 +137,11 @@ static irqreturn_t baseband_xmm_power2_ver_lt_1130_ipc_ap_wake_irq2(int irq, voi
 			/* go to IPC_AP_WAKE_INIT2 state */
 			ipc_ap_wake_state = IPC_AP_WAKE_INIT2;
 			/* queue work */
-			baseband_xmm_power2_work->state = BBXMM_WORK_INIT_FLASHLESS_PM_VER_LT_1130_STEP2;
+			baseband_xmm_power2_work->state = BBXMM_WORK_INIT_FLASHLESS_PM_VER_GE_1130_STEP2;
 			queue_work(workqueue, (struct work_struct *) baseband_xmm_power2_work);
 		} else
 			pr_debug("%s: IPC_AP_WAKE_INIT1"
 				" wait for falling edge\n", __func__);
-	} else {
-		if (!value) {
-			pr_debug("%s - falling\n", __func__);
-			ipc_ap_wake_state = IPC_AP_WAKE_L;
-		} else {
-			pr_debug("%s - rising\n", __func__);
-			ipc_ap_wake_state = IPC_AP_WAKE_H;
-		}
-		return baseband_xmm_power_ipc_ap_wake_irq(irq, dev_id);
-	}
-
-	return IRQ_HANDLED;
-}
-
-static irqreturn_t baseband_xmm_power2_ver_ge_1130_ipc_ap_wake_irq2
-	(int irq, void *dev_id)
-{
-	int value;
-
-	/* pr_debug("%s\n", __func__); */
-
-	/* check for platform data */
-	if (!baseband_power2_driver_data) {
-		pr_err(MODULE_NAME "%s - !baseband_power2_driver_data\n", __func__);
-		return IRQ_HANDLED;
-	}
-
-	value = gpio_get_value(baseband_power2_driver_data->
-		modem.xmm.ipc_ap_wake);
-
-	/* IPC_AP_WAKE state machine */
-	if (ipc_ap_wake_state < IPC_AP_WAKE_IRQ_READY) {
-		pr_err("%s - spurious irq\n", __func__);
-	} else if (ipc_ap_wake_state == IPC_AP_WAKE_IRQ_READY) {
-		if (!value) {
-			pr_debug("%s - IPC_AP_WAKE_INIT1"
-				" - got falling edge\n",
-				__func__);
-			/* go to IPC_AP_WAKE_INIT2 state */
-			ipc_ap_wake_state = IPC_AP_WAKE_INIT2;
-			/* queue work */
-			baseband_xmm_power2_work->state =
-				BBXMM_WORK_INIT_FLASHLESS_PM_VER_GE_1130_STEP2;
-			queue_work(workqueue, (struct work_struct *)
-				baseband_xmm_power2_work);
-		} else {
-			pr_debug("%s - IPC_AP_WAKE_INIT1"
-				" - wait for falling edge\n",
-				__func__);
-		}
 	} else {
 		if (!value) {
 			pr_debug("%s - falling\n", __func__);
@@ -281,85 +231,6 @@ static irqreturn_t radio_det_irq(int irq, void *dev_id)
     return IRQ_HANDLED;
 }
 #endif /* BB_XMM_OEM1 */
-
-static void baseband_xmm_power2_flashless_pm_ver_lt_1130_step1
-	(struct work_struct *work)
-{
-	int value;
-
-	pr_debug("%s {\n", __func__);
-
-	/* check for platform data */
-	if (!baseband_power2_driver_data)
-		return;
-
-	/* check if IPC_HSIC_ACTIVE high */
-	value = gpio_get_value(baseband_power2_driver_data->
-		modem.xmm.ipc_hsic_active);
-	if (value != 1) {
-		pr_err("%s - expected IPC_HSIC_ACTIVE high!\n", __func__);
-		return;
-	}
-
-	/* wait 30 ms */
-	msleep(30);
-
-	/* set IPC_HSIC_ACTIVE low */
-	gpio_set_value(baseband_power2_driver_data->
-		modem.xmm.ipc_hsic_active, 0);
-
-	pr_debug("%s }\n", __func__);
-}
-
-static void baseband_xmm_power2_flashless_pm_ver_lt_1130_step2
-	(struct work_struct *work)
-{
-	int value;
-
-	pr_debug("%s {\n", __func__);
-
-	/* check for platform data */
-	if (!baseband_power2_driver_data)
-		return;
-
-	/* check if IPC_HSIC_ACTIVE low */
-	value = gpio_get_value(baseband_power2_driver_data->
-		modem.xmm.ipc_hsic_active);
-	if (value != 0) {
-		pr_err("%s - expected IPC_HSIC_ACTIVE low!\n", __func__);
-		return;
-	}
-
-	/* wait 1 ms */
-	msleep(1);
-
-	/* unregister usb host controller */
-	if (baseband_power2_driver_data->hsic_unregister)
-		baseband_power2_driver_data->hsic_unregister(
-			baseband_power2_driver_data->modem.xmm.hsic_device);
-	else
-		pr_err("%s: hsic_unregister is missing\n", __func__);
-
-	/* set IPC_HSIC_ACTIVE high */
-	gpio_set_value(baseband_power2_driver_data->
-		modem.xmm.ipc_hsic_active, 1);
-
-	/* wait 20 ms */
-	msleep(20);
-
-	/* set IPC_HSIC_ACTIVE low */
-	gpio_set_value(baseband_power2_driver_data->
-		modem.xmm.ipc_hsic_active, 0);
-
-	/* wait 20 ms */
-	msleep(20);
-
-	/* set IPC_HSIC_ACTIVE high */
-	gpio_set_value(baseband_power2_driver_data->
-		modem.xmm.ipc_hsic_active, 1);
-
-	pr_debug("%s }\n", __func__);
-}
 
 static void baseband_xmm_power2_flashless_pm_ver_ge_1130_step1
 	(struct work_struct *work)
@@ -621,8 +492,7 @@ static void baseband_xmm_power2_work_func(struct work_struct *work)
 		pr_debug("BBXMM_WORK_UNINIT\n");
 		/* free baseband irq(s) */
 		if (free_ipc_ap_wake_irq) {
-			free_irq(gpio_to_irq(baseband_power2_driver_data
-				->modem.xmm.ipc_ap_wake), NULL);
+			free_irq(gpio_to_irq(baseband_power2_driver_data->modem.xmm.ipc_ap_wake), NULL);
 			free_ipc_ap_wake_irq = 0;
 		}
 		break;
@@ -630,15 +500,11 @@ static void baseband_xmm_power2_work_func(struct work_struct *work)
 		pr_debug("BBXMM_WORK_INIT\n");
 		/* request baseband irq(s) */
 		ipc_ap_wake_state = IPC_AP_WAKE_UNINIT;
-			err = request_threaded_irq(
-			gpio_to_irq(baseband_power2_driver_data->modem.xmm.ipc_ap_wake),
-			NULL,
-			(modem_ver < XMM_MODEM_VER_1130)
-			? baseband_xmm_power2_ver_lt_1130_ipc_ap_wake_irq2
-			: baseband_xmm_power2_ver_ge_1130_ipc_ap_wake_irq2,
-			IRQF_TRIGGER_RISING | IRQF_TRIGGER_FALLING,
-			"BBXMM_POWER2_IPC_AP_WAKE_IRQ",
-			NULL);
+		err = request_threaded_irq(
+				gpio_to_irq(baseband_power2_driver_data->modem.xmm.ipc_ap_wake),
+				NULL, baseband_xmm_power2_ver_ge_1130_ipc_ap_wake_irq2,
+				IRQF_TRIGGER_RISING | IRQF_TRIGGER_FALLING,
+				"xmm_power2_ipc_ap_wake_irq", NULL);
 		if (err < 0) {
 			pr_err("%s - request irq IPC_AP_WAKE_IRQ failed\n",
 				__func__);
@@ -661,37 +527,13 @@ static void baseband_xmm_power2_work_func(struct work_struct *work)
 		break;
 	case BBXMM_WORK_INIT_FLASH_PM_STEP1:
 		pr_debug("BBXMM_WORK_INIT_FLASH_PM_STEP1\n");
-		/* go to next state */
-		bbxmm_work->state = (modem_ver < XMM_MODEM_VER_1130)
-			? BBXMM_WORK_INIT_FLASH_PM_VER_LT_1130_STEP1
-			: BBXMM_WORK_INIT_FLASH_PM_VER_GE_1130_STEP1;
-		queue_work(workqueue, work);
-		break;
-	case BBXMM_WORK_INIT_FLASH_PM_VER_LT_1130_STEP1:
-		pr_debug("BBXMM_WORK_INIT_FLASH_PM_VER_LT_1130_STEP1\n");
 		break;
 	case BBXMM_WORK_INIT_FLASH_PM_VER_GE_1130_STEP1:
 		pr_debug("BBXMM_WORK_INIT_FLASH_PM_VER_GE_1130_STEP1\n");
 		break;
 	case BBXMM_WORK_INIT_FLASHLESS_PM_STEP1:
 		pr_debug("BBXMM_WORK_INIT_FLASHLESS_PM_STEP1\n");
-		/* go to next state */
-		bbxmm_work->state = (modem_ver < XMM_MODEM_VER_1130)
-			? BBXMM_WORK_INIT_FLASHLESS_PM_VER_LT_1130_WAIT_IRQ
-			: BBXMM_WORK_INIT_FLASHLESS_PM_VER_GE_1130_STEP1;
-		queue_work(workqueue, work);
-		break;
-	case BBXMM_WORK_INIT_FLASHLESS_PM_VER_LT_1130_WAIT_IRQ:
-		pr_debug("BBXMM_WORK_INIT_FLASHLESS_PM_VER_LT_1130_WAIT_IRQ"
-			" - waiting for IPC_AP_WAKE_IRQ to trigger step1\n");
-		break;
-	case BBXMM_WORK_INIT_FLASHLESS_PM_VER_LT_1130_STEP1:
-		pr_debug("BBXMM_WORK_INIT_FLASHLESS_PM_VER_LT_1130_STEP1\n");
-		baseband_xmm_power2_flashless_pm_ver_lt_1130_step1(work);
-		break;
-	case BBXMM_WORK_INIT_FLASHLESS_PM_VER_LT_1130_STEP2:
-		pr_debug("BBXMM_WORK_INIT_FLASHLESS_PM_VER_LT_1130_STEP2\n");
-		baseband_xmm_power2_flashless_pm_ver_lt_1130_step2(work);
+		baseband_xmm_power2_flashless_pm_ver_ge_1130_step1(work);
 		break;
 	case BBXMM_WORK_INIT_FLASHLESS_PM_VER_GE_1130_STEP1:
 		pr_debug("BBXMM_WORK_INIT_FLASHLESS_PM_VER_GE_1130_STEP1\n");
