@@ -496,13 +496,7 @@ static int __init baseband_xmm_power2_init(void)
 
 static void __exit baseband_xmm_power2_exit(void)
 {
-	pr_info(MODULE_NAME "%s\n", __func__);
-
-#ifdef BB_XMM_OEM1
-	pr_info("%s wake_lock_destroy", __func__);
-	wake_lock_destroy(&modem_info.modem_wake_lock);
-#endif /* BB_XMM_OEM1 */
-
+	pr_debug("%s\n", __func__);
 	platform_driver_unregister(&baseband_power2_driver);
 }
 
