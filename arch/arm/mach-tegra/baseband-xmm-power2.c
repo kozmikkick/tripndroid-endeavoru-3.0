@@ -443,34 +443,18 @@ static int baseband_xmm_power2_driver_remove(struct platform_device *device)
 	if (!data)
 		return 0;
 
+	/* free work structure */
+	if (workqueue) {
+		cancel_work_sync((struct work_struct *)baseband_xmm_power2_work);
+		destroy_workqueue(workqueue);
+	}
+
 	/* free irq */
 	if (free_ipc_ap_wake_irq) {
 		free_irq(gpio_to_irq(data->modem.xmm.ipc_ap_wake), NULL);
 		free_ipc_ap_wake_irq = 0;
 	}
 
-	/* OEM specific - free sim detect irq */
-#ifdef BB_XMM_OEM1
-    free_irq(gpio_to_irq(CORE_DUMP_DETECT), &modem_info);
-
-	if (modem_kset_radio) {
-		kobject_put(&modem_info.modem_core_dump_kobj);
-		kset_unregister(modem_kset_radio);
-		modem_kset_radio = NULL;
-	}
-
-if (kobj_hsic_device) {
-	pr_debug("free kobj_hsic_device");
-	kobject_put(kobj_hsic_device);
-}
-
-#endif /* BB_XMM_OEM1 */
-
-	/* free work structure */
-	if (workqueue) {
-		cancel_work_sync((struct work_struct *)baseband_xmm_power2_work);
-		destroy_workqueue(workqueue);
-	}
 	kfree(baseband_xmm_power2_work);
 	baseband_xmm_power2_work = (struct baseband_xmm_power_work_t *) 0;
 
