@@ -343,17 +343,14 @@ static void baseband_xmm_power2_flashless_pm_ver_ge_1130_step3(struct work_struc
 	pr_info("%s }\n", __func__);
 }
 
-static void baseband_xmm_power2_flashless_pm_ver_ge_1130_step4
-	(struct work_struct *work)
+static void baseband_xmm_power2_flashless_pm_ver_ge_1130_step4(struct work_struct *work)
 {
-	int X = XYZ / 1000000;
-	int Y = XYZ / 1000 - X * 1000;
-	int Z = XYZ % 1000;
+
 	int enum_success = 0;
+	mm_segment_t oldfs;
+	struct file *filp;
 
 	pr_info("%s {\n", __func__);
-
-	pr_info("XYZ=%ld X=%d Y=%d Z=%d\n", XYZ, X, Y, Z);
 
 	/* check for platform data */
 	if (!baseband_power2_driver_data)
@@ -363,33 +360,16 @@ static void baseband_xmm_power2_flashless_pm_ver_ge_1130_step4
 	msleep(1000);
 
 	/* check if enumeration succeeded */
-	{
-		mm_segment_t oldfs;
-		struct file *filp;
-		oldfs = get_fs();
-		set_fs(KERNEL_DS);
-#ifdef BB_XMM_OEM1
-		filp = filp_open("/dev/ttyACM0",
-			O_RDONLY, 0);
-#else
-		filp = filp_open("/sys/bus/usb/devices/usb2/2-1/manufacturer",
-			O_RDONLY, 0);
-#endif
-		if (IS_ERR(filp) || (filp == NULL)) {
-#ifdef BB_XMM_OEM1
-			pr_err("open /dev/ttyACM0 failed %ld\n",
-				PTR_ERR(filp));
-#else
-			pr_err("open /sys/bus/usb/devices"
-				"/usb2/2-1/manufacturer failed %ld\n",
-				PTR_ERR(filp));
-#endif
-		} else {
-			filp_close(filp, NULL);
-			enum_success = 1;
-		}
-		set_fs(oldfs);
+	oldfs = get_fs();
+	set_fs(KERNEL_DS);
+	filp = filp_open("/dev/ttyACM0", O_RDONLY, 0);
+	if (IS_ERR(filp) || (filp == NULL))
+		pr_err("failed to open /dev/ttyACM0 %ld\n", PTR_ERR(filp));
+	else {
+		filp_close(filp, NULL);
+		enum_success = 1;
 	}
+	set_fs(oldfs);
 
 	/* if recovery pulse did not fix enumeration, retry from beginning */
 	if (!enum_success) {
@@ -405,13 +385,11 @@ static void baseband_xmm_power2_flashless_pm_ver_ge_1130_step4
 				retry);
 			--retry;
 			ipc_ap_wake_state = IPC_AP_WAKE_IRQ_READY;
-			baseband_xmm_power2_work->state =
-				BBXMM_WORK_INIT_FLASHLESS_PM_VER_GE_1130_STEP1;
+			baseband_xmm_power2_work->state = BBXMM_WORK_INIT_FLASHLESS_PM_VER_GE_1130_STEP1;
 			queue_work(workqueue, (struct work_struct *)
 				baseband_xmm_power2_work);
 		}
 	} else
-		pr_info("%s - enum success\n", __func__);
 
 	pr_info("%s }\n", __func__);
 }
