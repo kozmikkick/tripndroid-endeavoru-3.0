@@ -32,55 +32,14 @@
 #include "board.h"
 #include "devices.h"
 
-/*
- *	HTC: version history
- *
- *		v01 - bert_lin - 20111027
- *			1. item 14 easy to panic after flight mode on/off
- *				plugin the usb cable and try to use adb shell
- *			root cause: wake lock doesn't released after module exit
- *				wake_lock_init name=htc_modem_6260 bf018f60
- *				wakelock_stats_show 137 bf018f60
- *				wakelock_stats_show 138 (null) (null)
- *			2. re-arrange the kset_create_and_add flow
- *				original one doesn't take care the error handling
- *				kernel panic when we see [FLS] can not allocate modem_kset0
- *		       20111110-
- * 			1. modify sim detec kset object name to modem_kset_sim from modem_kset_sim
- *			2. Add radio core dump
- *
- */
 #define MODULE_NAME "[XMM2_v1]"
 
 MODULE_LICENSE("GPL");
 
-#if defined(CONFIG_MACH_EDGE) || defined(CONFIG_MACH_ENDEAVORU) || defined(CONFIG_MACH_EDGE_TD) || defined(CONFIG_MACH_BLUE)
-#if 0//sim move to other driver
-    #define SIM_DETECT_LOW_ACTIVE TEGRA_GPIO_PI5
-#endif//sim move to other driver
-    #define SIM_INIT_LOW_ACTIVE TEGRA_GPIO_PE0
-#if 0//sim move to other driver
-    #define SIM_DETECT SIM_DETECT_LOW_ACTIVE
-#endif//sim move to other driver
-    #define SIM_INIT SIM_INIT_LOW_ACTIVE
-
-#elif defined(CONFIG_MACH_QUATTRO_U)
-#if 0//sim move to other driver
-    #define SIM_DETECT_HIGH_ACTIVE TEGRA_GPIO_PN2
-#endif//sim move to other driver
-    #define SIM_INIT_HIGH_ACTIVE TEGRA_GPIO_PK2
-#if 0//sim move to other driver
-    #define SIM_DETECT SIM_DETECT_HIGH_ACTIVE
-#endif//sim move to other driver
-
-    #define SIM_INIT SIM_INIT_HIGH_ACTIVE
-
-#endif
-
-
-#if defined(CONFIG_MACH_EDGE) || defined(CONFIG_MACH_ENDEAVORU) || defined(CONFIG_MACH_EDGE_TD) || defined(CONFIG_MACH_BLUE)   
-	#define CORE_DUMP_DETECT TEGRA_GPIO_PN2
-	//radio fatal
+#define SIM_INIT_LOW_ACTIVE TEGRA_GPIO_PE0
+#define SIM_INIT SIM_INIT_LOW_ACTIVE
+#define CORE_DUMP_DETECT TEGRA_GPIO_PN2
+#define DEBUG_LOG_LENGTH 1024
 
 static enum {
 	RADIO_STATUS_UNKNOWN,
@@ -91,15 +50,6 @@ static enum {
 
 static struct work_struct radio_detect_work_struct;
 
-#endif
-
-
-#ifdef BB_XMM_OEM1
-
-#define DEBUG_LOG_LENGTH 1024
-#if 0//sim move to other driver
-static struct kset *modem_kset_sim;
-#endif//sim move to other driver
 static struct kset *modem_kset_radio;
 static struct kobject* kobj_hsic_device;
 
@@ -112,8 +62,6 @@ static void htc_modem_kobject_release(struct kobject *kobj)
 static struct kobj_type htc_modem_ktype = {
     .release = htc_modem_kobject_release,
 };
-
-#endif /* BB_XMM_OEM1 */
 
 static unsigned long XYZ = 1000 * 1000000 + 800 * 1000 + 500;
 
@@ -133,6 +81,7 @@ MODULE_PARM_DESC(XYZ,
 static struct baseband_power_platform_data *baseband_power2_driver_data;
 static struct workqueue_struct *workqueue;
 static struct baseband_xmm_power_work_t *baseband_xmm_power2_work;
+static bool free_ipc_ap_wake_irq;
 
 static enum {
 	IPC_AP_WAKE_UNINIT,
@@ -144,17 +93,6 @@ static enum {
 } ipc_ap_wake_state;
 
 #ifdef BB_XMM_OEM1
-#if 0//sim move to other driver
-static enum {
-	SIM_STATUS_UNKNOWN,
-	SIM_STATUS_READY,
-	SIM_STATUS_INSERTED,
-	SIM_STATUS_UNPLUGGED,
-	SIM_STATUS_MAX,
-} sim_detect_status;
-
-static struct work_struct sim_detect_work_struct;
-#endif//sim move to other driver
 
 struct htc_modem_info {
 
@@ -165,25 +103,12 @@ struct htc_modem_info {
     struct mutex info_lock;
 
     int is_open;
-#if 0//sim move to other driver
-    struct kobject modem_sim_det_kobj;
-#endif//sim move to other driver
 
     struct kobject modem_core_dump_kobj;
 
     struct wake_lock modem_wake_lock;
     char debug_log[DEBUG_LOG_LENGTH];
 
-#if 0
-    struct battery_info_reply rep;
-
-    struct battery_adc_reply adc_data;
-    int adc_vref[ADC_REPLY_ARRAY_SIZE];
-
-    int guage_driver;
-    int charger;
-    int read_current;
-#endif
 };
 
 static struct htc_modem_info modem_info;
@@ -308,71 +233,8 @@ static irqreturn_t baseband_xmm_power2_ver_ge_1130_ipc_ap_wake_irq2
 }
 
 #ifdef BB_XMM_OEM1
-#if 0//sim move to other driver
-static void sim_detect_work_handler(struct work_struct *work)
-{
-    if (!baseband_power2_driver_data)
-    {
-	pr_err("baseband_power2_driver_data is null\n");
-	return ;
-    }
-
-	char message[20] = "SIMHOTSWAP=";
-		char *envp[] = { message, NULL };
-    int status = gpio_get_value(SIM_DETECT);
-
-    pr_info("SIM_DETECT = %d\n", status);
-
-		if (status){
-			strncat(message, "REMOVE", 6);
-			pr_info("SIM CARD REMOVE\n");
-			}
-		else{
-			strncat(message, "INSERT", 6);			
-			pr_info("SIM CARD INSERT\n");
-			}
-
-
-    pr_info("[FLS] issue SIMHOTSWAP uevent\n");
-    //kobject_uevent(&baseband_power2_driver_data->modem.xmm6260.hsic_device->dev.kobj, KOBJ_ADD);
-    //kobject_uevent(  &modem_info.modem_sim_det_kobj, KOBJ_ADD);
-    kobject_uevent_env(&modem_info.modem_sim_det_kobj, KOBJ_ADD,envp);
-
-}
-#endif//sim move to other driver
 
 /*SIM detection IRQ*/
-#if defined(CONFIG_MACH_EDGE) || defined(CONFIG_MACH_ENDEAVORU) || defined(CONFIG_MACH_EDGE_TD) || defined(CONFIG_MACH_BLUE)
-#if 0//sim move to other driver
-static irqreturn_t sim_det_irq(int irq, void *dev_id)
-{
-
-    int value;
-
-    if (!baseband_power2_driver_data)
-    {
-	pr_info("no baseband_power2_driver_data\n");
-	return IRQ_HANDLED;
-    }
-
-    if (sim_detect_status < SIM_STATUS_READY) {
-	pr_err("%s - spurious irq\n", __func__);
-    } else {
-	value = gpio_get_value(SIM_DETECT/* 69*/);
-	if (!value) {
-	    pr_info("%s - falling\n", __func__);
-	    sim_detect_status = SIM_STATUS_INSERTED;
-	} else {
-	    pr_info("%s - rising\n", __func__);
-	    sim_detect_status = SIM_STATUS_UNPLUGGED;
-	}
-    }
-
-    queue_work(workqueue, &sim_detect_work_struct);
-
-    return IRQ_HANDLED;
-}
-#endif//sim move to other driver
 static void radio_detect_work_handler(struct work_struct *work)
 {
 	int radiopower=0;
@@ -407,17 +269,8 @@ static void radio_detect_work_handler(struct work_struct *work)
 			strncat(message, "FATAL", 5);
 			pr_info("CORE_DUMP_DETECT=Low, radio fatal!!\n");
 		}
-		/*
-
-		if (status)
-			strncat(message, "FATAL", 5);
-		else
-			strncat(message, "READY", 5);
-			*/
 
     pr_info("[FLS] coredump uevent\n");
-    //kobject_uevent(&baseband_power2_driver_data->modem.xmm6260.hsic_device->dev.kobj, KOBJ_ADD);
-    //kobject_uevent(  &modem_info.modem_core_dump_kobj, KOBJ_ADD);
     kobject_uevent_env(&modem_info.modem_core_dump_kobj, KOBJ_ADD,envp);
 
 }
@@ -453,7 +306,6 @@ static irqreturn_t radio_det_irq(int irq, void *dev_id)
 	}
     return IRQ_HANDLED;
 }
-#endif
 #endif /* BB_XMM_OEM1 */
 
 static void baseband_xmm_power2_flashless_pm_ver_lt_1130_step1
@@ -782,8 +634,6 @@ static void baseband_xmm_power2_flashless_pm_ver_ge_1130_step4
 	pr_info("%s }\n", __func__);
 }
 
-static int free_ipc_ap_wake_irq;
-
 static void baseband_xmm_power2_work_func(struct work_struct *work)
 {
 	struct baseband_xmm_power_work_t *bbxmm_work
@@ -914,79 +764,12 @@ static int baseband_xmm_power2_driver_probe(struct platform_device *device)
 
 	/* OEM specific initialization */
 #ifdef BB_XMM_OEM1
-#if defined(CONFIG_MACH_EDGE) || defined(CONFIG_MACH_ENDEAVORU) || defined(CONFIG_MACH_EDGE_TD) || defined(CONFIG_MACH_BLUE)
-#if 0//sim move to other driver
-		/* may be better to put this in init2()??*/
-		sim_detect_status = SIM_STATUS_UNKNOWN;
-		int err;
-		err = request_irq(gpio_to_irq(SIM_DETECT),
-			sim_det_irq,
-			IRQF_TRIGGER_RISING | IRQF_TRIGGER_FALLING,
-			"SIM_DETECT",
-		&modem_info);
-
-		if (err < 0) {
-			pr_err("%s - request irq SIM_DETECT failed\n",
-				__func__);
-			//return err;
-		}
-
-		sim_detect_status = SIM_STATUS_READY;
-		pr_err("enable sim detection irq here\n");
-		err = gpio_get_value(SIM_DETECT/* 69*/);
-		pr_err("gpio 69 value is %d\n", err);
-#endif//sim move to other driver
-
-#if 0 //only open for XA,XB device
-
-		int err = gpio_get_value(SIM_INIT);
-		pr_info("gpio 32 value is %d\n", err);
-
-
-#if defined(CONFIG_MACH_EDGE) || defined(CONFIG_MACH_ENDEAVORU) || defined(CONFIG_MACH_EDGE_TD) || defined(CONFIG_MACH_BLUE)
-	if(err) /*if GPIO_PI5 is high, set as high*/
-	{
-	    gpio_set_value(SIM_INIT, 1);
-	    pr_info("SIM_INIT value is 1\n");
-	}
-	else  /*if GPIO_PI5 is low, keep 50ms high, then pull low*/
-	{
-	    gpio_set_value(SIM_INIT, 1);
-	    msleep(50);
-	    gpio_set_value(SIM_INIT, 0);
-	    pr_info("SIM_INIT value is 1 and then set to low\n");
-	}
-#endif
-#endif
 		kobj_hsic_device =
 			 kobject_get(&baseband_power2_driver_data->modem.xmm.hsic_device->dev.kobj);
 		if (!kobj_hsic_device) {
 			pr_err("[FLS] can not get modem_kobject\n");
 			goto fail;
 		}
-#if 0//sim move to other driver
-		modem_kset_sim = kset_create_and_add("modem", NULL, kobj_hsic_device);
-		if (!modem_kset_sim) {
-			kobject_put(kobj_hsic_device);
-			pr_err("[FLS] can not allocate modem_kset_sim%d\n", err);
-			goto fail;
-		}
-
-		modem_info.modem_sim_det_kobj.kset = modem_kset_sim;
-		err = kobject_init_and_add(&modem_info.modem_sim_det_kobj,
-			&htc_modem_ktype, NULL, "htc_modem_sim_det");
-		if (err) {
-			pr_err("init kobject modem_kset_sim failed.");
-			kobject_put(&modem_info.modem_sim_det_kobj);
-
-			kset_unregister(modem_kset_sim);
-			modem_kset_sim = NULL;
-
-			kobject_put(kobj_hsic_device);
-
-			goto fail;
-		}
-#endif//sim move to other driver
 
 		/* radio detect*/
 		radio_detect_status = RADIO_STATUS_UNKNOWN;
@@ -1023,7 +806,6 @@ static int baseband_xmm_power2_driver_probe(struct platform_device *device)
 			goto fail;
 
 		}
-#endif
 #endif /* BB_XMM_OEM1 */
 
 	/* init work queue */
@@ -1049,13 +831,8 @@ static int baseband_xmm_power2_driver_probe(struct platform_device *device)
 
 	/* OEM specific - init work queue */
 #ifdef BB_XMM_OEM1
-#if defined(CONFIG_MACH_EDGE) || defined(CONFIG_MACH_ENDEAVORU) || defined(CONFIG_MACH_EDGE_TD) || defined(CONFIG_MACH_BLUE)
-#if 0//sim move to other driver
-	INIT_WORK(&sim_detect_work_struct, sim_detect_work_handler);
-#endif//sim move to other driver
 	INIT_WORK(&radio_detect_work_struct, radio_detect_work_handler);
 fail:
-#endif
 #endif /* BB_XMM_OEM1 */
 
 	return 0;
@@ -1081,20 +858,7 @@ static int baseband_xmm_power2_driver_remove(struct platform_device *device)
 
 	/* OEM specific - free sim detect irq */
 #ifdef BB_XMM_OEM1
-#if defined(CONFIG_MACH_EDGE) || defined(CONFIG_MACH_ENDEAVORU) || defined(CONFIG_MACH_EDGE_TD) || defined(CONFIG_MACH_BLUE)
-#if 0//sim move to other driver
-    free_irq(gpio_to_irq(SIM_DETECT), &modem_info);
-#endif//sim move to other driver
     free_irq(gpio_to_irq(CORE_DUMP_DETECT), &modem_info);
-#endif
-#if 0//sim move to other driver
-	/* HTC: 20111027 free kobj & kset */
-	if (modem_kset_sim) {
-		kobject_put(&modem_info.modem_sim_det_kobj);
-		kset_unregister(modem_kset_sim);
-		modem_kset_sim = NULL;
-	}
-#endif//sim move to other driver
 
 	if (modem_kset_radio) {
 		kobject_put(&modem_info.modem_core_dump_kobj);
@@ -1175,10 +939,6 @@ static int __init baseband_xmm_power2_init(void)
 
     mutex_init(&modem_info.info_lock);
     modem_info.is_open = 0;
-#if 0
-    modem_info.modem_sim_det_kobj;
-    modem_info.modem_core_dump_kobj;
-#endif
 
     wake_lock_init(&modem_info.modem_wake_lock, WAKE_LOCK_SUSPEND,
 	                            "htc_modem_6260");
