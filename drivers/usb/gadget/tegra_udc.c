@@ -2601,14 +2601,16 @@ static int __init tegra_udc_probe(struct platform_device *pdev)
 	INIT_DELAYED_WORK(&udc->work, tegra_udc_charger_detect_work);
 	INIT_WORK(&udc->charger_work, tegra_udc_set_current_limit_work);
 
+	// TripNRaVeR: disable for endeavoru
 	/* Get the regulator for drawing the vbus current in udc driver */
-	udc->vbus_reg = regulator_get(NULL, "usb_bat_chg");
+	/* udc->vbus_reg = regulator_get(NULL, "usb_bat_chg");
 	if (IS_ERR(udc->vbus_reg)) {
 		dev_info(&pdev->dev,
 			"usb_bat_chg regulator not registered:"
 				" USB charging will not be enabled\n");
 		udc->vbus_reg = NULL;
-	}
+	} */
+	udc->vbus_reg = NULL;
 
 #ifdef CONFIG_USB_OTG_UTILS
 	if (tegra_usb_phy_otg_supported(udc->phy))

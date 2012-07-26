@@ -3126,14 +3126,16 @@ static int __init fsl_udc_probe(struct platform_device *pdev)
 	/* create a work for controlling the clocks to the phy if otg is disabled */
 	INIT_WORK(&udc_controller->irq_work, fsl_udc_irq_work);
 
+	// TripNRaVeR: disable for endeavoru
 	/* Get the regulator for drawing the vbus current in udc driver */
-	udc_controller->vbus_regulator = regulator_get(NULL, "usb_bat_chg");
+	/*udc_controller->vbus_regulator = regulator_get(NULL, "usb_bat_chg");
 	if (IS_ERR(udc_controller->vbus_regulator)) {
 		dev_info(&pdev->dev,
 			"usb_bat_chg regulator not registered:"
 				" USB charging will not be enabled\n");
 		udc_controller->vbus_regulator = NULL;
-	}
+	}*/
+	udc_controller->vbus_regulator = NULL;
 
 #ifdef CONFIG_USB_OTG_UTILS
 	udc_controller->transceiver = otg_get_transceiver();
