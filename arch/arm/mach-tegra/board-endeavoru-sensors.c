@@ -70,52 +70,6 @@
 #define RAWCHIP 1
 #include <media/rawchip/Yushan_API.h>
 
-static struct regulator *v_sdmmc_2v85_en ;
-static struct regulator *v_srio_1v8_en ;
-void cm3629_enable_power(int enable)
-{
-	if(htc_get_pcbid_info() >= PROJECT_PHASE_XD) {
-		if(enable == 1) {
-			if (v_sdmmc_2v85_en == NULL) {
-		  		v_sdmmc_2v85_en = regulator_get(NULL, "v_sdmmc_2v85");
-		  		if (WARN_ON(IS_ERR(v_sdmmc_2v85_en))) {
-		   			pr_err("[v_sdmmc_2v85] %s: couldn't get regulator v_sdmmc_2v85_en: %ld\n", __func__, PTR_ERR(v_sdmmc_2v85_en));
-				}
-			}
-		 	regulator_enable(v_sdmmc_2v85_en);
-
-			if (v_srio_1v8_en == NULL) {
-		  		v_srio_1v8_en = regulator_get(NULL, "v_srio_1v8");
-		  		if (WARN_ON(IS_ERR(v_srio_1v8_en))) {
-		   			pr_err("[v_srio_1v8] %s: couldn't get regulator v_srio_1v8_en: %ld\n", __func__, PTR_ERR(v_srio_1v8_en));
-				}
-			}
-		 	regulator_enable(v_srio_1v8_en);
-		}else if(enable == 0) {
-			if(regulator_is_enabled(v_srio_1v8_en)) {
-				regulator_disable(v_srio_1v8_en);
-			}
-			if(regulator_is_enabled(v_sdmmc_2v85_en)) {
-				regulator_disable(v_sdmmc_2v85_en);
-			}	
-		}
-	}else {
-		if(enable == 1) {
-		 	if (v_srio_1v8_en == NULL) {
-		  		v_srio_1v8_en = regulator_get(NULL, "v_srio_1v8");
-		  		if (WARN_ON(IS_ERR(v_srio_1v8_en))) {
-		   			pr_err("[v_srio_1v8] %s: couldn't get regulator v_srio_1v8_en: %ld\n", __func__, PTR_ERR(v_srio_1v8_en));
-				}
-			}
-		 	regulator_enable(v_srio_1v8_en);
-		}else if(enable == 0) {
-			if(regulator_is_enabled(v_srio_1v8_en)) {
-				regulator_disable(v_srio_1v8_en);
-			}	
-		}
-	}
-}
-
 static struct cm3628_platform_data cm3628_pdata = {
 	/*.intr = PSNENOR_INTz,*/
 	.intr = TEGRA_GPIO_PK2,
