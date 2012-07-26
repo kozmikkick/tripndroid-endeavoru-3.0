@@ -140,8 +140,6 @@ static int uart_pin_pull_state=1; // 1 for UART, 0 for GPIO
 static bool modem_sleep_flag = false;
 static spinlock_t xmm_lock;
 static bool system_suspending;
-static struct regulator *enterprise_hsic_reg;
-static bool _hsic_reg_status;
 
 static int reenable_autosuspend; //ICS only
 static int htcpcbid=0;
@@ -149,51 +147,6 @@ static int htcpcbid=0;
 static struct workqueue_struct *workqueue_susp;
 
 //static struct delayed_work pm_qos_work;
-
-static int tegra_baseband_rail_on(void)
-{
-	int ret;
-
-	if (_hsic_reg_status == true)
-		return 0;
-
-	if (enterprise_hsic_reg == NULL) {
-		enterprise_hsic_reg = regulator_get(NULL, "avdd_hsic");
-		if (IS_ERR_OR_NULL(enterprise_hsic_reg)) {
-			pr_err("xmm: could not get regulator vddio_hsic\n");
-			enterprise_hsic_reg = NULL;
-			return PTR_ERR(enterprise_hsic_reg);
-		}
-	}
-	ret = regulator_enable(enterprise_hsic_reg);
-	if (ret < 0) {
-		pr_err("xmm: failed to enable regulator\n");
-		return ret;
-	}
-	_hsic_reg_status = true;
-	return 0;
-}
-
-static int tegra_baseband_rail_off(void)
-{
-	int ret;
-
-	if (_hsic_reg_status == false)
-		return 0;
-
-	if (IS_ERR_OR_NULL(enterprise_hsic_reg)) {
-		pr_err("xmm: unbalanced disable on vddio_hsic regulator\n");
-		enterprise_hsic_reg = NULL;
-		return PTR_ERR(enterprise_hsic_reg);
-	}
-	ret = regulator_disable(enterprise_hsic_reg);
-	if (ret < 0) {
-		pr_err("xmm: failed to disable regulator\n");
-		return ret;
-	}
-	_hsic_reg_status = false;
-	return 0;
-}
 
 int gpio_config_only_one(unsigned gpio, unsigned long flags, const char *label)
 {
@@ -683,7 +636,7 @@ void baseband_xmm_set_power_status(unsigned int status)
 		pr_info("L3\n");
 		/* system is going to suspend */
 		if (baseband_xmm_powerstate == BBXMM_PS_L2)
-			tegra_baseband_rail_off();
+			config_gpio_for_power_off();
 
 		baseband_xmm_powerstate = status;
 		spin_lock_irqsave(&xmm_lock, flags);
@@ -713,7 +666,7 @@ void baseband_xmm_set_power_status(unsigned int status)
 	case BBXMM_PS_L3TOL0:
 		/* poweron rail for L3 -> L0 (system resume) */
 		pr_debug("L3 -> L0, turning on power rail.\n");
-		tegra_baseband_rail_on();
+		config_gpio_for_power_on();
 		baseband_xmm_powerstate = status;
 		break;
 	default:
