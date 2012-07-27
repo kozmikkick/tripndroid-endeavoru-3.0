@@ -1055,36 +1055,6 @@ static struct platform_device *enterprise_devices[] __initdata = {
 #define TOUCH_GPIO_RST TEGRA_GPIO_PF3
 #define TOUCH_GPIO_PWD TEGRA_GPIO_PY2
 
-static struct regulator *srio_1v8_en;
-
-int powerfun(int enable)
-{
-	int ret = 0;
-	if(enable >= 2){
-	}
-	else
-	{
-		if (srio_1v8_en == NULL) {
-			srio_1v8_en = regulator_get(NULL, "v_srio_1v8");
-			if (WARN_ON(IS_ERR(srio_1v8_en))) {
-				pr_err("[srio_1v8] %s: couldn't get regulator srio_1v8_en: %ld\n",
-						__func__, PTR_ERR(srio_1v8_en));
-				ret = -1;
-				goto exit;
-			}
-		}
-		if(enable){
-			ret = regulator_enable(srio_1v8_en);
-			mdelay(10);
-		}else{
-			ret = regulator_disable(srio_1v8_en);
-		}
-	}
-exit:
-	return ret;
-
-}
-
 static struct synaptics_i2c_rmi_platform_data edge_ts_3k_data[] = {
 	{
 		.version = 0x0100,
@@ -1095,7 +1065,6 @@ static struct synaptics_i2c_rmi_platform_data edge_ts_3k_data[] = {
 		//.flags = SYNAPTICS_FLIP_Y,
 		.gpio_irq = TOUCH_GPIO_IRQ,
 		.default_config = 1,
-		.power = powerfun,
 		.source = 1, 
 		.config = {
 			0x00 , 0x00 , 0x00 , 0x00 , //config version
@@ -1134,7 +1103,6 @@ static struct synaptics_i2c_rmi_platform_data edge_ts_3k_data[] = {
 		.abs_y_max = 1755,
 		//.flags = SYNAPTICS_FLIP_Y,
 		.gpio_irq = TOUCH_GPIO_IRQ,
-		.power = powerfun,
 		.source = 0, 
 		.config = {
 			0x00 , 0x00 , 0x00 , 0x01 , //config version
@@ -1178,7 +1146,6 @@ static struct synaptics_i2c_rmi_platform_data edge_ts_3k_data_XB[] = {
 		//.flags = SYNAPTICS_FLIP_Y,
 		.gpio_irq = TOUCH_GPIO_IRQ,
 		.default_config = 1,
-		.power = powerfun,
 		.cable_support = 1,
 		.source = 1, //YFO
 		.customer_register = {0xF9,0x64,0x74,0x32},
@@ -1224,7 +1191,6 @@ static struct synaptics_i2c_rmi_platform_data edge_ts_3k_data_XB[] = {
 		.notifyFinger = NULL, /* speedupCPU,*/
 		//.flags = SYNAPTICS_FLIP_Y,
 		.gpio_irq = TOUCH_GPIO_IRQ,
-		.power = powerfun,
 		.cable_support = 1,
 		.source = 0, //second source
 		.customer_register = {0xF9,0x64,0x74,0x32},
@@ -1270,7 +1236,6 @@ static struct synaptics_i2c_rmi_platform_data edge_ts_3k_data_XB[] = {
 		.flags = SYNAPTICS_FLIP_Y,
 		.gpio_irq = TOUCH_GPIO_IRQ,
 		.default_config = 1,
-		.power = powerfun,
 		.source = 1, //YFO
 		.config = {
 			0x30, 0x30, 0x30, 0x31, 
@@ -1306,7 +1271,6 @@ static struct synaptics_i2c_rmi_platform_data edge_ts_3k_data_XB[] = {
 		.abs_y_max = 1770,
 		//.flags = SYNAPTICS_FLIP_Y,
 		.gpio_irq = TOUCH_GPIO_IRQ,
-		.power = powerfun,
 		.source = 0, //wintek
 		.config = {
 			0x30, 0x30, 0x30, 0x30, 
