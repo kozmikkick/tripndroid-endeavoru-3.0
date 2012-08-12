@@ -100,6 +100,9 @@ static int tegra_hifi_hw_params(struct snd_pcm_substream *substream,
 
 	srate = params_rate(params);
 	switch (srate) {
+	case 44100:
+		mclk = 512 * srate;
+		break;
 	case 64000:
 	case 88200:
 	case 96000:
