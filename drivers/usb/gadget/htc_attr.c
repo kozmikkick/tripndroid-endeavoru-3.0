@@ -64,6 +64,10 @@ static struct usb_string_node usb_string_array[] = {
 		.name = "serial",
 	},
 	{
+		.usb_function_flag = 1 << USB_FUNCTION_PROJECTOR,
+		.name = "projector",
+	},
+	{
 		.usb_function_flag = 1 << USB_FUNCTION_MODEM,
 		.name = "modem",
 	},
@@ -342,6 +346,9 @@ int android_switch_function(unsigned func)
 			list_add_tail(&f->enabled_list, &dev->enabled_functions);
 		else if ((func & (1 << USB_FUNCTION_ACCESSORY)) &&
 				!strcmp(f->name, "accessory"))
+			list_add_tail(&f->enabled_list, &dev->enabled_functions);
+		else if ((func & (1 << USB_FUNCTION_PROJECTOR)) &&
+				!strcmp(f->name, "projector"))
 			list_add_tail(&f->enabled_list, &dev->enabled_functions);
 #ifdef CONFIG_USB_ANDROID_MDM9K_DIAG
 		else if ((func & (1 << USB_FUNCTION_DIAG_MDM)) &&

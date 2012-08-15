@@ -32,7 +32,7 @@
 #include <linux/usb/gadget.h>
 #include <linux/usb/android_composite.h>
 #include <linux/wakelock.h>
-//#include <linux/htc_log.h>
+#include <linux/htc_log.h>
 #include "gadget_chips.h"
 
 /*
@@ -157,6 +157,10 @@ struct android_dev {
 static struct class *android_class;
 static struct android_dev *_android_dev;
 
+#ifdef CONFIG_USB_ANDROID_PROJECTOR
+#include "f_projector.c"
+#endif
+
 static struct wake_lock android_usb_idle_wake_lock;
 #ifdef CONFIG_PERFLOCK
 static struct perf_lock android_usb_perf_lock;
@@ -237,12 +241,12 @@ static void android_work(struct work_struct *data)
 		spin_unlock_irqrestore(&cdev->lock, flags);
 		kobject_uevent_env(&dev->dev->kobj, KOBJ_CHANGE,
 							configured);
-		pr_info("USB_STATE=CONFIGURED");
+		sp_pr_info("USB_STATE=CONFIGURED");
 
 		/* hold perflock, wakelock for performance consideration */
 		list_for_each_entry(f, &dev->enabled_functions, enabled_list) {
 			if (f->performance_lock) {
-				pr_info("Performance lock for '%s'\n", f->name);
+				sp_pr_info("Performance lock for '%s'\n", f->name);
 				count++;
 			}
 		}
@@ -268,7 +272,7 @@ static void android_work(struct work_struct *data)
 		kobject_uevent_env(&dev->dev->kobj, KOBJ_CHANGE,
 				dev->sw_connected ? connected : disconnected);
 
-		pr_info("%s\n", dev->connected ? connected[0] : disconnected[0]);
+		sp_pr_info("%s\n", dev->connected ? connected[0] : disconnected[0]);
 	} else {
 		spin_unlock_irqrestore(&cdev->lock, flags);
 	}
@@ -925,6 +929,13 @@ static int mtp_function_ctrlrequest(struct android_usb_function *f,
 	return mtp_ctrlrequest(cdev, c);
 }
 
+static int ptp_function_ctrlrequest(struct android_usb_function *f,
+						struct usb_composite_dev *cdev,
+						const struct usb_ctrlrequest *c)
+{
+	return mtp_ctrlrequest(cdev, c);
+}
+
 static struct android_usb_function mtp_function = {
 	.name		= "mtp",
 	.init		= mtp_function_init,
@@ -939,6 +950,7 @@ static struct android_usb_function ptp_function = {
 	.init		= ptp_function_init,
 	.cleanup	= ptp_function_cleanup,
 	.bind_config	= ptp_function_bind_config,
+	.ctrlrequest	= ptp_function_ctrlrequest,
 };
 #endif
 
@@ -1385,6 +1397,122 @@ static struct android_usb_function accessory_function = {
 	.ctrlrequest	= accessory_function_ctrlrequest,
 };
 
+#ifdef CONFIG_USB_ANDROID_PROJECTOR
+static int projector_function_init(struct android_usb_function *f,
+		struct usb_composite_dev *cdev)
+{
+	f->config = kzalloc(sizeof(struct htcmode_protocol), GFP_KERNEL);
+	if (!f->config)
+		return -ENOMEM;
+
+	return projector_setup();
+}
+
+static void projector_function_cleanup(struct android_usb_function *f)
+{
+
+	projector_cleanup();
+
+	if (f->config) {
+		kfree(f->config);
+		f->config = NULL;
+	}
+}
+
+static int projector_function_bind_config(struct android_usb_function *f,
+		struct usb_configuration *c)
+{
+	return projector_bind_config(c, f->config);
+}
+
+
+static ssize_t projector_product_show(struct device *dev,
+		struct device_attribute *attr, char *buf)
+{
+	struct android_usb_function *f = dev_get_drvdata(dev);
+	struct htcmode_protocol *config = f->config;
+	return snprintf(buf, PRODUCT_NAME_MAX, "%s\n", config->product_name);
+}
+
+static DEVICE_ATTR(product, S_IRUGO | S_IWUSR, projector_product_show,
+						    NULL);
+
+static ssize_t projector_car_model_show(struct device *dev,
+		struct device_attribute *attr, char *buf)
+{
+	struct android_usb_function *f = dev_get_drvdata(dev);
+	struct htcmode_protocol *config = f->config;
+	return snprintf(buf, CAR_MODEL_NAME_MAX, "%s\n", config->car_model);
+}
+
+static DEVICE_ATTR(car_model, S_IRUGO | S_IWUSR, projector_car_model_show,
+						    NULL);
+
+static ssize_t projector_width_show(struct device *dev,
+		struct device_attribute *attr, char *buf)
+{
+	struct android_usb_function *f = dev_get_drvdata(dev);
+	struct htcmode_protocol *config = f->config;
+	return snprintf(buf, PAGE_SIZE, "%d\n", config->server_info.width);
+}
+
+static DEVICE_ATTR(width, S_IRUGO | S_IWUSR, projector_width_show,
+						    NULL);
+
+static ssize_t projector_height_show(struct device *dev,
+		struct device_attribute *attr, char *buf)
+{
+	struct android_usb_function *f = dev_get_drvdata(dev);
+	struct htcmode_protocol *config = f->config;
+	return snprintf(buf, PAGE_SIZE, "%d\n", config->server_info.height);
+}
+
+static DEVICE_ATTR(height, S_IRUGO | S_IWUSR, projector_height_show,
+						    NULL);
+
+static ssize_t projector_rotation_show(struct device *dev,
+		struct device_attribute *attr, char *buf)
+{
+	struct android_usb_function *f = dev_get_drvdata(dev);
+	struct htcmode_protocol *config = f->config;
+	return snprintf(buf, PAGE_SIZE, "%d\n", (config->client_info.display_conf & CLIENT_INFO_SERVER_ROTATE_USED));
+}
+
+static DEVICE_ATTR(rotation, S_IRUGO | S_IWUSR, projector_rotation_show,
+						    NULL);
+
+static ssize_t projector_version_show(struct device *dev,
+		struct device_attribute *attr, char *buf)
+{
+	struct android_usb_function *f = dev_get_drvdata(dev);
+	struct htcmode_protocol *config = f->config;
+	return snprintf(buf, PAGE_SIZE, "%d\n", config->version);
+}
+
+static DEVICE_ATTR(version, S_IRUGO | S_IWUSR, projector_version_show,
+						    NULL);
+
+
+static struct device_attribute *projector_function_attributes[] = {
+	&dev_attr_product,
+	&dev_attr_car_model,
+	&dev_attr_width,
+	&dev_attr_height,
+	&dev_attr_rotation,
+	&dev_attr_version,
+	NULL
+};
+
+
+struct android_usb_function projector_function = {
+	.name		= "projector",
+	.init		= projector_function_init,
+	.cleanup	= projector_function_cleanup,
+	.bind_config	= projector_function_bind_config,
+	.attributes = projector_function_attributes
+};
+#endif
+
 static struct android_usb_function *supported_functions[] = {
 #if 1
 #ifdef CONFIG_USB_ANDROID_RNDIS
@@ -1405,6 +1533,9 @@ static struct android_usb_function *supported_functions[] = {
 //TODO:	&modem_function,
 //TODO:	&modem_mdm_function,
 	&serial_function,
+#ifdef CONFIG_USB_ANDROID_PROJECTOR
+	&projector_function,
+#endif
 #if defined(CONFIG_USB_ANDROID_RMNET_SMD)
 	&rmnet_smd_function,
 #elif defined(CONFIG_USB_ANDROID_RMNET_SDIO)
@@ -1914,6 +2045,14 @@ android_setup(struct usb_gadget *gadget, const struct usb_ctrlrequest *c)
 	 */
 	if (value < 0)
 		value = acc_ctrlrequest(cdev, c);
+
+#ifdef CONFIG_USB_ANDROID_PROJECTOR
+	/*
+	 * The projector needs to handle control requests before it's enabled.
+	 */
+	if (value < 0)
+		value = projector_ctrlrequest(cdev, c);
+#endif
 
 	if (value < 0)
 		value = composite_setup(gadget, c);

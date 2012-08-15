@@ -29,7 +29,7 @@ struct tegra_utmip_config {
 	u8 idle_wait_delay;
 	u8 term_range_adj;
 	u8 xcvr_setup;
-	signed char xcvr_setup_offset;
+	u8 xcvr_setup_offset;
 	u8 xcvr_use_fuses;
 	u8 xcvr_lsfslew;
 	u8 xcvr_lsrslew;
@@ -136,6 +136,7 @@ void tegra_usb_phy_clk_disable(struct tegra_usb_phy *phy);
 void tegra_usb_phy_clk_enable(struct tegra_usb_phy *phy);
 
 void tegra_usb_phy_power_off(struct tegra_usb_phy *phy, bool is_dpd);
+void tegra_usb_phy_presuspend(struct tegra_usb_phy *phy, bool is_dpd);
 
 void tegra_usb_phy_postsuspend(struct tegra_usb_phy *phy, bool is_dpd);
 

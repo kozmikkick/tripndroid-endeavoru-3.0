@@ -219,10 +219,8 @@ static struct usb_descriptor_header *ecm_fs_function[] = {
 	(struct usb_descriptor_header *) &ecm_header_desc,
 	(struct usb_descriptor_header *) &ecm_union_desc,
 	(struct usb_descriptor_header *) &ecm_desc,
-
 	/* NOTE: status endpoint might need to be removed */
 	(struct usb_descriptor_header *) &fs_ecm_notify_desc,
-
 	/* data interface, altsettings 0 and 1 */
 	(struct usb_descriptor_header *) &ecm_data_nop_intf,
 	(struct usb_descriptor_header *) &ecm_data_intf,
@@ -242,7 +240,6 @@ static struct usb_endpoint_descriptor hs_ecm_notify_desc = {
 	.wMaxPacketSize =	cpu_to_le16(ECM_STATUS_BYTECOUNT),
 	.bInterval =		LOG2_STATUS_INTERVAL_MSEC + 4,
 };
-
 static struct usb_endpoint_descriptor hs_ecm_in_desc = {
 	.bLength =		USB_DT_ENDPOINT_SIZE,
 	.bDescriptorType =	USB_DT_ENDPOINT,
@@ -267,10 +264,8 @@ static struct usb_descriptor_header *ecm_hs_function[] = {
 	(struct usb_descriptor_header *) &ecm_header_desc,
 	(struct usb_descriptor_header *) &ecm_union_desc,
 	(struct usb_descriptor_header *) &ecm_desc,
-
 	/* NOTE: status endpoint might need to be removed */
 	(struct usb_descriptor_header *) &hs_ecm_notify_desc,
-
 	/* data interface, altsettings 0 and 1 */
 	(struct usb_descriptor_header *) &ecm_data_nop_intf,
 	(struct usb_descriptor_header *) &ecm_data_intf,
