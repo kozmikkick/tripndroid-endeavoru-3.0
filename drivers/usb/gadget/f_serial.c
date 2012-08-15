@@ -18,7 +18,7 @@
 #include "u_serial.h"
 #include "gadget_chips.h"
 
-//#include <linux/htc_log.h>
+#include <linux/htc_log.h>
 
 /*
  * This function packages a simple "generic serial" port with no real
