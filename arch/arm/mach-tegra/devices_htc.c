@@ -14,22 +14,6 @@
  * GNU General Public License for more details.
  */
 
-/*  ATAG LIST
- * #define ATAG_SMI 0x4d534D71
- * #define ATAG_HWID 0x4d534D72
- * #define ATAG_GS         0x5441001d
- * #define ATAG_PS         0x5441001c
- * #define ATAG_CSA	0x5441001f
- * #define ATAG_CSA	0x5441001f
- * #define ATAG_SKUID 0x4d534D73
- * #define ATAG_HERO_PANEL_TYPE 0x4d534D74
- * #define ATAG_PS_TYPE 0x4d534D77
- * #define ATAG_TP_TYPE 0x4d534D78
- * #define ATAG_ENGINEERID 0x4d534D75
- * #define ATAG_MFG_GPIO_TABLE 0x59504551
- * #define ATAG_MEMSIZE 0x5441001e
- */
-
 #include <linux/kernel.h>
 #include <linux/platform_device.h>
 #include <linux/dma-mapping.h>
@@ -47,68 +31,39 @@
 #include "board.h"
 #include "gpio-names.h"
 
-unsigned long tegra_bootloader_panel_lsb;
-unsigned long tegra_bootloader_panel_msb;
-
-static char *df_serialno = "000000000000";
-static char *board_sn;
-static char *df_mb_serialno = "000000000000";
-static char *board_mb_sn;
-
-#define MFG_GPIO_TABLE_MAX_SIZE        0x400
+#define MFG_GPIO_TABLE_MAX_SIZE 0x400
 #define EMMC_FREQ_533 533
 #define EMMC_FREQ_400 400
 
+#define ATAG_GS         	0x5441001d
+#define ATAG_PS         	0x5441001c
+#define ATAG_CSA		0x5441001f
+#define ATAG_GRYO_GSENSOR	0x54410020
+#define ATAG_PS_TYPE 		0x4d534D77
+#define ATAG_TP_TYPE 		0x4d534D78
+#define ATAG_MFG_GPIO_TABLE 	0x59504551
+
+bool enable_debug_ll = false;
+
+static int zchg_mode = 0;
+static int build_flag;
+static int sku_id;
+static int mfg_mode;
+
+static unsigned long kernel_flag;
+static unsigned long extra_kernel_flag;
+static unsigned int bl_ac_flag = 0;
 static unsigned char mfg_gpio_table[MFG_GPIO_TABLE_MAX_SIZE];
 
-#define ATAG_SMI 0x4d534D71
-/* setup calls mach->fixup, then parse_tags, parse_cmdline
- * We need to setup meminfo in mach->fixup, so this function
- * will need to traverse each tag to find smi tag.
- */
-int __init parse_tag_smi(const struct tag *tags)
-{
-	int smi_sz = 0, find = 0;
-	struct tag *t = (struct tag *)tags;
-
-	for (; t->hdr.size; t = tag_next(t)) {
-		if (t->hdr.tag == ATAG_SMI) {
-			printk(KERN_DEBUG "find the smi tag\n");
-			find = 1;
-			break;
-		}
-	}
-	if (!find)
-		return -1;
-
-	printk(KERN_DEBUG "parse_tag_smi: smi size = %d\n", t->u.mem.size);
-	smi_sz = t->u.mem.size;
-	return smi_sz;
-}
-__tagtable(ATAG_SMI, parse_tag_smi);
-
-#define ATAG_HWID 0x4d534D72
-int __init parse_tag_hwid(const struct tag *tags)
-{
-	int hwid = 0, find = 0;
-	struct tag *t = (struct tag *)tags;
-
-	for (; t->hdr.size; t = tag_next(t)) {
-		if (t->hdr.tag == ATAG_HWID) {
-			printk(KERN_DEBUG "find the hwid tag\n");
-			find = 1;
-			break;
-		}
-	}
-
-	if (find)
-		hwid = t->u.revision.rev;
-	printk(KERN_DEBUG "parse_tag_hwid: hwid = 0x%x\n", hwid);
-	return hwid;
-}
-__tagtable(ATAG_HWID, parse_tag_hwid);
-
+static char *emmc_tag;
+static char *board_sn;
+static char *board_mb_sn;
 static char *keycap_tag = NULL;
+static char *cid_tag = NULL;
+static char *carrier_tag = NULL;
+
+unsigned char pcbid = PROJECT_PHASE_INVALID;
+
 static int __init board_keycaps_tag(char *get_keypads)
 {
 	if (strlen(get_keypads))
@@ -125,7 +80,6 @@ void board_get_keycaps_tag(char **ret_data)
 }
 EXPORT_SYMBOL(board_get_keycaps_tag);
 
-static char *cid_tag = NULL;
 static int __init board_set_cid_tag(char *get_hboot_cid)
 {
 	if (strlen(get_hboot_cid))
@@ -142,7 +96,6 @@ void board_get_cid_tag(char **ret_data)
 }
 EXPORT_SYMBOL(board_get_cid_tag);
 
-static char *carrier_tag = NULL;
 static int __init board_set_carrier_tag(char *get_hboot_carrier)
 {
 	if (strlen(get_hboot_carrier))
@@ -159,9 +112,6 @@ void board_get_carrier_tag(char **ret_data)
 }
 EXPORT_SYMBOL(board_get_carrier_tag);
 
-/* G-Sensor calibration value */
-#define ATAG_GS         0x5441001d
-
 unsigned int gs_kvalue;
 EXPORT_SYMBOL(gs_kvalue);
 
@@ -173,9 +123,6 @@ static int __init parse_tag_gs_calibration(const struct tag *tag)
 }
 
 __tagtable(ATAG_GS, parse_tag_gs_calibration);
-
-/* Proximity sensor calibration values */
-#define ATAG_PS         0x5441001c
 
 unsigned int ps_kparam1;
 EXPORT_SYMBOL(ps_kparam1);
@@ -196,7 +143,6 @@ static int __init parse_tag_ps_calibration(const struct tag *tag)
 
 __tagtable(ATAG_PS, parse_tag_ps_calibration);
 
-
 unsigned int als_kadc;
 EXPORT_SYMBOL(als_kadc);
 
@@ -210,10 +156,6 @@ static int __init parse_tag_als_calibration(const struct tag *tag)
 	return 0;
 }
 __tagtable(ATAG_ALS, parse_tag_als_calibration);
-
-
-/* CSA sensor calibration values */
-#define ATAG_CSA	0x5441001f
 
 unsigned int csa_kvalue1;
 EXPORT_SYMBOL(csa_kvalue1);
@@ -248,7 +190,6 @@ static int __init parse_tag_csa_calibration(const struct tag *tag)
 __tagtable(ATAG_CSA, parse_tag_csa_calibration);
 
 #ifdef CAMERA_CALIBRATION
-/* camera AWB calibration values */
 #define ATAG_CAM_AWB    0x59504550
 unsigned char awb_kvalues[2048];
 EXPORT_SYMBOL(awb_kvalues);
@@ -265,8 +206,6 @@ static int __init parse_tag_awb_calibration(const struct tag *tag)
 __tagtable(ATAG_CAM_AWB, parse_tag_awb_calibration);
 #endif
 
-/* Gyro/G-senosr calibration values */
-#define ATAG_GRYO_GSENSOR	0x54410020
 unsigned char gyro_gsensor_kvalue[37];
 EXPORT_SYMBOL(gyro_gsensor_kvalue);
 
@@ -278,7 +217,6 @@ static int __init parse_tag_gyro_gsensor_calibration(const struct tag *tag)
 }
 __tagtable(ATAG_GRYO_GSENSOR, parse_tag_gyro_gsensor_calibration);
 
-static int mfg_mode;
 int __init board_mfg_mode_init(char *s)
 {
 	if (!strcmp(s, "normal"))
@@ -306,7 +244,6 @@ EXPORT_SYMBOL(board_mfg_mode);
 
 __setup("androidboot.mode=", board_mfg_mode_init);
 
-static int zchg_mode = 0;
 int __init board_zchg_mode_init(char *s)
 {
 	if (!strcmp(s, "1"))
@@ -326,8 +263,6 @@ int board_zchg_mode(void)
 
 EXPORT_SYMBOL(board_zchg_mode);
 __setup("enable_zcharge=", board_zchg_mode_init);
-
-static int build_flag;
 
 static int __init board_bootloader_setup(char *str)
 {
@@ -363,18 +298,13 @@ int board_build_flag(void)
 {
 	return build_flag;
 }
-
 EXPORT_SYMBOL(board_build_flag);
 
 static int __init board_serialno_setup(char *serialno)
 {
 	char *str;
 
-	/* use default serial number when mode is factory2 */
-	if (board_mfg_mode() == 1 || !strlen(serialno))
-		str = df_serialno;
-	else
-		str = serialno;
+	str = serialno;
 #ifdef CONFIG_USB_FUNCTION
 	msm_hsusb_pdata.serial_number = str;
 #endif
@@ -387,11 +317,7 @@ static int __init board_mb_serialno_setup(char *serialno)
 {
 	char *str;
 
-	/* use default serial number when mode is factory2 */
-	if (board_mfg_mode() == 1 || !strlen(serialno))
-		str = df_mb_serialno;
-	else
-		str = serialno;
+	str = serialno;
 	board_mb_sn = str;
 	return 1;
 }
@@ -407,52 +333,14 @@ char *board_mb_serialno(void)
 	return board_mb_sn;
 }
 
-static int sku_id;
 int board_get_sku_tag()
 {
 	return sku_id;
 }
 
-#define ATAG_SKUID 0x4d534D73
-int __init parse_tag_skuid(const struct tag *tags)
-{
-	int skuid = 0, find = 0;
-	struct tag *t = (struct tag *)tags;
-
-	for (; t->hdr.size; t = tag_next(t)) {
-		if (t->hdr.tag == ATAG_SKUID) {
-			printk(KERN_DEBUG "find the skuid tag\n");
-			find = 1;
-			break;
-		}
-	}
-
-	if (find) {
-		skuid = t->u.revision.rev;
-		sku_id = skuid;
-	}
-	printk(KERN_DEBUG "parse_tag_skuid: hwid = 0x%x\n", skuid);
-	return skuid;
-}
-__tagtable(ATAG_SKUID, parse_tag_skuid);
-
-#define ATAG_HERO_PANEL_TYPE 0x4d534D74
-int panel_type;
-int __init tag_panel_parsing(const struct tag *tags)
-{
-	panel_type = tags->u.revision.rev;
-
-	printk(KERN_DEBUG "%s: panel type = %d\n", __func__,
-		panel_type);
-
-	return panel_type;
-}
-__tagtable(ATAG_HERO_PANEL_TYPE, tag_panel_parsing);
-
-/* ISL29028 ID values */
-#define ATAG_PS_TYPE 0x4d534D77
 int ps_type;
 EXPORT_SYMBOL(ps_type);
+
 int __init tag_ps_parsing(const struct tag *tags)
 {
 	ps_type = tags->u.revision.rev;
@@ -463,12 +351,10 @@ int __init tag_ps_parsing(const struct tag *tags)
 	return ps_type;
 }
 __tagtable(ATAG_PS_TYPE, tag_ps_parsing);
-//#endif
 
- /* Touch Controller ID values */
-#define ATAG_TP_TYPE 0x4d534D78
 int tp_type;
 EXPORT_SYMBOL(tp_type);
+
 int __init tag_tp_parsing(const struct tag *tags)
 {
 	tp_type = tags->u.revision.rev;
@@ -480,56 +366,6 @@ int __init tag_tp_parsing(const struct tag *tags)
 }
 __tagtable(ATAG_TP_TYPE, tag_tp_parsing);
 
-
-#define ATAG_ENGINEERID 0x4d534D75
-unsigned engineer_id;
-EXPORT_SYMBOL(engineer_id);
-int __init parse_tag_engineerid(const struct tag *tags)
-{
-	int engineerid = 0, find = 0;
-	struct tag *t = (struct tag *)tags;
-
-	for (; t->hdr.size; t = tag_next(t)) {
-		if (t->hdr.tag == ATAG_ENGINEERID) {
-			printk(KERN_DEBUG "find the engineer tag\n");
-			find = 1;
-			break;
-		}
-	}
-
-	if (find) {
-		engineer_id = t->u.revision.rev;
-		engineerid = t->u.revision.rev;
-	}
-	printk(KERN_DEBUG "parse_tag_engineerid: 0x%x\n", engineerid);
-	return engineerid;
-}
-__tagtable(ATAG_ENGINEERID, parse_tag_engineerid);
-
-#define ATAG_PCBID 0x4d534D76
-unsigned char pcbid = PROJECT_PHASE_INVALID;
-int __init parse_tag_pcbid(const struct tag *tags)
-{
-	int find = 0;
-	struct tag *t = (struct tag *)tags;
-
-	for (; t->hdr.size; t = tag_next(t)) {
-		if (t->hdr.tag == ATAG_PCBID) {
-			printk(KERN_DEBUG "found the pcbid tag\n");
-			find = 1;
-			break;
-		}
-	}
-
-	if (find) {
-		pcbid = t->u.revision.rev;
-	}
-	printk(KERN_DEBUG "parse_tag_pcbid: 0x%x\n", pcbid);
-	return pcbid;
-}
-__tagtable(ATAG_PCBID, parse_tag_pcbid);
-
-#define ATAG_MFG_GPIO_TABLE 0x59504551
 int __init parse_tag_mfg_gpio_table(const struct tag *tags)
 {
 	   unsigned char *dptr = (unsigned char *)(&tags->u);
@@ -547,7 +383,6 @@ char *board_get_mfg_sleep_gpio_table(void)
 }
 EXPORT_SYMBOL(board_get_mfg_sleep_gpio_table);
 
-static char *emmc_tag;
 static int __init board_set_emmc_tag(char *get_hboot_emmc)
 {
 	if (strlen(get_hboot_emmc))
@@ -568,30 +403,6 @@ int board_emmc_boot(void)
 	return 0;
 }
 
-#define ATAG_MEMSIZE 0x5441001e
-unsigned memory_size;
-int __init parse_tag_memsize(const struct tag *tags)
-{
-	int mem_size = 0, find = 0;
-	struct tag *t = (struct tag *)tags;
-
-	for (; t->hdr.size; t = tag_next(t)) {
-		if (t->hdr.tag == ATAG_MEMSIZE) {
-			printk(KERN_DEBUG "find the memsize tag\n");
-			find = 1;
-			break;
-		}
-	}
-
-	if (find) {
-		memory_size = t->u.revision.rev;
-		mem_size = t->u.revision.rev;
-	}
-	printk(KERN_DEBUG "parse_tag_memsize: %d\n", memory_size);
-	return mem_size;
-}
-__tagtable(ATAG_MEMSIZE, parse_tag_memsize);
-
 int __init parse_tag_extdiag(const struct tag *tags)
 {
 	const struct tag *t = tags;
@@ -603,20 +414,6 @@ int __init parse_tag_extdiag(const struct tag *tags)
 	return 0;
 }
 
-static unsigned int radio_flag;
-int __init radio_flag_init(char *s)
-{
-	radio_flag = simple_strtoul(s, 0, 16);
-	return 1;
-}
-__setup("radioflag=", radio_flag_init);
-
-unsigned int get_radio_flag(void)
-{
-	return radio_flag;
-}
-
-static unsigned long kernel_flag;
 int __init kernel_flag_init(char *s)
 {
 	int ret;
@@ -630,7 +427,6 @@ unsigned int get_kernel_flag(void)
 	return kernel_flag;
 }
 
-static unsigned long extra_kernel_flag;
 int __init extra_kernel_flag_init(char *s)
 {
 	int ret;
@@ -656,64 +452,15 @@ int unregister_notifier_by_psensor(struct notifier_block *nb)
 	return blocking_notifier_chain_unregister(&psensor_notifier_list, nb);
 }
 
-static int __init tegra_bootloader_panel_arg(char *options)
-{
-	char *p = options;
-
-	tegra_bootloader_panel_lsb = memparse(p, &p);
-	if (*p == '@')
-		tegra_bootloader_panel_msb = memparse(p+1, &p);
-
-	pr_info("Found panel_vendor: %08lx@%08lx\n",
-		tegra_bootloader_panel_lsb, tegra_bootloader_panel_msb);
-
-	return 0;
-}
-early_param("panel_vendor", tegra_bootloader_panel_arg);
-
 /* should call only one time */
 static int __htc_get_pcbid_info(void)
 {
-	switch (pcbid)
-	{
-		case 0:
-			return PROJECT_PHASE_XA;
-		case 1:
-			return PROJECT_PHASE_XB;
-		case 2:
-			return PROJECT_PHASE_XC;
-		case 3:
-			return PROJECT_PHASE_XD;
-		case 4:
-			return PROJECT_PHASE_XE;
-		case 5:
-			return PROJECT_PHASE_XF;
-		case 6:
-			return PROJECT_PHASE_XG;
-		case 7:
-			return PROJECT_PHASE_XH;
-		default:
-			return pcbid;
-	}
+	return pcbid;
 }
 
 static char* __pcbid_to_name(signed int id)
 {
-	switch (id)
-	{
-	case PROJECT_PHASE_INVALID: return "INVALID";
-	case PROJECT_PHASE_EVM:     return "EVM";
-	case PROJECT_PHASE_XA:      return "XA";
-	case PROJECT_PHASE_XB:      return "XB";
-	case PROJECT_PHASE_XC:      return "XC";
-	case PROJECT_PHASE_XD:      return "XD";
-	case PROJECT_PHASE_XE:      return "XE";
-	case PROJECT_PHASE_XF:      return "XF";
-	case PROJECT_PHASE_XG:      return "XG";
-	case PROJECT_PHASE_XH:      return "XH";
-	default:
-		return "<Latest HW phase>";
-	}
+	return "<Latest HW phase>";
 }
 
 const int htc_get_pcbid_info(void)
@@ -722,21 +469,13 @@ const int htc_get_pcbid_info(void)
 	if (__pcbid == PROJECT_PHASE_INVALID)
 	{
 		__pcbid = __htc_get_pcbid_info();
-		pr_info("[hTC info] project phase: %s (id=%d)\n",
+		pr_info("project phase: %s (id=%d)\n",
 				__pcbid_to_name(__pcbid), __pcbid);
 	}
 	return __pcbid;
 }
 
-#define ENG_ID_MODEM_REWORK 0xCA0F
-const bool is_modem_rework_phase()
-{
-    return (htc_get_pcbid_info() == PROJECT_PHASE_XC) &&
-        (engineer_id == ENG_ID_MODEM_REWORK);
-}
-
 #ifdef CONFIG_DEBUG_LL_DYNAMIC
-bool enable_debug_ll = false;
 static int __init board_set_debug_ll(char *val)
 {
        pr_debug("%s: low level debug: on\n", __func__);
@@ -746,7 +485,6 @@ static int __init board_set_debug_ll(char *val)
 __setup("debug_ll", board_set_debug_ll);
 #endif
 
-static unsigned int bl_ac_flag = 0;
 int __init bl_ac_flag_init(char *s)
 {
 	bl_ac_flag=1;
