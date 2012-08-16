@@ -1,86 +1,37 @@
-/* arch/arm/mach-msm/include/mach/BOARD_HTC.h
- * Copyright (C) 2007-2009 HTC Corporation.
- * Author: Thomas Tsai <thomas_tsai@htc.com>
+/*
+ * arch/arm/mach-tegra/include/mach/board_htc.c
  *
- * This software is licensed under the terms of the GNU General Public
- * License version 2, as published by the Free Software Foundation, and
- * may be copied, distributed, and modified under those terms.
+ * Copyright (c) 2011-2012, NVIDIA Corporation.
  *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
+ * more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, write to the Free Software Foundation, Inc.,
+ * 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
+
 #ifndef __ASM_ARCH_MSM_BOARD_HTC_H
 #define __ASM_ARCH_MSM_BOARD_HTC_H
 
 #include <linux/types.h>
 #include <linux/list.h>
 #include <asm/setup.h>
-#if 0
-#ifdef CONFIG_MSM_HTC_DEBUG_INFO
-#include <mach/htc_debug_info.h>
-#endif
-#endif
-
-#if 0
-struct msm_pmem_setting{
-	resource_size_t pmem_start;
-	resource_size_t pmem_size;
-	resource_size_t pmem_adsp_start;
-	resource_size_t pmem_adsp_size;
-	resource_size_t pmem_gpu0_start;
-	resource_size_t pmem_gpu0_size;
-	resource_size_t pmem_gpu1_start;
-	resource_size_t pmem_gpu1_size;
-	resource_size_t pmem_camera_start;
-	resource_size_t pmem_camera_size;
-	resource_size_t ram_console_start;
-	resource_size_t ram_console_size;
-};
-
-enum {
-	MSM_SERIAL_UART1	= 0,
-	MSM_SERIAL_UART2,
-	MSM_SERIAL_UART3,
-#ifdef CONFIG_SERIAL_MSM_HS
-	MSM_SERIAL_UART1DM,
-	MSM_SERIAL_UART2DM,
-#endif
-	MSM_SERIAL_NUM,
-};
-
-#endif
-
-/* common init routines for use by arch/arm/mach-msm/board-*.c */
-
-#if 0
-void __init msm_add_usb_devices(void (*phy_reset) (void), void (*phy_shutdown) (void));
-void __init msm_add_usb_id_pin_function(void (*config_usb_id_gpios)(bool enable));
-void __init msm_add_usb_id_pin_gpio(int usb_id_pin_io);
-void __init msm_enable_car_kit_detect(bool enable);
-void __init msm_change_usb_id(__u16 vendor_id, __u16 product_id);
-void __init msm_add_mem_devices(struct msm_pmem_setting *setting);
-#ifdef CONFIG_USB_FUNCTION
-void __init msm_register_uart_usb_switch(void (*usb_uart_switch) (int));
-void __init msm_register_usb_phy_init_seq(int *int_seq);
-void __init msm_init_ums_lun(int lun_num);
-void __init msm_set_ums_device_id(int id);
-void __init msm_hsusb_set_product(struct msm_hsusb_product *product, int num_products);
-#endif
-
-struct mmc_platform_data;
-int __init msm_add_sdcc_devices(unsigned int controller, struct mmc_platform_data *plat);
-int __init msm_add_serial_devices(unsigned uart);
-#endif
 
 #define SHIP_BUILD  0
 #define MFG_BUILD   1
 #define ENG_BUILD   2
 
-
 int board_mfg_mode(void);
 int board_zchg_mode(void);
+
 void htc_gpio_set_diag_gpio_table(unsigned char* dwMFG_gpio_table);
 
 int __init board_mcp_monodie(void);
@@ -102,16 +53,9 @@ char *board_serialno(void);
 unsigned int get_kernel_flag(void);
 unsigned int get_extra_kernel_flag(void);
 unsigned int get_bl_ac_in_flag(void);
-/*
- * Obviously, we need these in all project.
- * To export a function to get these is too lousy.
- * Each BSP can include board.h to get these.
- *
- * Jay, 15/May/09'
- * */
+
 extern int panel_type;
 extern int usb_phy_error;
-
 
 extern unsigned long tegra_bootloader_panel_lsb;
 extern unsigned long tegra_bootloader_panel_msb;
@@ -146,13 +90,4 @@ enum {
 
 unsigned int get_radio_flag(void);
 
-#if 0
-#if defined(CONFIG_ARCH_MSM8X60)
-unsigned int get_radio_flag(void);
-#endif
-
-#ifdef CONFIG_MSM_HTC_DEBUG_INFO
-extern void htc_debug_info_init(void);
-#endif
-#endif
 #endif
