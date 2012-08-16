@@ -117,7 +117,6 @@ void cm3629_enable_power(int enable)
 }
 
 static struct cm3628_platform_data cm3628_pdata = {
-	/*.intr = PSNENOR_INTz,*/
 	.intr = TEGRA_GPIO_PK2,
 	.levels = { 12, 14, 16, 41, 83, 3561, 6082, 6625, 7168, 65535},
 	.golden_adc = 0x1145,
@@ -173,11 +172,6 @@ static struct i2c_board_info i2c_CM3629_devices[] = {
 
 static void psensor_init(void)
 {
-#if 0
-		i2c_register_board_info(0,
-				i2c_CM3628_devices, ARRAY_SIZE(i2c_CM3628_devices));
-		pr_info("[PS][cm3628]%s\n", __func__);
-#endif
 #if 1
 	if(ps_type) {
 		i2c_register_board_info(0,
@@ -264,15 +258,12 @@ static struct nct1008_platform_data enterprise_nct1008_pdata = {
 	.ext_range = true,
 	.conv_rate = 0x08,
 	.offset = 8, /* 4 * 2C. Bug 844025 - 1C for device accuracies */
-#ifndef CONFIG_TEGRA_INTERNAL_TSENSOR_EDP_SUPPORT
 	.probe_callback = nct1008_probe_callback,
-#endif
 };
 
 static struct i2c_board_info enterprise_i2c4_nct1008_board_info[] = {
 	{
 		I2C_BOARD_INFO("nct1008", 0x4C),
-		//.irq = TEGRA_GPIO_TO_IRQ(TEGRA_GPIO_PH7),
 		.irq = TEGRA_GPIO_TO_IRQ(TEGRA_GPIO_PCC2),
 		.platform_data = &enterprise_nct1008_pdata,
 	}
@@ -282,23 +273,7 @@ static void enterprise_nct1008_init(void)
 {
 	int ret;
 
-#if 0
-	tegra_gpio_enable(TEGRA_GPIO_PH7);
-	ret = gpio_request(TEGRA_GPIO_PH7, "temp_alert");
-	if (ret < 0) {
-		pr_err("%s: gpio_request failed %d\n", __func__, ret);
-		return;
-	}
-
-	ret = gpio_direction_input(TEGRA_GPIO_PH7);
-	if (ret < 0) {
-		pr_err("%s: gpio_direction_input failed %d\n", __func__, ret);
-		gpio_free(TEGRA_GPIO_PH7);
-		return;
-	}
-#endif
-
-tegra_gpio_enable(TEGRA_GPIO_PCC2);
+	tegra_gpio_enable(TEGRA_GPIO_PCC2);
 	ret = gpio_request(TEGRA_GPIO_PCC2, "temp_alert");
 	if (ret < 0) {
 		pr_err("%s: gpio_request failed %d\n", __func__, ret);
@@ -339,9 +314,6 @@ static struct pana_gyro_platform_data pana_gyro_pdata = {
 	.config_gyro_diag_gpios = config_ruby_gyro_diag_gpios,
 };
 
-
-
-
 static struct i2c_board_info __initdata pana_gyro_GSBI12_boardinfo[] = {
 	{
 		I2C_BOARD_INFO("ewtzmu2", 0x69),
@@ -351,7 +323,7 @@ static struct i2c_board_info __initdata pana_gyro_GSBI12_boardinfo[] = {
 };
 
 static struct bma250_platform_data gsensor_bma250_platform_data = {
-	.intr = TEGRA_GPIO_PO5,//RUBY_GPIO_GSENSOR_INT_N,
+	.intr = TEGRA_GPIO_PO5,
 	.chip_layout = 1,
 };
 static struct i2c_board_info i2c_bma250_devices[] = {
@@ -388,105 +360,40 @@ static struct i2c_board_info i2c_akm8975_devices_xc[] = {
 	},
 };
 
-/* MPU board file definition	*/
-#if (MPU_GYRO_TYPE == MPU_TYPE_MPU3050)
-#define MPU_GYRO_NAME		"mpu3050"
-#endif
-#if (MPU_GYRO_TYPE == MPU_TYPE_MPU6050)
-#define MPU_GYRO_NAME		"mpu6050"
-#endif
-static struct mpu_platform_data mpu_gyro_data = {
-	.int_config	= 0x10,
-	.level_shifter	= 0,
-	.orientation	= MPU_GYRO_ORIENTATION,	/* Located in board_[platformname].h	*/
-};
+#define SENSOR_MPU_NAME "mpu3050"
+static struct mpu3050_platform_data mpu3050_data = {
+	.int_config  = 0x10,
+	/* Orientation matrix for MPU on enterprise */
+	  .en_1v8 = 1,
+	  .orientation = { -1, 0, 0, 0, -1, 0, 0, 0, 1 },
+	.level_shifter = 0,
 
-#if (MPU_GYRO_TYPE == MPU_TYPE_MPU3050)
-static struct ext_slave_platform_data mpu_accel_data = {
-	.address	= MPU_ACCEL_ADDR,
-	.irq		= 0,
-	.adapt_num	= MPU_ACCEL_BUS_NUM,
-	.bus		= EXT_SLAVE_BUS_SECONDARY,
-	.orientation	= MPU_ACCEL_ORIENTATION,	/* Located in board_[platformname].h	*/
-};
-#endif
-
-static struct ext_slave_platform_data mpu_compass_data = {
-	.address	= MPU_COMPASS_ADDR,
-	.irq		= 0,
-	.adapt_num	= MPU_COMPASS_BUS_NUM,
-	.bus		= EXT_SLAVE_BUS_PRIMARY,
-	.orientation	= MPU_COMPASS_ORIENTATION,	/* Located in board_[platformname].h	*/
-};
-
-static struct i2c_board_info __initdata inv_mpu_i2c2_board_info[] = {
-	{
-		I2C_BOARD_INFO(MPU_GYRO_NAME, MPU_GYRO_ADDR),
-		.irq = TEGRA_GPIO_TO_IRQ(MPU_GYRO_IRQ_GPIO),
-		.platform_data = &mpu_gyro_data,
+	.accel = {
+		.get_slave_descr = get_accel_slave_descr,
+		.adapt_num   = 0,
+		.bus         = EXT_SLAVE_BUS_SECONDARY,
+		.address     = 0x19,
+		/* Orientation matrix for Kionix on enterprise */
+		  .orientation = { 1, 0, 0, 0, 1, 0, 0, 0, 1 },
 	},
-#if (MPU_GYRO_TYPE == MPU_TYPE_MPU3050)
-	{
-		I2C_BOARD_INFO(MPU_ACCEL_NAME, MPU_ACCEL_ADDR),
-#if	MPU_ACCEL_IRQ_GPIO
-		.irq = TEGRA_GPIO_TO_IRQ(MPU_ACCEL_IRQ_GPIO),
-#endif
-		.platform_data = &mpu_accel_data,
-	},
-#endif
-	{
-		I2C_BOARD_INFO(MPU_COMPASS_NAME, MPU_COMPASS_ADDR),
-#if	MPU_COMPASS_IRQ_GPIO
-		.irq = TEGRA_GPIO_TO_IRQ(MPU_COMPASS_IRQ_GPIO),
-#endif
-		.platform_data = &mpu_compass_data,
+
+	.compass = {
+		.get_slave_descr = get_compass_slave_descr,
+		.adapt_num   = 0,
+		.bus         = EXT_SLAVE_BUS_PRIMARY,
+		.address     = 0x0D,//for A-project
+		/* Orientation matrix for AKM on enterprise */
+		  .orientation = { -1, 0, 0, 0, 1, 0, 0, 0, -1 },
 	},
 };
 
-static void mpuirq_init(void)
-{
-	int ret = 0;
-
-	pr_info("*** MPU START *** mpuirq_init...\n");
-
-#if (MPU_GYRO_TYPE == MPU_TYPE_MPU3050)
-#if	MPU_ACCEL_IRQ_GPIO
-	/* ACCEL-IRQ assignment */
-	tegra_gpio_enable(MPU_ACCEL_IRQ_GPIO);
-	ret = gpio_request(MPU_ACCEL_IRQ_GPIO, MPU_ACCEL_NAME);
-	if (ret < 0) {
-		pr_err("%s: gpio_request failed %d\n", __func__, ret);
-		return;
-	}
-
-	ret = gpio_direction_input(MPU_ACCEL_IRQ_GPIO);
-	if (ret < 0) {
-		pr_err("%s: gpio_direction_input failed %d\n", __func__, ret);
-		gpio_free(MPU_ACCEL_IRQ_GPIO);
-		return;
-	}
-#endif
-#endif
-
-	/* MPU-IRQ assignment */
-	tegra_gpio_enable(MPU_GYRO_IRQ_GPIO);
-	ret = gpio_request(MPU_GYRO_IRQ_GPIO, MPU_GYRO_NAME);
-	if (ret < 0) {
-		pr_err("%s: gpio_request failed %d\n", __func__, ret);
-		return;
-	}
-
-	ret = gpio_direction_input(MPU_GYRO_IRQ_GPIO);
-	if (ret < 0) {
-		pr_err("%s: gpio_direction_input failed %d\n", __func__, ret);
-		gpio_free(MPU_GYRO_IRQ_GPIO);
-		return;
-	}
-	pr_info("*** MPU END *** mpuirq_init...\n");
-
-	i2c_register_board_info(MPU_GYRO_BUS_NUM, inv_mpu_i2c2_board_info,
-		ARRAY_SIZE(inv_mpu_i2c2_board_info));
-}
+static struct i2c_board_info __initdata mpu3050_i2c0_boardinfo[] = {
+	{
+		I2C_BOARD_INFO(SENSOR_MPU_NAME, 0x68),
+		.irq = TEGRA_GPIO_TO_IRQ(TEGRA_GPIO_PI6),
+		.platform_data = &mpu3050_data,
+	},
+};
 
 static void config_nfc_gpios(void)
 {
@@ -545,7 +452,6 @@ static void edge_nfc_init(void)
     i2c_register_board_info(0, pn544_i2c_boardinfo,
             ARRAY_SIZE(pn544_i2c_boardinfo));
 }
-
 
 static inline void ENR_msleep(u32 t)
 {
@@ -631,6 +537,30 @@ static void enterprise_gyro_diag_init(void)
 
 }
 
+static void __init enterprise_mpuirq_init(void)
+{
+	int ret = 0;
+
+	tegra_gpio_enable(TEGRA_GPIO_PI6);
+	ret = gpio_request(TEGRA_GPIO_PI6, SENSOR_MPU_NAME);
+	if (ret < 0) {
+		pr_err("%s: gpio_request failed %d\n", __func__, ret);
+		return;
+	}
+
+	ret = gpio_direction_input(TEGRA_GPIO_PI6);
+	if (ret < 0) {
+		pr_err("%s: gpio_direction_input failed %d\n", __func__, ret);
+		gpio_free(TEGRA_GPIO_PI6);
+		return;
+	}
+	tegra_pinmux_set_pullupdown(TEGRA_PINGROUP_GMI_CS7_N, TEGRA_PUPD_NORMAL);
+
+	if(htc_get_pcbid_info() == PROJECT_PHASE_XA){
+		i2c_register_board_info(0, mpu3050_i2c0_boardinfo,
+					ARRAY_SIZE(mpu3050_i2c0_boardinfo));
+	}
+}
 static void enterprise_gyro_sleep_pin(void)
 {
 
@@ -705,10 +635,8 @@ static int endeavor_s5k3h2y_power_on(void)
     #if RAWCHIP
     gpio_direction_output(RAW_RSTN, 0);
     #endif
-    //ENR_msleep(1); //TODO
 
 #ifdef CAMERA_REGULATOR
-    //pr_info("[CAM] use regurator to get power\n");
 
 	#if RAWCHIP
 	/*RAW_1V8_EN */
@@ -1359,13 +1287,13 @@ int __init enterprise_sensors_init(void)
 
 	if (htc_get_pcbid_info() == PROJECT_PHASE_XA){
 		pr_info("[GYRO]Use Invensense solution");
-		mpuirq_init();
+		enterprise_mpuirq_init();
 	}
 
 	//enterprise_srio_1v8_en();
 	enterprise_gsensor_irq_init(); 
 	if (htc_get_pcbid_info() != PROJECT_PHASE_XA ){
-		mpuirq_init();
+		enterprise_mpuirq_init();
 		enterprise_gyro_diag_init();
 		i2c_register_board_info(0,
 			pana_gyro_GSBI12_boardinfo, ARRAY_SIZE(pana_gyro_GSBI12_boardinfo));
