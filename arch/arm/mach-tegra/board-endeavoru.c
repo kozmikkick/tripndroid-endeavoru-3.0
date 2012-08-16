@@ -103,8 +103,6 @@
 extern int global_wakeup_state;
 extern int resume_from_deep_suspend;
 
-extern unsigned engineer_id;
-
 /* All units are in millicelsius */
 static struct tegra_thermal_data thermal_data = {
 	.temp_shutdown = 90000,
@@ -1901,7 +1899,7 @@ static void __init tegra_endeavoru_init(void)
 		platform_device_register(&htc_headset_mgr_xe);
 
 #if defined(CONFIG_TEGRA_GRHOST) && defined(CONFIG_TEGRA_HDMI_MHL)
-	if (board_id >= PROJECT_PHASE_A && engineer_id != 1) {
+	if (board_id >= PROJECT_PHASE_A) {
 		mhl_sii_device_data.ci2ca = 1;
 		mhl_sii_device_data.enMhlD3Guard = true;
 	}

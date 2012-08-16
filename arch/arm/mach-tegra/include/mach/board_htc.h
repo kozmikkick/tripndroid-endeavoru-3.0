@@ -110,7 +110,6 @@ unsigned int get_bl_ac_in_flag(void);
  * Jay, 15/May/09'
  * */
 extern int panel_type;
-extern unsigned engineer_id;
 extern int usb_phy_error;
 
 
