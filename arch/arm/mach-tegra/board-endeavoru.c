@@ -101,7 +101,6 @@
 #define POWER_WAKEUP_ENR 7
 
 extern int global_wakeup_state;
-extern int resume_from_deep_suspend;
 
 /* All units are in millicelsius */
 static struct tegra_thermal_data thermal_data = {
@@ -133,13 +132,10 @@ static struct tegra_thermal_data thermal_data = {
 	}
 
 static int enrkey_wakeup(void)
-{
-	if (resume_from_deep_suspend) {
-		unsigned long status =
-			readl(IO_ADDRESS(TEGRA_PMC_BASE) + PMC_WAKE_STATUS);
-		return status & TEGRA_WAKE_GPIO_PU6 ? KEY_POWER : KEY_RESERVED;
-	} else
-		return KEY_RESERVED;
+{ 
+	unsigned long status =  
+	readl(IO_ADDRESS(TEGRA_PMC_BASE) + PMC_WAKE_STATUS); 
+	return status & TEGRA_WAKE_GPIO_PU6 ? KEY_POWER : KEY_RESERVED; 
 }
 
 static struct gpio_keys_button A_PROJECT_keys[] = {
