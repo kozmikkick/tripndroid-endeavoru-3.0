@@ -30,6 +30,7 @@
 
 #include <asm/mach-types.h>
 
+#include <linux/delay.h>
 #include <linux/module.h>
 #include <linux/platform_device.h>
 #include <linux/slab.h>
@@ -563,6 +564,12 @@ aic3008_init_fail:
 	return err;
 }
 
+static int aic3008_pre_resume(struct snd_soc_card *card) {
+/* Delay on resume */
+	msleep(100);
+	return 0;
+}
+
 /*******************************************************************/
 /* Codec suspend/resume controls                                   */
 /*******************************************************************/
@@ -616,6 +623,7 @@ static struct snd_soc_card snd_soc_tegra_aic3008 = {
 	.name = "tegra-aic3008",
 	.dai_link = tegra_soc_dai,
 	.num_links = ARRAY_SIZE(tegra_soc_dai),
+	.resume_pre = aic3008_pre_resume,
 };
 
 static __devinit int tegra_aic3008_driver_probe(struct platform_device *pdev)
