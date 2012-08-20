@@ -2240,7 +2240,6 @@ static int __init acm_init(void)
 #ifdef RIL_DBG
 	host_dbg_flag |= DBG_ACM0_RW;
 #endif
-	is_mach_edge = 1;
 
 	mach_ble_flashless = (is_mach_ble && is_flashless);
 	mach_ble_flash = (is_mach_ble && !is_flashless);
