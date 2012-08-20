@@ -2,6 +2,7 @@
  * arch/arm/mach-tegra/board-endeavoru-panel.c
  *
  * Copyright (c) 2011, NVIDIA Corporation.
+ * Copyright (c) 2012, TripNDroid Mobile Engineering.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,16 +20,18 @@
  */
 
 #include <linux/delay.h>
+#include <linux/ion.h>
+#include <linux/tegra_ion.h>
+#include <linux/disp_debug.h>
 #include <linux/gpio.h>
 #include <linux/regulator/consumer.h>
 #include <linux/resource.h>
-#include <asm/mach-types.h>
 #include <linux/platform_device.h>
 #include <linux/earlysuspend.h>
 #include <linux/tegra_pwm_bl.h>
-#include <asm/atomic.h>
 #include <linux/nvhost.h>
 #include <linux/nvmap.h>
+
 #include <mach/irqs.h>
 #include <mach/iomap.h>
 #include <mach/dc.h>
@@ -37,12 +40,14 @@
 #include <mach/panel_id.h>
 #include <mach/board_htc.h>
 #include <mach/tegra_fb.h>
+#include <mach/smmu.h>
 
 #include "board.h"
 #include "devices.h"
 #include "gpio-names.h"
 
-#include <linux/disp_debug.h>
+#include <asm/mach-types.h>
+#include <asm/atomic.h>
 
 #define POWER_WAKEUP_ENR 7
 
@@ -55,8 +60,8 @@ static struct regulator *enterprise_dsi_reg = NULL;
 static struct regulator *v_lcm_3v3 = NULL;
 static struct regulator *v_lcmio_1v8 = NULL;
 
-static struct regulator *enterprise_hdmi_reg = NULL;
-static struct regulator *enterprise_hdmi_pll = NULL;
+static struct regulator *enterprise_hdmi_reg;
+static struct regulator *enterprise_hdmi_pll;
 #endif
 
 #define LCM_TE			TEGRA_GPIO_PJ1
@@ -91,6 +96,8 @@ static struct gpio panel_init_gpios[] = {
 
 /*global varible for work around*/
 static bool g_display_on = true;
+
+static atomic_t sd_brightness = ATOMIC_INIT(255);
 
 #define BACKLIGHT_MAX 255
 
@@ -132,6 +139,7 @@ static unsigned char shrink_pwm(int val)
 
 static int enterprise_backlight_notify(struct device *unused, int brightness)
 {
+	int cur_sd_brightness = atomic_read(&sd_brightness);
 
 	if (brightness > 0)
 		brightness = shrink_pwm(brightness);
@@ -154,11 +162,11 @@ static struct platform_tegra_pwm_backlight_data enterprise_disp1_backlight_data 
 	.switch_to_sfio		= &tegra_gpio_disable,
 	.max_brightness		= 255,
 	.dft_brightness		= 85,
-	.notify		= enterprise_backlight_notify,
+	.notify			= enterprise_backlight_notify,
 	.period			= 0xFF,
 	.clk_div		= 20,
 	.clk_select		= 0,
-	.backlight_mode = MIPI_BACKLIGHT,	//Set MIPI_BACKLIGHT as default
+	.backlight_mode 	= MIPI_BACKLIGHT,
 	/* Only toggle backlight on fb blank notifications for disp1 */
 	.check_fb	= enterprise_disp1_check_fb,
 };
@@ -184,35 +192,13 @@ static int enterprise_hdmi_vddio_disable(void)
 
 static int enterprise_hdmi_enable(void)
 {
-	int ret;
-	if (!enterprise_hdmi_reg) {
-		enterprise_hdmi_reg = regulator_get(NULL, "avdd_hdmi");
-		if (IS_ERR_OR_NULL(enterprise_hdmi_reg)) {
-			pr_err("hdmi: couldn't get regulator avdd_hdmi\n");
-			enterprise_hdmi_reg = NULL;
-			return PTR_ERR(enterprise_hdmi_reg);
-		}
-	}
-	ret = regulator_enable(enterprise_hdmi_reg);
-	if (ret < 0) {
-		pr_err("hdmi: couldn't enable regulator avdd_hdmi\n");
-		return ret;
-	}
-	if (!enterprise_hdmi_pll) {
-		enterprise_hdmi_pll = regulator_get(NULL, "avdd_hdmi_pll");
-		if (IS_ERR_OR_NULL(enterprise_hdmi_pll)) {
-			pr_err("hdmi: couldn't get regulator avdd_hdmi_pll\n");
-			enterprise_hdmi_pll = NULL;
-			regulator_put(enterprise_hdmi_reg);
-			enterprise_hdmi_reg = NULL;
-			return PTR_ERR(enterprise_hdmi_pll);
-		}
-	}
-	ret = regulator_enable(enterprise_hdmi_pll);
-	if (ret < 0) {
-		pr_err("hdmi: couldn't enable regulator avdd_hdmi_pll\n");
-		return ret;
-	}
+	REGULATOR_GET(enterprise_hdmi_reg, "avdd_hdmi");
+	regulator_enable(enterprise_hdmi_reg);
+
+	REGULATOR_GET(enterprise_hdmi_pll, "avdd_hdmi_pll");
+	regulator_enable(enterprise_hdmi_pll);
+
+failed:
 	return 0;
 }
 
@@ -229,7 +215,6 @@ static int enterprise_hdmi_disable(void)
 
 	return 0;
 }
-
 static struct resource enterprise_disp1_resources[] = {
 	{
 		.name	= "irq",
@@ -284,6 +269,11 @@ static struct resource enterprise_disp2_resources[] = {
 	},
 };
 
+static struct tegra_dc_sd_settings enterprise_sd_settings = {
+	.enable = 0, /* Normal mode operation */
+	.bl_device = &enterprise_disp1_backlight_device,
+};
+
 static struct tegra_fb_data enterprise_hdmi_fb_data = {
 	.win		= 0,
 	.xres		= 1366,
@@ -323,25 +313,24 @@ static int enterprise_dsi_panel_enable(void)
 	/*TODO the power-on sequence move to bridge_reset*/
 	return 0;
 }
+
 static int bridge_reset(void)
 {
 	int err = 0;
-
-	DISP_INFO_IN();
 
 	if (is_power_on) {
 		DISP_INFO_LN("is_power_on:%d\n", is_power_on);
 		return 0;
 	}
 
-	/*TODO delay for DSI hardware stable*/
-	msleep(10);
+	/* delay for DSI hardware stable */
+	hr_msleep(10);
 
 	/*change LCM_TE & LCM_PWM to SFIO*/
-	//tegra_gpio_disable(LCM_PWM);
+	tegra_gpio_disable(LCM_PWM);
 	tegra_gpio_disable(LCM_TE);
 
-	/*TODO: workaround to prevent panel off during dc_probe, remove it later*/
+	/* workaround to prevent panel off during dc_probe, remove it later */
 	if(g_display_on)
 	{
 		REGULATOR_GET(enterprise_dsi_reg, "avdd_dsi_csi");
@@ -353,7 +342,6 @@ static int bridge_reset(void)
 		regulator_enable(v_lcmio_1v8);
 		regulator_enable(v_lcm_3v3);
 
-		DISP_INFO_LN("Workaround for first panel init sequence\n");
 		goto success;
 		return 0;
 	}
@@ -366,10 +354,10 @@ static int bridge_reset(void)
 
 	/*LCD_RST pull low*/
 	gpio_set_value(LCM_RST, 0);
-	msleep(10);
+	hr_msleep(5);
 	/*Turn on LCMIO_1V8_EN*/
 	regulator_enable(v_lcmio_1v8);
-	msleep(2);
+	hr_msleep(1);
 	/*Turn on LCMIO_3V3_EN*/
 	regulator_enable(v_lcm_3v3);
 	switch (g_panel_id) {
@@ -379,20 +367,19 @@ static int bridge_reset(void)
 		case PANEL_ID_ENRTD_SHARP_HX_C3:
 		case PANEL_ID_ENR_SHARP_HX_C4:
 		case PANEL_ID_ENRTD_SHARP_HX_C4:
-			msleep(10);
+			hr_msleep(10);
 			/*read LCD_ID0,LCD_ID1*/
-			msleep(2);
+			hr_msleep(2);
 		break;
 		default:
-			msleep(20);
+			hr_msleep(20);
 	}
 	gpio_set_value(LCM_RST, 1);
-	msleep(1);
+	hr_msleep(1);
 failed:
 success:
 	is_power_on = 1;
 	DISP_INFO_LN("is_power_on:%d\n", is_power_on);
-	DISP_INFO_OUT();
 
 	return err;
 }
@@ -401,22 +388,19 @@ static int ic_reset(void)
 {
 	int err = 0;
 
-	DISP_INFO_IN();
-
 	if(g_display_on) {
 		g_display_on = false;
-		DISP_INFO_LN("Workaround for first panel init sequence\n");
 		goto success;
 		return 0;
 	}
-	msleep(5);
+
+	hr_msleep(2);
 	gpio_set_value(LCM_RST, 0);
-	msleep(8);
+	hr_msleep(1);
 	gpio_set_value(LCM_RST, 1);
-	msleep(35);
+	hr_msleep(25);
 
 success:
-	DISP_INFO_OUT();
 	return err;
 }
 
@@ -429,29 +413,27 @@ static int enterprise_dsi_panel_disable(void)
 		return 0;
 	}
 
-	DISP_INFO_IN();
 	gpio_set_value(LCM_RST, 0);
-	msleep(15);
+	hr_msleep(12);
 
 	REGULATOR_GET(v_lcm_3v3, "v_lcm_3v3");
 	regulator_disable(v_lcm_3v3);
-	msleep(5);
+	hr_msleep(5);
 
 	REGULATOR_GET(v_lcmio_1v8, "v_lcmio_1v8");
 	regulator_disable(v_lcmio_1v8);
+
 
 	REGULATOR_GET(enterprise_dsi_reg, "avdd_dsi_csi");
 	regulator_disable(enterprise_dsi_reg);
 
 	/*change LCM_TE & LCM_PWM to GPIO*/
-	//tegra_gpio_enable(LCM_PWM);
+	tegra_gpio_enable(LCM_PWM);
 	tegra_gpio_enable(LCM_TE);
 
 	is_power_on = 0;
 	DISP_INFO_LN("is_power_on:%d\n", is_power_on);
 failed:
-
-	DISP_INFO_OUT();
 
 	return err;
 }
@@ -485,8 +467,6 @@ static void enterprise_stereo_set_orientation(int mode)
 static int enterprise_dsi_panel_postsuspend(void)
 {
 	int err = 0;
-
-
 	return err;
 }
 #endif
@@ -2417,7 +2397,7 @@ static struct tegra_dsi_cmd dsi_init_sharp_nt_c2_9a_cmd[]= {
 	DSI_CMD_SHORT(0x05, 0x11, 0x00),
 	DSI_DLY_MS(105),
 
- 	/*gamma case-c*/
+	/*gamma case-c*/
 	DSI_CMD_SHORT(0x15, 0xFF, 0x01),
 	DSI_CMD_SHORT(0x15, 0xFE, 0x02),
 	DSI_CMD_SHORT(0x15, 0x75, 0x00),
@@ -2931,7 +2911,6 @@ struct tegra_dsi_out enterprise_dsi = {
 
 	.panel_reset = DSI_PANEL_RESET,
 	.power_saving_suspend = true,
-
 	.n_init_cmd = ARRAY_SIZE(dsi_init_sharp_nt_c2_cmd),
 	.dsi_init_cmd = dsi_init_sharp_nt_c2_cmd,
 
@@ -2959,7 +2938,7 @@ static struct tegra_stereo_out enterprise_stereo = {
 #ifdef CONFIG_TEGRA_DC
 static struct tegra_dc_mode enterprise_dsi_modes[] = {
 	{
-		.pclk = 20000000,
+		.pclk = 30000000,
 		.h_ref_to_sync = 4,
 		.v_ref_to_sync = 1,
 		.h_sync_width = 16,
@@ -2972,7 +2951,6 @@ static struct tegra_dc_mode enterprise_dsi_modes[] = {
 		.v_front_porch = 2,
 	},
 };
-
 
 static struct tegra_fb_data enterprise_dsi_fb_data = {
 	.win		= 0,
@@ -2992,9 +2970,9 @@ struct tegra_fb_info f_proj_data = {
 static struct tegra_dc_out enterprise_disp1_out = {
 	.align		= TEGRA_DC_ALIGN_MSB,
 	.order		= TEGRA_DC_ORDER_RED_BLUE,
+	.parent_clk	= "pll_d_out0",
 
 	.flags		= DC_CTRL_MODE,
-
 	.type		= TEGRA_DC_OUT_DSI,
 
 	.modes		= enterprise_dsi_modes,
@@ -3009,11 +2987,11 @@ static struct tegra_dc_out enterprise_disp1_out = {
 
 	.width		= 53,
 	.height		= 95,
-	/*TODO let power-on sequence wait until dsi hardware init*/
+
 	.bridge_reset = bridge_reset,
 	.ic_reset = ic_reset,
-	
 };
+
 static struct tegra_dc_platform_data enterprise_disp1_pdata = {
 	.flags		= TEGRA_DC_FLAG_ENABLED,
 	.default_out	= &enterprise_disp1_out,
@@ -3047,6 +3025,7 @@ static struct nvhost_device enterprise_disp2_device = {
 };
 #endif
 
+#if defined(CONFIG_TEGRA_NVMAP)
 static struct nvmap_platform_carveout enterprise_carveouts[] = {
 	[0] = NVMAP_HEAP_CARVEOUT_IRAM_INIT,
 	[1] = {
@@ -3070,9 +3049,72 @@ static struct platform_device enterprise_nvmap_device = {
 		.platform_data = &enterprise_nvmap_data,
 	},
 };
+#endif
+
+#if defined(CONFIG_ION_TEGRA)
+#if 0
+static struct platform_device tegra_iommu_device = {
+	.name = "tegra_iommu_device",
+	.id = -1,
+	.dev = {
+		.platform_data = (void *)((1 << HWGRP_COUNT) - 1),
+	},
+};
+#endif
+
+static struct ion_platform_data tegra_ion_data = {
+	.nr = 3,
+	.heaps = {
+		{
+			.type = ION_HEAP_TYPE_CARVEOUT,
+			.id = TEGRA_ION_HEAP_CARVEOUT,
+			.name = "carveout",
+			.base = 0,
+			.size = 0,
+		},
+		{
+			.type = ION_HEAP_TYPE_CARVEOUT,
+			.id = TEGRA_ION_HEAP_IRAM,
+			.name = "iram",
+			.base = TEGRA_IRAM_BASE + TEGRA_RESET_HANDLER_SIZE,
+			.size = TEGRA_IRAM_SIZE - TEGRA_RESET_HANDLER_SIZE,
+		},
+		{
+			.type = ION_HEAP_TYPE_CARVEOUT,
+			.id = TEGRA_ION_HEAP_VPR,
+			.name = "vpr",
+			.base = 0,
+			.size = 0,
+		},
+#if 0
+		{
+			.type = ION_HEAP_TYPE_IOMMU,
+			.id = TEGRA_ION_HEAP_IOMMU,
+			.name = "iommu",
+			.base = TEGRA_SMMU_BASE,
+			.size = TEGRA_SMMU_SIZE,
+			.priv = &tegra_iommu_device.dev,
+		},
+#endif
+	},
+};
+
+static struct platform_device tegra_ion_device = {
+	.name = "ion-tegra",
+	.id = -1,
+	.dev = {
+		.platform_data = &tegra_ion_data,
+	},
+};
+#endif
 
 static struct platform_device *enterprise_gfx_devices[] __initdata = {
+#if defined(CONFIG_TEGRA_NVMAP)
 	&enterprise_nvmap_device,
+#endif
+#if defined(CONFIG_ION_TEGRA)
+	&tegra_ion_device,
+#endif
 	&tegra_pwfm0_device,
 };
 
@@ -3104,9 +3146,6 @@ struct early_suspend enterprise_panel_early_suspender;
 static void enterprise_panel_early_suspend(struct early_suspend *h)
 {
 	struct backlight_device *bl = platform_get_drvdata(&enterprise_disp1_backlight_device);
-
-	DISP_INFO_IN();
-
 	if (bl && bl->props.bkl_on) {
 		bl->props.bkl_on = 0;
 		del_timer_sync(&bkl_timer);
@@ -3119,30 +3158,37 @@ static void enterprise_panel_early_suspend(struct early_suspend *h)
 	if (num_registered_fb > 1)
 		fb_blank(registered_fb[1], FB_BLANK_NORMAL);
 
-	DISP_INFO_OUT();
+#ifdef CONFIG_TEGRA_CONVSERVATIVE_GOV_ON_EARLYSUPSEND
+	cpufreq_store_default_gov();
+	if (cpufreq_change_gov(cpufreq_conservative_gov))
+		pr_err("Early_suspend: Error changing governor to %s\n",
+				cpufreq_conservative_gov);
+#endif
+
 }
 
 static void enterprise_panel_late_resume(struct early_suspend *h)
 {
 	unsigned i;
 
-	DISP_INFO_IN();
+#ifdef CONFIG_TEGRA_CONVSERVATIVE_GOV_ON_EARLYSUPSEND
+	if (cpufreq_restore_default_gov())
+		pr_err("Early_suspend: Unable to restore governor\n");
+#endif
 
 	for (i = 0; i < num_registered_fb; i++)
 		fb_blank(registered_fb[i], FB_BLANK_UNBLANK);
 
 	mod_timer(&bkl_timer, jiffies + msecs_to_jiffies(50));
-	DISP_INFO_OUT();
 }
 #endif /* early suspend */
 
 int __init enterprise_panel_init(void)
 {
 	int err;
-	struct resource __maybe_unused *res;
-	int i;
-	int pin_count;
+	int i = 0;
 
+	struct resource __maybe_unused *res;
 
 	if (board_mfg_mode() == 5 && !(board_zchg_mode() & 0x1)) {
 		/* offmode charging, gfx devices register for vibrator*/
@@ -3151,18 +3197,23 @@ int __init enterprise_panel_init(void)
 		return 0;
 	}
 
-	DISP_INFO_IN();
-
+#if defined(CONFIG_TEGRA_NVMAP)
 	enterprise_carveouts[1].base = tegra_carveout_start;
 	enterprise_carveouts[1].size = tegra_carveout_size;
+#endif
+
+#if defined(CONFIG_ION_TEGRA)
+	tegra_ion_data.heaps[0].base = tegra_carveout_start;
+	tegra_ion_data.heaps[0].size = tegra_carveout_size;
+#endif
 
 	err = gpio_request_array(panel_init_gpios, ARRAY_SIZE(panel_init_gpios));
 	if(err) {
-		DISP_ERR("gpio request failed\n");
 		goto failed;
 	}
 
-	pin_count = ARRAY_SIZE(panel_init_gpios);
+	int pin_count = ARRAY_SIZE(panel_init_gpios);
+
 	for (i = 0; i < pin_count; i++) {
 		tegra_gpio_enable(panel_init_gpios[i].gpio);
 	}
@@ -3174,7 +3225,6 @@ int __init enterprise_panel_init(void)
 	enterprise_panel_early_suspender.resume = enterprise_panel_late_resume;
 	enterprise_panel_early_suspender.level = EARLY_SUSPEND_LEVEL_DISABLE_FB;
 	register_early_suspend(&enterprise_panel_early_suspender);
-
 #endif
 
 #ifdef CONFIG_TEGRA_GRHOST
@@ -3334,23 +3384,23 @@ int __init enterprise_panel_init(void)
 			enterprise_dsi.osc_on_cmd = osc_on_cmd;
 	}
 
+#if defined(CONFIG_TEGRA_GRHOST) && defined(CONFIG_TEGRA_NVAVP)
+	if (!err)
+		err = nvhost_device_register(&nvavp_device);
+#endif
+
 	if ( (board_mfg_mode() == 5) && (board_zchg_mode() & 0x1))
 		enterprise_disp1_backlight_data.draw_battery = 1;
 
 	if (!err)
 		err = platform_add_devices(enterprise_bl_devices,
 				ARRAY_SIZE(enterprise_bl_devices));
+
 	INIT_WORK(&bkl_work, bkl_do_work);
 	bkl_wq = create_workqueue("bkl_wq");
-	setup_timer(&bkl_timer, bkl_update, 0);
-
-#if defined(CONFIG_TEGRA_GRHOST) && defined(CONFIG_TEGRA_NVAVP)
-	if (!err)
-		err = nvhost_device_register(&nvavp_device);
-#endif
+	setup_timer(&bkl_timer, bkl_update, NULL);
 
 failed:
-	DISP_INFO_OUT();
 
 	return err;
 }
