@@ -180,7 +180,13 @@ int tegra_pm_irq_set_wake_type(int irq, int flow_type)
 
 	if (wake < 0)
 		return 0;
-
+#ifdef CONFIG_MACH_ENDEAVORU
+if(wake == 7) {
+	tegra_lp0_wake_level &= ~(1ull << wake);
+	tegra_lp0_wake_level_any &= ~(1ull << wake);
+	return 0;
+}
+#endif
 	switch (flow_type) {
 	case IRQF_TRIGGER_FALLING:
 	case IRQF_TRIGGER_LOW:
