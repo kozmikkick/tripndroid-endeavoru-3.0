@@ -46,6 +46,7 @@ struct nct1008_platform_data {
 	u8 thermal_zones_sz;
 	void (*alarm_fn)(bool raised);
 	void (*probe_callback)(struct nct1008_data *);
+	char *reg_name;
 };
 
 struct nct1008_data {

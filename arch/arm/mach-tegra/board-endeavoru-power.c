@@ -149,7 +149,7 @@ static struct regulator_consumer_supply tps80031_ldousb_supply_a03[] = {
 	REGULATOR_SUPPLY("v_usb_3v3", NULL),
 	REGULATOR_SUPPLY("avdd_usb", NULL),
 	REGULATOR_SUPPLY("avdd_hdmi", NULL),
-	REGULATOR_SUPPLY("vdd_nct1008", "4-004c"),
+/*	REGULATOR_SUPPLY("vdd_nct1008", "4-004c"), */
 };
 
 static struct regulator_consumer_supply tps80031_vbus_supply_common[] = {
