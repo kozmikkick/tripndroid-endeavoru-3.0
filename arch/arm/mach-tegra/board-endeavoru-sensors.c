@@ -259,6 +259,7 @@ static struct nct1008_platform_data enterprise_nct1008_pdata = {
 	.conv_rate = 0x08,
 	.offset = 8, /* 4 * 2C. Bug 844025 - 1C for device accuracies */
 	.probe_callback = nct1008_probe_callback,
+	.reg_name = "v_usb_3v3",
 };
 
 static struct i2c_board_info enterprise_i2c4_nct1008_board_info[] = {
