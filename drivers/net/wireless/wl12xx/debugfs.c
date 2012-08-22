@@ -32,6 +32,7 @@
 #include "ps.h"
 #include "io.h"
 #include "tx.h"
+#include "version.h"
 
 /* ms */
 #define WL1271_DEBUGFS_STATS_LIFETIME 1000
@@ -109,11 +110,14 @@ static void wl1271_debugfs_update_stats(struct wl1271 *wl)
 
 	mutex_lock(&wl->mutex);
 
+	if (unlikely(wl->state != WLCORE_STATE_ON))
+		goto out;
+
 	ret = wl1271_ps_elp_wakeup(wl);
 	if (ret < 0)
 		goto out;
 
-	if (wl->state == WL1271_STATE_ON &&
+	if (!wl->plt &&
 	    time_after(jiffies, wl->stats.fw_stats_update +
 		       msecs_to_jiffies(WL1271_DEBUGFS_STATS_LIFETIME))) {
 		wl1271_acx_statistics(wl, wl->stats.fw_stats);
@@ -346,7 +350,7 @@ static ssize_t dynamic_ps_timeout_write(struct file *file,
 
 	wl->conf.conn.dynamic_ps_timeout = value;
 
-	if (wl->state == WL1271_STATE_OFF)
+	if (unlikely(wl->state != WLCORE_STATE_ON))
 		goto out;
 
 	ret = wl1271_ps_elp_wakeup(wl);
@@ -358,7 +362,7 @@ static ssize_t dynamic_ps_timeout_write(struct file *file,
 	 */
 
 	wl12xx_for_each_wlvif_sta(wl, wlvif) {
-		if (test_bit(WLVIF_FLAG_IN_AUTO_PS, &wlvif->flags))
+		if (test_bit(WLVIF_FLAG_IN_PS, &wlvif->flags))
 			wl1271_ps_set_mode(wl, wlvif, STATION_AUTO_PS_MODE);
 	}
 
@@ -376,24 +380,209 @@ static const struct file_operations dynamic_ps_timeout_ops = {
 	.llseek = default_llseek,
 };
 
+
+static ssize_t forced_ps_read(struct file *file, char __user *user_buf,
+			  size_t count, loff_t *ppos)
+{
+	struct wl1271 *wl = file->private_data;
+
+	return wl1271_format_buffer(user_buf, count,
+				    ppos, "%d\n",
+				    wl->conf.conn.forced_ps);
+}
+
+static ssize_t forced_ps_write(struct file *file,
+				    const char __user *user_buf,
+				    size_t count, loff_t *ppos)
+{
+	struct wl1271 *wl = file->private_data;
+	struct wl12xx_vif *wlvif;
+	unsigned long value;
+	int ret, ps_mode;
+
+	ret = kstrtoul_from_user(user_buf, count, 10, &value);
+	if (ret < 0) {
+		wl1271_warning("illegal value in forced_ps");
+		return -EINVAL;
+	}
+
+	if (value != 1 && value != 0) {
+		wl1271_warning("forced_ps should be either 0 or 1");
+		return -ERANGE;
+	}
+
+	mutex_lock(&wl->mutex);
+
+	wl->conf.conn.forced_ps = value;
+
+	if (unlikely(wl->state != WLCORE_STATE_ON))
+		goto out;
+
+	ret = wl1271_ps_elp_wakeup(wl);
+	if (ret < 0)
+		goto out;
+
+	/* In case we're already in PSM, trigger it again to switch mode
+	 * immediately without waiting for re-association
+	 */
+
+	ps_mode = value ? STATION_POWER_SAVE_MODE : STATION_AUTO_PS_MODE;
+
+	wl12xx_for_each_wlvif_sta(wl, wlvif) {
+		if (test_bit(WLVIF_FLAG_IN_PS, &wlvif->flags))
+			wl1271_ps_set_mode(wl, wlvif, ps_mode);
+	}
+
+	wl1271_ps_elp_sleep(wl);
+
+out:
+	mutex_unlock(&wl->mutex);
+	return count;
+}
+
+static const struct file_operations forced_ps_ops = {
+	.read = forced_ps_read,
+	.write = forced_ps_write,
+	.open = wl1271_open_file_generic,
+	.llseek = default_llseek,
+};
+
+static ssize_t vif_count_read(struct file *file, char __user *user_buf,
+			  size_t count, loff_t *ppos)
+{
+	struct wl1271 *wl = file->private_data;
+
+	return wl1271_format_buffer(user_buf, count,
+				    ppos, "%d\n",
+				    ieee80211_started_vifs_count(wl->hw));
+}
+
+static const struct file_operations vif_count_ops = {
+	.read = vif_count_read,
+	.open = wl1271_open_file_generic,
+	.llseek = default_llseek,
+};
+
+static ssize_t split_scan_timeout_read(struct file *file, char __user *user_buf,
+			  size_t count, loff_t *ppos)
+{
+	struct wl1271 *wl = file->private_data;
+
+	return wl1271_format_buffer(user_buf, count,
+				    ppos, "%d\n",
+				    wl->conf.scan.split_scan_timeout / 1000);
+}
+
+static ssize_t split_scan_timeout_write(struct file *file,
+				    const char __user *user_buf,
+				    size_t count, loff_t *ppos)
+{
+	struct wl1271 *wl = file->private_data;
+	unsigned long value;
+	int ret;
+
+	ret = kstrtoul_from_user(user_buf, count, 10, &value);
+	if (ret < 0) {
+		wl1271_warning("illegal value in split_scan_timeout");
+		return -EINVAL;
+	}
+
+	if (value == 0)
+		wl1271_info("split scan will be disabled");
+
+	mutex_lock(&wl->mutex);
+
+	wl->conf.scan.split_scan_timeout = value * 1000;
+
+	mutex_unlock(&wl->mutex);
+	return count;
+}
+
+static const struct file_operations split_scan_timeout_ops = {
+	.read = split_scan_timeout_read,
+	.write = split_scan_timeout_write,
+	.open = wl1271_open_file_generic,
+	.llseek = default_llseek,
+};
+
+
+static ssize_t elp_timeout_read(struct file *file, char __user *user_buf,
+			  size_t count, loff_t *ppos)
+{
+	struct wl1271 *wl = file->private_data;
+
+	return wl1271_format_buffer(user_buf, count,
+				    ppos, "%d\n",
+				    wl->conf.conn.elp_timeout);
+}
+
+static ssize_t elp_timeout_write(struct file *file,
+				    const char __user *user_buf,
+				    size_t count, loff_t *ppos)
+{
+	struct wl1271 *wl = file->private_data;
+	unsigned long value;
+	int ret;
+
+	ret = kstrtoul_from_user(user_buf, count, 10, &value);
+	if (ret < 0) {
+		wl1271_warning("illegal value in dynamic_ps");
+		return -EINVAL;
+	}
+
+	if (value < 1 || value > 65535) {
+		wl1271_warning("dyanmic_ps_timeout is not in valid range");
+		return -ERANGE;
+	}
+
+	mutex_lock(&wl->mutex);
+
+	wl->conf.conn.elp_timeout = value;
+
+	mutex_unlock(&wl->mutex);
+	return count;
+}
+
+static const struct file_operations elp_timeout_ops = {
+	.read = elp_timeout_read,
+	.write = elp_timeout_write,
+	.open = wl1271_open_file_generic,
+	.llseek = default_llseek,
+};
+
+
 static ssize_t driver_state_read(struct file *file, char __user *user_buf,
 				 size_t count, loff_t *ppos)
 {
 	struct wl1271 *wl = file->private_data;
 	int res = 0;
-	char buf[1024];
+	ssize_t ret;
+	char *buf;
+
+#define DRIVER_STATE_BUF_LEN 1024
+
+	buf = kmalloc(DRIVER_STATE_BUF_LEN, GFP_KERNEL);
+	if (!buf)
+		return -ENOMEM;
 
 	mutex_lock(&wl->mutex);
 
 #define DRIVER_STATE_PRINT(x, fmt)   \
-	(res += scnprintf(buf + res, sizeof(buf) - res,\
+	(res += scnprintf(buf + res, DRIVER_STATE_BUF_LEN - res,\
 			  #x " = " fmt "\n", wl->x))
+
+#define DRIVER_STATE_PRINT_GENERIC(x, fmt, args...)   \
+	(res += scnprintf(buf + res, DRIVER_STATE_BUF_LEN - res,\
+			  #x " = " fmt "\n", args))
 
 #define DRIVER_STATE_PRINT_LONG(x) DRIVER_STATE_PRINT(x, "%ld")
 #define DRIVER_STATE_PRINT_INT(x)  DRIVER_STATE_PRINT(x, "%d")
 #define DRIVER_STATE_PRINT_STR(x)  DRIVER_STATE_PRINT(x, "%s")
 #define DRIVER_STATE_PRINT_LHEX(x) DRIVER_STATE_PRINT(x, "0x%lx")
 #define DRIVER_STATE_PRINT_HEX(x)  DRIVER_STATE_PRINT(x, "0x%x")
+
+	DRIVER_STATE_PRINT_GENERIC(version, "%s", wl12xx_git_head);
+	DRIVER_STATE_PRINT_GENERIC(timestamp, "%s", wl12xx_timestamp);
 
 	DRIVER_STATE_PRINT_INT(tx_blocks_available);
 	DRIVER_STATE_PRINT_INT(tx_allocated_blocks);
@@ -437,10 +626,13 @@ static ssize_t driver_state_read(struct file *file, char __user *user_buf,
 #undef DRIVER_STATE_PRINT_LHEX
 #undef DRIVER_STATE_PRINT_STR
 #undef DRIVER_STATE_PRINT
+#undef DRIVER_STATE_BUF_LEN
 
 	mutex_unlock(&wl->mutex);
 
-	return simple_read_from_buffer(user_buf, count, ppos, buf, res);
+	ret = simple_read_from_buffer(user_buf, count, ppos, buf, res);
+	kfree(buf);
+	return ret;
 }
 
 static const struct file_operations driver_state_ops = {
@@ -500,6 +692,7 @@ static ssize_t vifs_state_read(struct file *file, char __user *user_buf,
 			VIF_STATE_PRINT_INT(sta.basic_rate_idx);
 			VIF_STATE_PRINT_INT(sta.ap_rate_idx);
 			VIF_STATE_PRINT_INT(sta.p2p_rate_idx);
+			VIF_STATE_PRINT_INT(sta.qos);
 		} else {
 			VIF_STATE_PRINT_INT(ap.global_hlid);
 			VIF_STATE_PRINT_INT(ap.bcast_hlid);
@@ -1001,6 +1194,10 @@ static int wl1271_debugfs_add_files(struct wl1271 *wl,
 	DEBUGFS_ADD(beacon_interval, rootdir);
 	DEBUGFS_ADD(beacon_filtering, rootdir);
 	DEBUGFS_ADD(dynamic_ps_timeout, rootdir);
+	DEBUGFS_ADD(forced_ps, rootdir);
+	DEBUGFS_ADD(split_scan_timeout, rootdir);
+	DEBUGFS_ADD(elp_timeout, rootdir);
+	DEBUGFS_ADD(vif_count, rootdir);
 
 	streaming = debugfs_create_dir("rx_streaming", rootdir);
 	if (!streaming || IS_ERR(streaming))
