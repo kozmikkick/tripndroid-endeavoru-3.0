@@ -34,6 +34,7 @@ void wl1271_elp_work(struct work_struct *work)
 	struct delayed_work *dwork;
 	struct wl1271 *wl;
 	struct wl12xx_vif *wlvif;
+	int ret;
 
 	dwork = container_of(work, struct delayed_work, work);
 	wl = container_of(dwork, struct wl1271, elp_work);
@@ -42,7 +43,7 @@ void wl1271_elp_work(struct work_struct *work)
 
 	mutex_lock(&wl->mutex);
 
-	if (unlikely(wl->state == WL1271_STATE_OFF))
+	if (unlikely(wl->state != WLCORE_STATE_ON))
 		goto out;
 
 	/* our work might have been already cancelled */
@@ -56,13 +57,19 @@ void wl1271_elp_work(struct work_struct *work)
 		if (wlvif->bss_type == BSS_TYPE_AP_BSS)
 			goto out;
 
-		if (!test_bit(WLVIF_FLAG_IN_AUTO_PS, &wlvif->flags) &&
+		if (!test_bit(WLVIF_FLAG_IN_PS, &wlvif->flags) &&
 		    test_bit(WLVIF_FLAG_IN_USE, &wlvif->flags))
 			goto out;
 	}
 
 	wl1271_debug(DEBUG_PSM, "chip to elp");
-	wl1271_raw_write32(wl, HW_ACCESS_ELP_CTRL_REG_ADDR, ELPCTRL_SLEEP);
+	ret = wl1271_raw_write32(wl, HW_ACCESS_ELP_CTRL_REG_ADDR,
+				 ELPCTRL_SLEEP);
+	if (ret < 0) {
+		wl12xx_queue_recovery_work(wl);
+		goto out;
+	}
+
 	set_bit(WL1271_FLAG_IN_ELP, &wl->flags);
 
 out:
@@ -75,6 +82,7 @@ out:
 void wl1271_ps_elp_sleep(struct wl1271 *wl)
 {
 	struct wl12xx_vif *wlvif;
+	u32 timeout;
 
 	/* we shouldn't get consecutive sleep requests */
 	if (WARN_ON(test_and_set_bit(WL1271_FLAG_ELP_REQUESTED, &wl->flags)))
@@ -84,13 +92,18 @@ void wl1271_ps_elp_sleep(struct wl1271 *wl)
 		if (wlvif->bss_type == BSS_TYPE_AP_BSS)
 			return;
 
-		if (!test_bit(WLVIF_FLAG_IN_AUTO_PS, &wlvif->flags) &&
+		if (!test_bit(WLVIF_FLAG_IN_PS, &wlvif->flags) &&
 		    test_bit(WLVIF_FLAG_IN_USE, &wlvif->flags))
 			return;
 	}
 
+	if (wl->conf.conn.forced_ps)
+		timeout = ELP_ENTRY_DELAY;
+	else
+		timeout = wl->conf.conn.elp_timeout;
+
 	ieee80211_queue_delayed_work(wl->hw, &wl->elp_work,
-				     msecs_to_jiffies(ELP_ENTRY_DELAY));
+				     msecs_to_jiffies(timeout));
 }
 
 int wl1271_ps_elp_wakeup(struct wl1271 *wl)
@@ -127,7 +140,12 @@ int wl1271_ps_elp_wakeup(struct wl1271 *wl)
 		wl->elp_compl = &compl;
 	spin_unlock_irqrestore(&wl->wl_lock, flags);
 
-	wl1271_raw_write32(wl, HW_ACCESS_ELP_CTRL_REG_ADDR, ELPCTRL_WAKE_UP);
+	ret = wl1271_raw_write32(wl, HW_ACCESS_ELP_CTRL_REG_ADDR,
+				 ELPCTRL_WAKE_UP);
+	if (ret < 0) {
+		wl12xx_queue_recovery_work(wl);
+		goto err;
+	}
 
 	if (!pending) {
 		ret = wait_for_completion_timeout(
@@ -183,10 +201,14 @@ int wl1271_ps_set_mode(struct wl1271 *wl, struct wl12xx_vif *wlvif,
 		if (ret < 0)
 			return ret;
 
-		set_bit(WLVIF_FLAG_IN_AUTO_PS, &wlvif->flags);
+		set_bit(WLVIF_FLAG_IN_PS, &wlvif->flags);
 
-		/* enable beacon early termination. Not relevant for 5GHz */
-		if (wlvif->band == IEEE80211_BAND_2GHZ) {
+		/*
+		 * enable beacon early termination.
+		 * Not relevant for 5GHz and for high rates.
+		 */
+		if ((wlvif->band == IEEE80211_BAND_2GHZ) &&
+		    (wlvif->basic_rate < CONF_HW_BIT_RATE_9MBPS)) {
 			ret = wl1271_acx_bet_enable(wl, wlvif, true);
 			if (ret < 0)
 				return ret;
@@ -196,7 +218,8 @@ int wl1271_ps_set_mode(struct wl1271 *wl, struct wl12xx_vif *wlvif,
 		wl1271_debug(DEBUG_PSM, "leaving psm");
 
 		/* disable beacon early termination */
-		if (wlvif->band == IEEE80211_BAND_2GHZ) {
+		if ((wlvif->band == IEEE80211_BAND_2GHZ) &&
+		    (wlvif->basic_rate < CONF_HW_BIT_RATE_9MBPS)) {
 			ret = wl1271_acx_bet_enable(wl, wlvif, false);
 			if (ret < 0)
 				return ret;
@@ -206,7 +229,7 @@ int wl1271_ps_set_mode(struct wl1271 *wl, struct wl12xx_vif *wlvif,
 		if (ret < 0)
 			return ret;
 
-		clear_bit(WLVIF_FLAG_IN_AUTO_PS, &wlvif->flags);
+		clear_bit(WLVIF_FLAG_IN_PS, &wlvif->flags);
 		break;
 	default:
 		wl1271_warning("trying to set ps to unsupported mode %d", mode);

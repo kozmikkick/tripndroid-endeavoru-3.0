@@ -37,19 +37,34 @@
 int wl1271_init_templates_config(struct wl1271 *wl)
 {
 	int ret, i;
+	size_t max_size;
 
 	/* send empty templates for fw memory reservation */
 	ret = wl1271_cmd_template_set(wl, WL12XX_INVALID_ROLE_ID,
 				      CMD_TEMPL_CFG_PROBE_REQ_2_4, NULL,
-				      WL1271_CMD_TEMPL_DFLT_SIZE,
+				      WL1271_CMD_TEMPL_MAX_SIZE,
 				      0, WL1271_RATE_AUTOMATIC);
 	if (ret < 0)
 		return ret;
 
 	ret = wl1271_cmd_template_set(wl, WL12XX_INVALID_ROLE_ID,
 				      CMD_TEMPL_CFG_PROBE_REQ_5,
-				      NULL, WL1271_CMD_TEMPL_DFLT_SIZE, 0,
+				      NULL, WL1271_CMD_TEMPL_MAX_SIZE, 0,
 				      WL1271_RATE_AUTOMATIC);
+	if (ret < 0)
+		return ret;
+
+	ret = wl1271_cmd_template_set(wl, WL12XX_INVALID_ROLE_ID,
+			CMD_TEMPL_APP_PROBE_REQ_2_4, NULL,
+			WL1271_CMD_TEMPL_MAX_SIZE,
+			0, WL1271_RATE_AUTOMATIC);
+	if (ret < 0)
+		return ret;
+
+	ret = wl1271_cmd_template_set(wl, WL12XX_INVALID_ROLE_ID,
+			CMD_TEMPL_APP_PROBE_REQ_5, NULL,
+			WL1271_CMD_TEMPL_MAX_SIZE,
+			0, WL1271_RATE_AUTOMATIC);
 	if (ret < 0)
 		return ret;
 
@@ -89,10 +104,11 @@ int wl1271_init_templates_config(struct wl1271 *wl)
 	if (ret < 0)
 		return ret;
 
+	max_size = sizeof(struct wl12xx_arp_rsp_template) +
+		   WL1271_EXTRA_SPACE_MAX;
 	ret = wl1271_cmd_template_set(wl, WL12XX_INVALID_ROLE_ID,
 				      CMD_TEMPL_ARP_RSP, NULL,
-				      sizeof
-				      (struct wl12xx_arp_rsp_template),
+				      max_size,
 				      0, WL1271_RATE_AUTOMATIC);
 	if (ret < 0)
 		return ret;
@@ -238,17 +254,6 @@ static int wl12xx_init_rx_config(struct wl1271 *wl)
 	return 0;
 }
 
-int wl1271_init_phy_config(struct wl1271 *wl)
-{
-	int ret;
-
-	ret = wl1271_acx_pd_threshold(wl);
-	if (ret < 0)
-		return ret;
-
-	return 0;
-}
-
 static int wl12xx_init_phy_vif_config(struct wl1271 *wl,
 					    struct wl12xx_vif *wlvif)
 {
@@ -342,12 +347,6 @@ static int wl12xx_init_fwlog(struct wl1271 *wl)
 static int wl1271_sta_hw_init(struct wl1271 *wl, struct wl12xx_vif *wlvif)
 {
 	int ret;
-
-	if (wl->chip.id != CHIP_ID_1283_PG20) {
-		ret = wl1271_cmd_ext_radio_parms(wl);
-		if (ret < 0)
-			return ret;
-	}
 
 	/* PS config */
 	ret = wl12xx_acx_config_ps(wl, wlvif);
@@ -588,7 +587,6 @@ int wl1271_init_vif_specific(struct wl1271 *wl, struct ieee80211_vif *vif)
 
 	/*
 	 * consider all existing roles before configuring psm.
-	 * TODO: reconfigure on interface removal.
 	 */
 	if (!wl->ap_count) {
 		if (is_ap) {
@@ -674,19 +672,24 @@ int wl1271_hw_init(struct wl1271 *wl)
 {
 	int ret;
 
-	if (wl->chip.id == CHIP_ID_1283_PG20)
+	if (wl->chip.id == CHIP_ID_1283_PG20) {
 		ret = wl128x_cmd_general_parms(wl);
-	else
-		ret = wl1271_cmd_general_parms(wl);
-	if (ret < 0)
-		return ret;
-
-	if (wl->chip.id == CHIP_ID_1283_PG20)
+		if (ret < 0)
+			return ret;
 		ret = wl128x_cmd_radio_parms(wl);
-	else
+		if (ret < 0)
+			return ret;
+	} else {
+		ret = wl1271_cmd_general_parms(wl);
+		if (ret < 0)
+			return ret;
 		ret = wl1271_cmd_radio_parms(wl);
-	if (ret < 0)
-		return ret;
+		if (ret < 0)
+			return ret;
+		ret = wl1271_cmd_ext_radio_parms(wl);
+		if (ret < 0)
+			return ret;
+	}
 
 	/* Chip-specific init */
 	ret = wl1271_chip_specific_init(wl);
@@ -719,11 +722,6 @@ int wl1271_hw_init(struct wl1271 *wl)
 
 	/* RX config */
 	ret = wl12xx_init_rx_config(wl);
-	if (ret < 0)
-		goto out_free_memmap;
-
-	/* PHY layer config */
-	ret = wl1271_init_phy_config(wl);
 	if (ret < 0)
 		goto out_free_memmap;
 
