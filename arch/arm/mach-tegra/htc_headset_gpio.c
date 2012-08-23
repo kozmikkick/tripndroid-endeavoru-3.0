@@ -47,7 +47,7 @@ static DECLARE_DELAYED_WORK(cancel_button_work, cancel_button_work_func);
 static struct htc_headset_gpio_info *hi;
 unsigned long last_key_jiffies = 0;
 unsigned long unstable_jiffies = 0.02 * HZ;
-unsigned long irq_delay = 0.002 * HZ;
+unsigned long irq_delay = 0.010 * HZ;
 
 static int hs_gpio_hpin_state(void)
 {
