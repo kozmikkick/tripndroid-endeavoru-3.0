@@ -2927,7 +2927,7 @@ struct tegra_dsi_out enterprise_dsi = {
 	.lp_cmd_mode_freq_khz = 20000,
 
 	/* TODO: Get the vender recommended freq */
-	.lp_read_cmd_mode_freq_khz = 200000,
+//	.lp_read_cmd_mode_freq_khz = 200000,
 };
 
 static struct tegra_stereo_out enterprise_stereo = {
@@ -2938,17 +2938,17 @@ static struct tegra_stereo_out enterprise_stereo = {
 #ifdef CONFIG_TEGRA_DC
 static struct tegra_dc_mode enterprise_dsi_modes[] = {
 	{
-		.pclk = 30000000,
-		.h_ref_to_sync = 4,
-		.v_ref_to_sync = 1,
-		.h_sync_width = 16,
-		.v_sync_width = 1,
-		.h_back_porch = 29,
-		.v_back_porch = 1,
+		.pclk = 61417000,
+		.h_ref_to_sync = 2,
+		.v_ref_to_sync = 2,
+		.h_sync_width = 4,
+		.v_sync_width = 4,
+		.h_back_porch = 100,
+		.v_back_porch = 14,
 		.h_active = 720,
 		.v_active = 1280,
-		.h_front_porch = 55,
-		.v_front_porch = 2,
+		.h_front_porch = 4,
+		.v_front_porch = 4,
 	},
 };
 
@@ -2957,7 +2957,7 @@ static struct tegra_fb_data enterprise_dsi_fb_data = {
 	.xres		= 720,
 	.yres		= 1280,
 	.bits_per_pixel	= 32,
-	.flags		= TEGRA_FB_FLIP_ON_PROBE,
+//	.flags		= TEGRA_FB_FLIP_ON_PROBE,
 };
 
 #ifdef CONFIG_USB_ANDROID_PROJECTOR
@@ -2995,7 +2995,7 @@ static struct tegra_dc_out enterprise_disp1_out = {
 static struct tegra_dc_platform_data enterprise_disp1_pdata = {
 	.flags		= TEGRA_DC_FLAG_ENABLED,
 	.default_out	= &enterprise_disp1_out,
-	.emc_clk_rate	= 204000000,
+	.emc_clk_rate	= 300000000,
 	.fb		= &enterprise_dsi_fb_data,
 };
 
