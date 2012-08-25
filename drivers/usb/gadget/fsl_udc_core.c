@@ -152,7 +152,6 @@ static struct usb_sys_interface *usb_sys_regs;
 
 static struct wake_lock udc_wake_lock;
 static struct wake_lock udc_wake_lock2;
-struct wake_lock udc_resume_wake_lock;
 
 /* it is initialized in probe()  */
 struct fsl_udc *udc_controller = NULL;
@@ -3819,8 +3818,6 @@ static int fsl_udc_resume(struct platform_device *pdev)
 	//unsigned long val;
 	irq_udc_debug =1 ;
 	irq_otg_debug =1 ;
-	if(global_wakeup_state == VBUS_WAKEUP_ENR)
-		wake_lock_timeout(&udc_resume_wake_lock, 8*HZ);
 
 #if 0
 	val =fsl_readl(&usb_sys_regs->vbus_wakeup);
@@ -3896,7 +3893,6 @@ static int __init udc_init(void)
 	USB_INFO("%s (%s)\n", driver_desc, DRIVER_VERSION);
 	wake_lock_init(&udc_wake_lock, WAKE_LOCK_SUSPEND, "usb_udc_lock");
 	wake_lock_init(&udc_wake_lock2, WAKE_LOCK_SUSPEND, "usb_udc_lock2");
-	wake_lock_init(&udc_resume_wake_lock, WAKE_LOCK_SUSPEND, "usb_udc_resume_lock");
 	return platform_driver_probe(&udc_driver, fsl_udc_probe);
 }
 
