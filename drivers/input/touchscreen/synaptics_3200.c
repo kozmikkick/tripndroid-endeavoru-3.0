@@ -1881,11 +1881,6 @@ static int syn_pdt_scan(struct synaptics_ts_data *ts, int num_page)
 				intr_count += (data[4] & 0x07);
 			}
 			ts->address_table[j + k].function_type = data[5];
-			printk(KERN_INFO
-				"Query: %2.2X, Command: %4.4X, Control: %2X, Data: %2X, INTR: %2X, Funtion: %2X\n",
-				ts->address_table[j + k].query_base , ts->address_table[j + k].command_base,
-				ts->address_table[j + k].control_base, ts->address_table[j + k].data_base,
-				ts->address_table[j + k].interrupt_source, ts->address_table[j + k].function_type);
 		}
 		k += num_function[i];
 	}
@@ -2239,12 +2234,9 @@ static int synaptics_ts_probe(
 			ts->key_postion_x[i] =
 				(ts->layout[1] - ts->layout[0]) * (i * 2 + 1) / (ts->key_number * 2)
 				+ ts->layout[0];
-			printk(KERN_INFO "[TP] ts->key_postion_x[%d]: %d\n",
-				i, ts->key_postion_x[i]);
 		}
 		ts->key_postion_y = ts->layout[2] +
 			(21 * (ts->layout[3] - ts->layout[2]) / 20);
-		printk(KERN_INFO "[TP] ts->key_postion_y: %d\n", ts->key_postion_y);
 	}
 
 	ret = synaptics_init_panel(ts);
