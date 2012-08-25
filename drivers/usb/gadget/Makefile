@@ -73,3 +73,7 @@ obj-$(CONFIG_USB_G_NOKIA)	+= g_nokia.o
 obj-$(CONFIG_USB_G_WEBCAM)	+= g_webcam.o
 obj-$(CONFIG_USB_G_NCM)		+= g_ncm.o
 obj-$(CONFIG_USB_G_ANDROID)	+= g_android.o
+
+ifeq (${CONFIG_MACH_ENDEAVORU},y)
+obj-y	+= usb_notifier.o
+endif
