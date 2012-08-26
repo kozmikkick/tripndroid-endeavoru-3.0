@@ -307,7 +307,7 @@
 #define ROUND_DIVIDER_DOWN	1
 
 /* PLLP default fixed rate in h/w controlled mode */
-#define PLLP_DEFAULT_FIXED_RATE		216000000
+#define PLLP_DEFAULT_FIXED_RATE		408000000
 
 /* Threshold to engage CPU clock skipper during CPU rate change */
 #define SKIPPER_ENGAGE_RATE		 800000000
