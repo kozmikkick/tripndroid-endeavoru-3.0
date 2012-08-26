@@ -317,11 +317,20 @@ static void tegra_auto_hotplug_work_func(struct work_struct *work)
 	}
 	mutex_unlock(tegra3_cpu_lock);
 
-	if (cpu < nr_cpu_ids) {
-		if (up)
+	/* Ignore hotplug during shutdown. This prevents us doing
+	* work that can fail.
+	*/
+	if (system_state <= SYSTEM_RUNNING && cpu < nr_cpu_ids) {
+		if (up){
+			printk(KERN_INFO "cpu_up(%u)+\n",cpu);
 			cpu_up(cpu);
-		else
+			printk(KERN_INFO "cpu_up(%u)-\n",cpu);
+		}
+		else{
+			printk(KERN_INFO "cpu_down(%u)+\n",cpu);
 			cpu_down(cpu);
+			printk(KERN_INFO "cpu_down(%u)-\n",cpu);
+		}
 	}
 }
 
