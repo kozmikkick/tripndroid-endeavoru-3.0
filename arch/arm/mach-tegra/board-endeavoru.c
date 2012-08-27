@@ -100,8 +100,6 @@
 #define PMC_WAKE_STATUS 0x14
 #define POWER_WAKEUP_ENR 7
 
-extern int global_wakeup_state;
-
 /* All units are in millicelsius */
 static struct tegra_thermal_data thermal_data = {
 	.temp_shutdown = 90000,

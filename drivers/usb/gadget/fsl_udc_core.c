@@ -90,7 +90,6 @@
 
 #define VUBS_IRQ -22
 #define VBUS_WAKEUP_ENR 19
-extern int global_wakeup_state;
 
 static int irq_udc_debug;
 int irq_otg_debug;

@@ -65,8 +65,6 @@
 #define ALL_UF_INT (0)
 #endif
 
-extern int global_wakeup_state;
-
 static int no_vsync;
 static struct fb_videomode tegra_dc_hdmi_fallback_mode = {
 	.refresh = 60,
