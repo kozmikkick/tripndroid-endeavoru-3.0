@@ -216,7 +216,7 @@ static __initdata struct tegra_pingroup_config endeavoru_pinmux_common[] = {
     // Port J
     DEFAULT_PINMUX(GMI_CS0_N,       GMI,             NORMAL,	   NORMAL,     INPUT), // MDM_BB2AP_HOST_WAKEUP
     DEFAULT_PINMUX(LCD_DE,          DISPLAYA,        NORMAL,       NORMAL,     INPUT), // DSP_LCM_DE
-    DEFAULT_PINMUX(GMI_CS1_N,       RSVD,            PULL_DOWN,    NORMAL,     INPUT), // PEH_COMP_INT
+    DEFAULT_PINMUX(GMI_CS1_N,       RSVD1,           PULL_DOWN,    NORMAL,     INPUT), // PEH_COMP_INT
     DEFAULT_PINMUX(LCD_HSYNC,       DISPLAYA,        NORMAL,       NORMAL,     INPUT), // NC
     DEFAULT_PINMUX(LCD_VSYNC,       DISPLAYA,        PULL_DOWN,    NORMAL,     INPUT), // MDM_AP_USB_UART_OE
     DEFAULT_PINMUX(GMI_A16,         UARTD,           NORMAL,       NORMAL,     OUTPUT), // MDM_TX
