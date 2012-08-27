@@ -283,7 +283,7 @@ static __initdata struct tegra_pingroup_config endeavoru_pinmux_common[] = {
     // Port R
     DEFAULT_PINMUX(KB_ROW0,         KBC,             PULL_UP,      NORMAL,     INPUT), // NC
     DEFAULT_PINMUX(KB_ROW1,         KBC,             NORMAL,       NORMAL,     OUTPUT), // PER_TORCH_EN
-    DEFAULT_PINMUX(KB_ROW2,         RSVD,            NORMAL,       NORMAL,     OUTPUT), // GYRO SLEEP
+    DEFAULT_PINMUX(KB_ROW2,         RSVD3,           NORMAL,       NORMAL,     OUTPUT), // GYRO SLEEP
     DEFAULT_PINMUX(KB_ROW3,         RSVD,            NORMAL,       NORMAL,     OUTPUT), // HAPTIC_EN
     DEFAULT_PINMUX(KB_ROW4,         RSVD,            NORMAL,       NORMAL,     INPUT), // NC
     DEFAULT_PINMUX(KB_ROW5,         RSVD,            NORMAL,       NORMAL,     INPUT), // NC
