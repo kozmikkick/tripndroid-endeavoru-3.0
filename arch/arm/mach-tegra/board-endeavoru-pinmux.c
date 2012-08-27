@@ -316,7 +316,7 @@ static __initdata struct tegra_pingroup_config endeavoru_pinmux_common[] = {
     DEFAULT_PINMUX(GPIO_PV3,        RSVD1,           NORMAL,       NORMAL,     OUTPUT), // NC
     I2C_PINMUX(DDC_SCL,             I2C4,            NORMAL,       NORMAL,     INPUT, DISABLE, ENABLE), // MHL_DDC_CLK
     I2C_PINMUX(DDC_SDA,             I2C4,            NORMAL,       NORMAL,     INPUT, DISABLE, ENABLE), // MHL_DDC_DATA
-    DEFAULT_PINMUX(CRT_VSYNC,       RSVD,            NORMAL,       NORMAL,     OUTPUT),
+    DEFAULT_PINMUX(CRT_VSYNC,       RSVD3,           NORMAL,       NORMAL,     OUTPUT),
 
     //Port W
     DEFAULT_PINMUX(LCD_CS1_N,       RSVD2,           PULL_UP,      NORMAL,     INPUT), // PWR_CHG_STAT
