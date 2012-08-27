@@ -405,7 +405,7 @@ static __initdata struct tegra_pingroup_config endeavoru_pinmux_EVT_XE[] = {
 	DEFAULT_PINMUX(CLK3_REQ,          RSVD3,           NORMAL,      TRISTATE,   INPUT), // RAW_INTR1(input only)
 	DEFAULT_PINMUX(ULPI_DATA4,        RSVD,            NORMAL,      NORMAL,     INPUT), // BT UART CTS wake up source
 	/* PLSensor sdmmc_2v85_en */
-	DEFAULT_PINMUX(LCD_D19,		  RSVD, 	   NORMAL,	NORMAL,     OUTPUT),
+	DEFAULT_PINMUX(LCD_D19,		  RSVD2, 	   NORMAL,	NORMAL,     OUTPUT),
 };
 
 int __init endeavoru_pinmux_init(void)
