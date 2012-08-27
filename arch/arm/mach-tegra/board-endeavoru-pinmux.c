@@ -148,7 +148,7 @@ static __initdata struct tegra_pingroup_config endeavoru_pinmux_common[] = {
 
     // Port C
     DEFAULT_PINMUX(UART3_RTS_N,     UARTC,           NORMAL,	   NORMAL,     OUTPUT), // BT_UART_RTS
-    DEFAULT_PINMUX(LCD_PWR1,        RSVD,            NORMAL,       NORMAL,     OUTPUT), // MDM_AP2BB_RST_PWRDWN
+    DEFAULT_PINMUX(LCD_PWR1,        RSVD2,            NORMAL,       NORMAL,     OUTPUT), // MDM_AP2BB_RST_PWRDWN
     DEFAULT_PINMUX(UART2_TXD,       IRDA,            NORMAL,       NORMAL,     OUTPUT), //
     DEFAULT_PINMUX(UART2_RXD,       IRDA,            NORMAL,       NORMAL,     INPUT), //
     I2C_PINMUX(GEN1_I2C_SCL,        I2C1,	     NORMAL,       NORMAL,     INPUT,  DISABLE, DISABLE), // PER_SENSOR_I2C_SCL
