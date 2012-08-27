@@ -465,7 +465,9 @@ static struct syscore_ops tegra_pinmux_syscore_ops = {
 
 static __initdata struct tegra_drive_pingroup_config t30_def_drive_pinmux[] = {
 	SET_DRIVE(DAP2, DISABLE, ENABLE, DIV_1, 31, 31, FASTEST, FASTEST),
+#ifndef CONFIG_MACH_ENDEAVORU
 	SET_DRIVE(DAP1, DISABLE, ENABLE, DIV_1, 31, 31, FASTEST, FASTEST),
+#endif
 };
 
 void __init tegra_init_pinmux(void)
