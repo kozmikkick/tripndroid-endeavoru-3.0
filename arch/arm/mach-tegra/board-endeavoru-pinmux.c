@@ -319,7 +319,7 @@ static __initdata struct tegra_pingroup_config endeavoru_pinmux_common[] = {
     DEFAULT_PINMUX(CRT_VSYNC,       RSVD,            NORMAL,       NORMAL,     OUTPUT),
 
     //Port W
-    DEFAULT_PINMUX(LCD_CS1_N,       RSVD1,           PULL_UP,      NORMAL,     INPUT), // PWR_CHG_STAT
+    DEFAULT_PINMUX(LCD_CS1_N,       RSVD2,           PULL_UP,      NORMAL,     INPUT), // PWR_CHG_STAT
     DEFAULT_PINMUX(LCD_M1,          DISPLAYA,        NORMAL,       NORMAL,     OUTPUT), // DSP_BL_PWM_CPU
     DEFAULT_PINMUX(SPI2_CS1_N,      RSVD,            PULL_UP,      NORMAL,     INPUT), // AUD_HP_DET
     DEFAULT_PINMUX(SPI2_CS2_N,      RSVD,            PULL_UP,      TRISTATE,   INPUT), // DSP_VOL_DOWN
