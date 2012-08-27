@@ -270,7 +270,7 @@ static __initdata struct tegra_pingroup_config endeavoru_pinmux_common[] = {
     DEFAULT_PINMUX(DAP4_FS,         I2S3,            PULL_DOWN,    NORMAL,     INPUT), // AUD_BTPCM_SYNC
     DEFAULT_PINMUX(DAP4_DIN,        I2S3,            PULL_DOWN,    NORMAL,     INPUT), // AUD_BTPCM_DOUT
     DEFAULT_PINMUX(DAP4_DOUT,       RSVD2,           NORMAL,       NORMAL,     OUTPUT), // AUD_SPK_EN
-    DEFAULT_PINMUX(DAP4_SCLK,       RSVD,            NORMAL,       NORMAL,     OUTPUT), // AUD_LINEOUT_EN
+    DEFAULT_PINMUX(DAP4_SCLK,       RSVD2,           NORMAL,       NORMAL,     OUTPUT), // AUD_LINEOUT_EN
 
     // Port Q
     DEFAULT_PINMUX(KB_COL0,         KBC,             PULL_UP,      NORMAL,     INPUT), // NC
