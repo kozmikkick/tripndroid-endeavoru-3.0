@@ -190,7 +190,7 @@ static __initdata struct tegra_pingroup_config endeavoru_pinmux_common[] = {
     DEFAULT_PINMUX(GMI_AD3,         RSVD,            NORMAL,       NORMAL,     INPUT), // SYS_BOOT_SEL_3
     DEFAULT_PINMUX(GMI_AD4,         RSVD2,           NORMAL,       NORMAL,     INPUT), // SYS_RAM_CODE_0
     DEFAULT_PINMUX(GMI_AD5,         RSVD2,           NORMAL,       NORMAL,     INPUT), // SYS_RAM_CODE_1
-    DEFAULT_PINMUX(GMI_AD6,         RSVD,            NORMAL,       NORMAL,     INPUT), // SYS_RAM_CODE_2
+    DEFAULT_PINMUX(GMI_AD6,         RSVD2,           NORMAL,       NORMAL,     INPUT), // SYS_RAM_CODE_2
     DEFAULT_PINMUX(GMI_AD7,         RSVD,            NORMAL,       NORMAL,     INPUT), // SYS_RAM_CODE_3
 
     // Port H
