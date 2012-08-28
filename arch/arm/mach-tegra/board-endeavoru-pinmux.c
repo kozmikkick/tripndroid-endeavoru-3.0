@@ -284,7 +284,7 @@ static __initdata struct tegra_pingroup_config endeavoru_pinmux_common[] = {
     DEFAULT_PINMUX(KB_ROW0,         KBC,             PULL_UP,      NORMAL,     INPUT), // NC
     DEFAULT_PINMUX(KB_ROW1,         KBC,             NORMAL,       NORMAL,     OUTPUT), // PER_TORCH_EN
     DEFAULT_PINMUX(KB_ROW2,         RSVD3,           NORMAL,       NORMAL,     OUTPUT), // GYRO SLEEP
-    DEFAULT_PINMUX(KB_ROW3,         RSVD,            NORMAL,       NORMAL,     OUTPUT), // HAPTIC_EN
+    DEFAULT_PINMUX(KB_ROW3,         RSVD2,           NORMAL,       NORMAL,     OUTPUT), // HAPTIC_EN
     DEFAULT_PINMUX(KB_ROW4,         RSVD,            NORMAL,       NORMAL,     INPUT), // NC
     DEFAULT_PINMUX(KB_ROW5,         RSVD,            NORMAL,       NORMAL,     INPUT), // NC
     DEFAULT_PINMUX(KB_ROW6,         RSVD,            NORMAL,       TRISTATE,   INPUT), // CAM_CAM1_ID
@@ -399,7 +399,7 @@ static __initdata struct tegra_pingroup_config endeavoru_pinmux_EVT_XE[] = {
 	DEFAULT_PINMUX(UART2_RTS_N,       SPI4,            NORMAL,      NORMAL,     INPUT), // MCAM_SPI_DI
 	DEFAULT_PINMUX(UART2_CTS_N,       SPI4,            NORMAL,      NORMAL,     INPUT), // MCAM_SPI_CS0
 	DEFAULT_PINMUX(KB_ROW0,           RSVD,            NORMAL,      TRISTATE,   INPUT), // RAW_INTR0(input only)
-	DEFAULT_PINMUX(KB_ROW3,           RSVD,            NORMAL,      NORMAL,     INPUT), // RAW_1V8_EN
+	DEFAULT_PINMUX(KB_ROW3,           RSVD2,           NORMAL,      NORMAL,     INPUT), // RAW_1V8_EN
 	DEFAULT_PINMUX(KB_ROW4,           RSVD,            NORMAL,      NORMAL,     INPUT), // RAW_RSTN
 	DEFAULT_PINMUX(KB_ROW5,           RSVD,            NORMAL,      NORMAL,     OUTPUT), // NC
 	DEFAULT_PINMUX(CLK3_REQ,          RSVD3,           NORMAL,      TRISTATE,   INPUT), // RAW_INTR1(input only)
