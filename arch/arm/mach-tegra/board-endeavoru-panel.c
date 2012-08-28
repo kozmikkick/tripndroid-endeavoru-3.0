@@ -192,13 +192,35 @@ static int enterprise_hdmi_vddio_disable(void)
 
 static int enterprise_hdmi_enable(void)
 {
-	REGULATOR_GET(enterprise_hdmi_reg, "avdd_hdmi");
-	regulator_enable(enterprise_hdmi_reg);
-
-	REGULATOR_GET(enterprise_hdmi_pll, "avdd_hdmi_pll");
-	regulator_enable(enterprise_hdmi_pll);
-
-failed:
+	int ret;
+	if (!enterprise_hdmi_reg) {
+		enterprise_hdmi_reg = regulator_get(NULL, "avdd_hdmi");
+		if (IS_ERR_OR_NULL(enterprise_hdmi_reg)) {
+			pr_err("hdmi: couldn't get regulator avdd_hdmi\n");
+			enterprise_hdmi_reg = NULL;
+			return PTR_ERR(enterprise_hdmi_reg);
+		}
+	}
+	ret = regulator_enable(enterprise_hdmi_reg);
+	if (ret < 0) {
+		pr_err("hdmi: couldn't enable regulator avdd_hdmi\n");
+		return ret;
+	}
+	if (!enterprise_hdmi_pll) {
+		enterprise_hdmi_pll = regulator_get(NULL, "avdd_hdmi_pll");
+		if (IS_ERR_OR_NULL(enterprise_hdmi_pll)) {
+			pr_err("hdmi: couldn't get regulator avdd_hdmi_pll\n");
+			enterprise_hdmi_pll = NULL;
+			regulator_put(enterprise_hdmi_reg);
+			enterprise_hdmi_reg = NULL;
+			return PTR_ERR(enterprise_hdmi_pll);
+		}
+	}
+	ret = regulator_enable(enterprise_hdmi_pll);
+	if (ret < 0) {
+		pr_err("hdmi: couldn't enable regulator avdd_hdmi_pll\n");
+		return ret;
+	}
 	return 0;
 }
 
