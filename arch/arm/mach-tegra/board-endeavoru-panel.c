@@ -66,6 +66,8 @@ static struct regulator *enterprise_hdmi_pll;
 
 #define ENTERPRISE_STEREO_3D		0
 #define ENTERPRISE_STEREO_2D		1
+#define ENTERPRISE_STEREO_LANDSCAPE	0
+#define ENTERPRISE_STEREO_PORTRAIT	1
 
 #define LCM_TE			TEGRA_GPIO_PJ1
 #define LCM_PWM			TEGRA_GPIO_PW1
@@ -480,10 +482,10 @@ static void enterprise_stereo_set_orientation(int mode)
 {
 	switch (mode) {
 	case TEGRA_DC_STEREO_LANDSCAPE:
-		/*gpio_set_value(TEGRA_GPIO_PH2, ENTERPRISE_STEREO_LANDSCAPE);*/
+		gpio_set_value(TEGRA_GPIO_PH2, ENTERPRISE_STEREO_LANDSCAPE);
 		break;
 	case TEGRA_DC_STEREO_PORTRAIT:
-		/*gpio_set_value(TEGRA_GPIO_PH2, ENTERPRISE_STEREO_PORTRAIT);*/
+		gpio_set_value(TEGRA_GPIO_PH2, ENTERPRISE_STEREO_PORTRAIT);
 		break;
 	}
 }
