@@ -181,7 +181,7 @@ static __initdata struct tegra_pingroup_config endeavoru_pinmux_common[] = {
     DEFAULT_PINMUX(LCD_D12,         DISPLAYA,        NORMAL,       NORMAL,     INPUT), // NC
     DEFAULT_PINMUX(LCD_D13,         DISPLAYA,        NORMAL,       NORMAL,     INPUT), // NC
     DEFAULT_PINMUX(LCD_D14,         RSVD,            NORMAL,       NORMAL,     INPUT), // CAM_CAM2_CORE_1V8_EN
-    DEFAULT_PINMUX(LCD_D15,         RSVD,	     NORMAL,       NORMAL,     OUTPUT), // SYS_PMU_MSECURE
+    DEFAULT_PINMUX(LCD_D15,         RSVD2,	     NORMAL,       NORMAL,     OUTPUT), // SYS_PMU_MSECURE
 
     // Port G
     DEFAULT_PINMUX(GMI_AD0,         RSVD,            NORMAL,	   NORMAL,     INPUT), // SYS_BOOT_SEL_0
