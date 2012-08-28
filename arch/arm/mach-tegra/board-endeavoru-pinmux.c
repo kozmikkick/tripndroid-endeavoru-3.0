@@ -224,7 +224,7 @@ static __initdata struct tegra_pingroup_config endeavoru_pinmux_common[] = {
     // Port K
     DEFAULT_PINMUX(GMI_ADV_N,       RSVD2,           NORMAL,	   NORMAL,     INPUT), // external pull down
     DEFAULT_PINMUX(GMI_CLK,         RSVD,            NORMAL,       NORMAL,     INPUT), // NC
-    DEFAULT_PINMUX(GMI_CS4_N,       RSVD,            PULL_UP,      NORMAL,     INPUT), // PER_PS_INT
+    DEFAULT_PINMUX(GMI_CS4_N,       RSVD2,           PULL_UP,      NORMAL,     INPUT), // PER_PS_INT
     DEFAULT_PINMUX(GMI_CS2_N,       RSVD,            NORMAL,       NORMAL,     INPUT), // NC
     DEFAULT_PINMUX(GMI_CS3_N,       RSVD,            NORMAL,       NORMAL,     INPUT), // NC
     DEFAULT_PINMUX(SPDIF_OUT,       SPDIF,           NORMAL,       NORMAL,     OUTPUT), // NC
