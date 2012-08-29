@@ -398,7 +398,7 @@ static __initdata struct tegra_pingroup_config endeavoru_pinmux_EVT_XE[] = {
 	DEFAULT_PINMUX(UART2_RXD,         SPI4,            NORMAL,      NORMAL,     INPUT), // MAMCAM_SPI_DO
 	DEFAULT_PINMUX(UART2_RTS_N,       SPI4,            NORMAL,      NORMAL,     INPUT), // MCAM_SPI_DI
 	DEFAULT_PINMUX(UART2_CTS_N,       SPI4,            NORMAL,      NORMAL,     INPUT), // MCAM_SPI_CS0
-	DEFAULT_PINMUX(KB_ROW0,           RSVD,            NORMAL,      TRISTATE,   INPUT), // RAW_INTR0(input only)
+	DEFAULT_PINMUX(KB_ROW0,           RSVD3,           NORMAL,      TRISTATE,   INPUT), // RAW_INTR0(input only)
 	DEFAULT_PINMUX(KB_ROW3,           RSVD2,           NORMAL,      NORMAL,     INPUT), // RAW_1V8_EN
 	DEFAULT_PINMUX(KB_ROW4,           RSVD3,           NORMAL,      NORMAL,     INPUT), // RAW_RSTN
 	DEFAULT_PINMUX(KB_ROW5,           RSVD,            NORMAL,      NORMAL,     OUTPUT), // NC
