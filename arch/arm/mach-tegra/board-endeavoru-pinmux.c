@@ -174,7 +174,7 @@ static __initdata struct tegra_pingroup_config endeavoru_pinmux_common[] = {
     DEFAULT_PINMUX(LCD_D7,          DISPLAYA,        NORMAL,       NORMAL,     INPUT), // PEH_VIBRATOR_ON
 
     // Port F
-    DEFAULT_PINMUX(LCD_D8,          RSVD,            PULL_DOWN,    NORMAL,     INPUT), // CAM_VCM_2V85_PWR
+    DEFAULT_PINMUX(LCD_D8,          RSVD2,           PULL_DOWN,    NORMAL,     INPUT), // CAM_VCM_2V85_PWR
     DEFAULT_PINMUX(LCD_D9,          DISPLAYA,        NORMAL,       NORMAL,     INPUT), //
     DEFAULT_PINMUX(LCD_D10,         DISPLAYA,        NORMAL,       NORMAL,     INPUT), // NC
     DEFAULT_PINMUX(LCD_D11,         DISPLAYA,        NORMAL,       NORMAL,     INPUT), // NC
