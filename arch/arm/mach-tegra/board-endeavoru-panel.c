@@ -56,9 +56,9 @@
 #define DSI_PANEL_RESET 1
 
 #ifdef CONFIG_TEGRA_DC
-static struct regulator *enterprise_dsi_reg = NULL;
-static struct regulator *v_lcm_3v3 = NULL;
-static struct regulator *v_lcmio_1v8 = NULL;
+static struct regulator *enterprise_dsi_reg;
+static bool dsi_regulator_status;
+static struct regulator *enterprise_lcd_reg;
 
 static struct regulator *enterprise_hdmi_reg;
 static struct regulator *enterprise_hdmi_pll;
@@ -69,9 +69,9 @@ static struct regulator *enterprise_hdmi_pll;
 #define ENTERPRISE_STEREO_LANDSCAPE	0
 #define ENTERPRISE_STEREO_PORTRAIT	1
 
-#define LCM_TE			TEGRA_GPIO_PJ1
-#define LCM_PWM			TEGRA_GPIO_PW1
-#define LCM_RST			TEGRA_GPIO_PN6
+#define LCM_TE				TEGRA_GPIO_PJ1
+#define LCM_PWM				TEGRA_GPIO_PW1
+#define enterprise_dsi_panel_reset	TEGRA_GPIO_PN6
 
 #define MHL_INT         TEGRA_GPIO_PC7
 #define MHL_USB_SEL     TEGRA_GPIO_PE0
@@ -86,12 +86,9 @@ struct workqueue_struct *bkl_wq;
 struct work_struct bkl_work;
 struct timer_list bkl_timer;
 
-static int is_power_on = 0;
-
 static struct gpio panel_init_gpios[] = {
     {LCM_TE,        GPIOF_IN,               "lcm_te"},
     {LCM_PWM,       GPIOF_OUT_INIT_LOW,     "pm0"},
-    {LCM_RST,       GPIOF_OUT_INIT_HIGH,    "lcm reset"},
     {MHL_INT,       GPIOF_IN,               "mhl_int"},
     {MHL_1V2_EN,    GPIOF_OUT_INIT_HIGH,    "mhl_1v2_en"},
     {MHL_RST,       GPIOF_OUT_INIT_HIGH,    "mhl_rst"},
@@ -335,134 +332,100 @@ static struct tegra_dc_platform_data enterprise_disp2_pdata = {
 	.emc_clk_rate	= 300000000,
 };
 
-static int enterprise_dsi_panel_enable(void)
+static int avdd_dsi_csi_rail_enable(void)
 {
-	/*TODO the power-on sequence move to bridge_reset*/
+	int ret;
+
+	if (dsi_regulator_status == true)
+		return 0;
+
+	if (enterprise_dsi_reg == NULL) {
+		enterprise_dsi_reg = regulator_get(NULL, "avdd_dsi_csi");
+		if (IS_ERR_OR_NULL(enterprise_dsi_reg)) {
+			pr_err("dsi: Could not get regulator avdd_dsi_csi\n");
+			enterprise_dsi_reg = NULL;
+			return PTR_ERR(enterprise_dsi_reg);
+		}
+	}
+	ret = regulator_enable(enterprise_dsi_reg);
+	if (ret < 0) {
+		pr_err("DSI regulator avdd_dsi_csi could not be enabled\n");
+		return ret;
+	}
+	dsi_regulator_status = true;
 	return 0;
 }
 
-static int bridge_reset(void)
+static int avdd_dsi_csi_rail_disable(void)
 {
-	int err = 0;
+	int ret;
 
-	if (is_power_on) {
-		DISP_INFO_LN("is_power_on:%d\n", is_power_on);
+	if (dsi_regulator_status == false)
 		return 0;
+
+	if (enterprise_dsi_reg == NULL) {
+		pr_warn("%s: unbalanced disable\n", __func__);
+		return -EIO;
 	}
 
-	/* delay for DSI hardware stable */
-	hr_msleep(10);
-
-	/*change LCM_TE & LCM_PWM to SFIO*/
-	tegra_gpio_disable(LCM_PWM);
-	tegra_gpio_disable(LCM_TE);
-
-	/* workaround to prevent panel off during dc_probe, remove it later */
-	if(g_display_on)
-	{
-		REGULATOR_GET(enterprise_dsi_reg, "avdd_dsi_csi");
-		regulator_enable(enterprise_dsi_reg);
-
-		REGULATOR_GET(v_lcm_3v3, "v_lcm_3v3");
-		REGULATOR_GET(v_lcmio_1v8, "v_lcmio_1v8");
-
-		regulator_enable(v_lcmio_1v8);
-		regulator_enable(v_lcm_3v3);
-
-		goto success;
-		return 0;
+	ret = regulator_disable(enterprise_dsi_reg);
+	if (ret < 0) {
+		pr_err("DSI regulator avdd_dsi_csi cannot be disabled\n");
+		return ret;
 	}
-
-	REGULATOR_GET(enterprise_dsi_reg, "avdd_dsi_csi");
-	regulator_enable(enterprise_dsi_reg);
-
-	REGULATOR_GET(v_lcm_3v3, "v_lcm_3v3");
-	REGULATOR_GET(v_lcmio_1v8, "v_lcmio_1v8");
-
-	/*LCD_RST pull low*/
-	gpio_set_value(LCM_RST, 0);
-	hr_msleep(5);
-	/*Turn on LCMIO_1V8_EN*/
-	regulator_enable(v_lcmio_1v8);
-	hr_msleep(1);
-	/*Turn on LCMIO_3V3_EN*/
-	regulator_enable(v_lcm_3v3);
-	switch (g_panel_id) {
-		case PANEL_ID_ENR_SHARP_HX_XA:
-		case PANEL_ID_ENR_SHARP_HX_C3:
-		case PANEL_ID_ENRTD_SHARP_HX_XA:
-		case PANEL_ID_ENRTD_SHARP_HX_C3:
-		case PANEL_ID_ENR_SHARP_HX_C4:
-		case PANEL_ID_ENRTD_SHARP_HX_C4:
-			hr_msleep(10);
-			/*read LCD_ID0,LCD_ID1*/
-			hr_msleep(2);
-		break;
-		default:
-			hr_msleep(20);
-	}
-	gpio_set_value(LCM_RST, 1);
-	hr_msleep(1);
-failed:
-success:
-	is_power_on = 1;
-	DISP_INFO_LN("is_power_on:%d\n", is_power_on);
-
-	return err;
+	dsi_regulator_status = false;
+	return 0;
 }
 
-static int ic_reset(void)
+static int enterprise_dsi_panel_enable(void)
 {
-	int err = 0;
+	int ret;
 
-	if(g_display_on) {
-		g_display_on = false;
-		goto success;
-		return 0;
+	tegra_gpio_disable(LCM_TE);
+
+	ret = avdd_dsi_csi_rail_enable();
+	if (ret)
+		return ret;
+
+#if DSI_PANEL_RESET
+	if (g_display_on != true) {
+		ret = gpio_request(enterprise_dsi_panel_reset, "panel reset");
+		if (ret < 0)
+			return ret;
+
+		ret = gpio_direction_output(enterprise_dsi_panel_reset, 0);
+		if (ret < 0) {
+			gpio_free(enterprise_dsi_panel_reset);
+			return ret;
+		}
+		tegra_gpio_enable(enterprise_dsi_panel_reset);
+
+		gpio_set_value(enterprise_dsi_panel_reset, 0);
+		udelay(2000);
+		gpio_set_value(enterprise_dsi_panel_reset, 1);
+		mdelay(20);
 	}
+#endif
 
-	hr_msleep(2);
-	gpio_set_value(LCM_RST, 0);
-	hr_msleep(1);
-	gpio_set_value(LCM_RST, 1);
-	hr_msleep(25);
-
-success:
-	return err;
+	return ret;
 }
 
 static int enterprise_dsi_panel_disable(void)
 {
-	int err = 0;
 
-	if (!is_power_on) {
-		DISP_INFO_LN("is_power_on:%d\n", is_power_on);
-		return 0;
-	}
-
-	gpio_set_value(LCM_RST, 0);
-	hr_msleep(12);
-
-	REGULATOR_GET(v_lcm_3v3, "v_lcm_3v3");
-	regulator_disable(v_lcm_3v3);
-	hr_msleep(5);
-
-	REGULATOR_GET(v_lcmio_1v8, "v_lcmio_1v8");
-	regulator_disable(v_lcmio_1v8);
-
-
-	REGULATOR_GET(enterprise_dsi_reg, "avdd_dsi_csi");
-	regulator_disable(enterprise_dsi_reg);
-
-	/*change LCM_TE & LCM_PWM to GPIO*/
-	tegra_gpio_enable(LCM_PWM);
 	tegra_gpio_enable(LCM_TE);
 
-	is_power_on = 0;
-	DISP_INFO_LN("is_power_on:%d\n", is_power_on);
-failed:
+	if (enterprise_lcd_reg != NULL)
+		regulator_disable(enterprise_lcd_reg);
 
-	return err;
+#if DSI_PANEL_RESET
+	if (g_display_on != true) {
+		tegra_gpio_disable(enterprise_dsi_panel_reset);
+		gpio_free(enterprise_dsi_panel_reset);
+	} else
+		g_display_on = false;
+#endif
+	return 0;
 }
 #endif
 
@@ -493,8 +456,8 @@ static void enterprise_stereo_set_orientation(int mode)
 #ifdef CONFIG_TEGRA_DC
 static int enterprise_dsi_panel_postsuspend(void)
 {
-	int err = 0;
-	return err;
+	/* Disable enterprise dsi rail */
+	return avdd_dsi_csi_rail_disable();
 }
 #endif
 
@@ -3014,9 +2977,6 @@ static struct tegra_dc_out enterprise_disp1_out = {
 
 	.width		= 53,
 	.height		= 95,
-
-	.bridge_reset = bridge_reset,
-	.ic_reset = ic_reset,
 };
 
 static struct tegra_dc_platform_data enterprise_disp1_pdata = {
@@ -3159,7 +3119,6 @@ static void bkl_do_work(struct work_struct *work)
 	}
 }
 
-
 static void bkl_update(unsigned long data) {
 	queue_work(bkl_wq, &bkl_work);
 }
@@ -3285,11 +3244,6 @@ int __init enterprise_panel_init(void)
 	if (!err)
 		err = nvhost_device_register(&enterprise_disp2_device);
 #endif
-
-	if ((g_panel_id & BL_MASK) == BL_CPU) {
-		enterprise_disp1_backlight_data.backlight_mode = CPU_BACKLIGHT;
-		DISP_INFO_LN("Found XA board and setup CPU_BACKLIGHT mode\n");
-	}
 
         /*switch PWM_setting by panel_id*/
         switch (g_panel_id) {
