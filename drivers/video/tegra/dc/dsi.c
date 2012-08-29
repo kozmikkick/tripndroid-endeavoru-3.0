@@ -2652,10 +2652,6 @@ static void tegra_dc_dsi_enable(struct tegra_dc *dc)
 			goto fail;
 		}
 
- 		if (dc->out->bridge_reset) {
- 			dc->out->bridge_reset();
- 		}
-
 		if (dsi->ulpm) {
 			if (tegra_dsi_enter_ulpm(dsi) < 0) {
 				dev_err(&dc->ndev->dev,
@@ -2689,10 +2685,6 @@ static void tegra_dc_dsi_enable(struct tegra_dc *dc)
 				"dsi: not able to set to lp mode\n");
 			goto fail;
 		}
-
- 		if (dc->out->ic_reset) {
- 			dc->out->ic_reset();
- 		}
 
 		err = tegra_dsi_send_panel_cmd(dc, dsi, dsi->info.dsi_init_cmd,
 						dsi->info.n_init_cmd);
