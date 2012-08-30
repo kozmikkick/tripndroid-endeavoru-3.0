@@ -1053,7 +1053,6 @@ static struct platform_device *enterprise_devices[] __initdata = {
 /* Touchscreen GPIO addresses   */
 #define TOUCH_GPIO_IRQ TEGRA_GPIO_PV1
 #define TOUCH_GPIO_RST TEGRA_GPIO_PF3
-#define TOUCH_GPIO_PWD TEGRA_GPIO_PY2
 
 static struct synaptics_i2c_rmi_platform_data edge_ts_3k_data[] = {
 	{
