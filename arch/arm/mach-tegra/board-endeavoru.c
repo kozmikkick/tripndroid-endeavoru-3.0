@@ -702,24 +702,26 @@ struct uart_clk_parent uart_parent_clk[] = {
 };
 
 static struct tegra_uart_platform_data enterprise_uart_pdata;
-static struct tegra_uart_platform_data enterprise_loopback_uart_pdata;
+#ifdef CONFIG_BT_CTS_WAKEUP
+static struct tegra_uart_platform_data enterprise_bt_uart_pdata;
+#endif
 
 static void __init uart_debug_init(void)
 {
 	unsigned long rate;
 	struct clk *c;
 
-	/* UARTD is the debug port. */
-	pr_info("Selecting UARTD as the debug console\n");
-	enterprise_uart_devices[3] = &debug_uartd_device;
+	/* UARTA is the debug port. */
+	pr_info("Selecting UARTA as the debug console\n");
+	enterprise_uart_devices[0] = &debug_uarta_device;
 	debug_uart_port_base = ((struct plat_serial8250_port *)(
-			debug_uartd_device.dev.platform_data))->mapbase;
-	debug_uart_clk = clk_get_sys("serial8250.0", "uartd");
+			debug_uarta_device.dev.platform_data))->mapbase;
+	debug_uart_clk = clk_get_sys("serial8250.0", "uarta");
 
 	/* Clock enable for the debug channel */
 	if (!IS_ERR_OR_NULL(debug_uart_clk)) {
 		rate = ((struct plat_serial8250_port *)(
-			debug_uartd_device.dev.platform_data))->uartclk;
+			debug_uarta_device.dev.platform_data))->uartclk;
 		pr_info("The debug console clock name is %s\n",
 						debug_uart_clk->name);
 		c = tegra_get_clock_by_name("pll_p");
@@ -801,16 +803,21 @@ static void __init enterprise_uart_init(void)
 	}
 	enterprise_uart_pdata.parent_clk_list = uart_parent_clk;
 	enterprise_uart_pdata.parent_clk_count = ARRAY_SIZE(uart_parent_clk);
-	enterprise_loopback_uart_pdata.parent_clk_list = uart_parent_clk;
-	enterprise_loopback_uart_pdata.parent_clk_count =
-						ARRAY_SIZE(uart_parent_clk);
-	enterprise_loopback_uart_pdata.is_loopback = true;
 	tegra_uarta_device.dev.platform_data = &enterprise_uart_pdata;
 	tegra_uartb_device.dev.platform_data = &enterprise_uart_pdata;
 	tegra_uartc_device.dev.platform_data = &enterprise_uart_pdata;
 	tegra_uartd_device.dev.platform_data = &enterprise_uart_pdata;
-	/* UARTE is used for loopback test purpose */
-	tegra_uarte_device.dev.platform_data = &enterprise_loopback_uart_pdata;
+	tegra_uarte_device.dev.platform_data = &enterprise_uart_pdata;
+
+#ifdef CONFIG_BT_CTS_WAKEUP
+	enterprise_bt_uart_pdata = enterprise_uart_pdata;
+
+	enterprise_bt_uart_pdata.uart_bt = (1 == 1);
+	enterprise_bt_uart_pdata.bt_en = BT_GPIO_EN;
+	enterprise_bt_uart_pdata.bt_cts_irq = BT_GPIO_CTS_IRQ;
+
+	tegra_uartc_device.dev.platform_data = &enterprise_bt_uart_pdata;
+#endif
 
 	/* Register low speed only if it is selected */
 	if (!is_tegra_debug_uartport_hs())
