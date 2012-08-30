@@ -239,7 +239,7 @@ static __initdata struct tegra_pingroup_config endeavoru_pinmux_common[] = {
     DEFAULT_PINMUX(LCD_D19,         DISPLAYA,        NORMAL,       NORMAL,     INPUT), // NC
     DEFAULT_PINMUX(LCD_D20,         DISPLAYA,        NORMAL,       NORMAL,     INPUT), // MDM_V_DCIN_MODEM_EN
     DEFAULT_PINMUX(LCD_D21,         RSVD,            NORMAL,       NORMAL,     OUTPUT), // NFC_VEN
-    DEFAULT_PINMUX(LCD_D22,         RSVD,            NORMAL,       NORMAL,     OUTPUT), // NFC_DL_MODE
+    DEFAULT_PINMUX(LCD_D22,         RSVD2,           NORMAL,       NORMAL,     OUTPUT), // NFC_DL_MODE
     DEFAULT_PINMUX(LCD_D23,         RSVD2,           NORMAL,       NORMAL,     INPUT), // CAM_V_CAM_VAA_2V85_EN
 
     // Port N
