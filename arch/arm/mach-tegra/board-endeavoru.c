@@ -766,29 +766,12 @@ static struct platform_device *headset_devices_xe[] = {
 	/* Please put the headset detection driver on the last */
 };
 
-static struct htc_headset_mgr_platform_data htc_headset_mgr_data = {
-	.eng_cfg				= HS_EDE_U,
-	.headset_devices_num	= ARRAY_SIZE(headset_devices),
-	.headset_devices	= headset_devices,
-	.headset_config_num	= ARRAY_SIZE(htc_headset_mgr_config),
-	.headset_config		= htc_headset_mgr_config,
-};
-
 static struct htc_headset_mgr_platform_data htc_headset_mgr_data_xe = {
 	.eng_cfg				= HS_EDE_U,
 	.headset_devices_num	= ARRAY_SIZE(headset_devices_xe),
 	.headset_devices	= headset_devices_xe,
 	.headset_config_num	= ARRAY_SIZE(htc_headset_mgr_config_xe),
 	.headset_config		= htc_headset_mgr_config_xe,
-};
-
-
-static struct platform_device htc_headset_mgr = {
-	.name	= "HTC_HEADSET_MGR",
-	.id	= -1,
-	.dev	= {
-		.platform_data	= &htc_headset_mgr_data,
-	},
 };
 
 static struct platform_device htc_headset_mgr_xe = {
@@ -1855,10 +1838,7 @@ static void __init tegra_endeavoru_init(void)
 
 	platform_add_devices(enterprise_devices, ARRAY_SIZE(enterprise_devices));
 
-	if (board_id <= PROJECT_PHASE_XD)
-		platform_device_register(&htc_headset_mgr);
-	else
-		platform_device_register(&htc_headset_mgr_xe);
+	platform_device_register(&htc_headset_mgr_xe);
 
 #if defined(CONFIG_TEGRA_GRHOST) && defined(CONFIG_TEGRA_HDMI_MHL)
 	if (board_id >= PROJECT_PHASE_A) {
