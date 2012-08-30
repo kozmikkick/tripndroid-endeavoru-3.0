@@ -379,7 +379,7 @@ static __initdata struct tegra_pingroup_config endeavoru_pinmux_common[] = {
 
     //Port CC
     DEFAULT_PINMUX(CAM_MCLK,        VI_ALT2,         NORMAL,       NORMAL,     INPUT), // CAM_MCLK
-    DEFAULT_PINMUX(GPIO_PCC1,       RSVD,            NORMAL,       NORMAL,     INPUT), // CAM_SEL
+    DEFAULT_PINMUX(GPIO_PCC1,       RSVD2,           NORMAL,       NORMAL,     INPUT), // CAM_SEL
     DEFAULT_PINMUX(GPIO_PCC2,       RSVD2,           PULL_UP,      NORMAL,     INPUT), // PWR_THEMP_ALERT_INT
     DEFAULT_PINMUX(SDMMC4_RST_N,    RSVD1,	     NORMAL,       NORMAL,     INPUT), // BSP_EMMC_RESOUT
     DEFAULT_PINMUX(SDMMC4_CLK,      SDMMC4,          NORMAL,       NORMAL,     INPUT), // BSP_EMMC_CLK
