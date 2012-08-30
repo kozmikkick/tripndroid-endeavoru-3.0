@@ -85,10 +85,6 @@
 #include "wakeups-t3.h"
 #include "pm.h"
 
-#ifdef CONFIG_TEGRA_HAPTIC2
-#include <linux/pm8xxx-haptic2.h>
-#endif
-
 #ifdef CONFIG_TEGRA_VIBRATOR_ENR
 #include <linux/tegra_vibrator_enr.h>
 #endif
@@ -116,8 +112,6 @@ static struct tegra_thermal_data thermal_data = {
 #endif
 };
 
-
-#if 1   // for A project bring up
 #define GPIO_KEY(_id, _gpio, _iswake)		\
 	{					\
 		.code = _id,			\
@@ -170,9 +164,6 @@ int __init A_PROJECT_keys_init(void)
 	return 0;
 }
 
-#endif
-
-//MHL
 #ifdef	CONFIG_TEGRA_HDMI_MHL
 
 #define EDGE_GPIO_MHL_INT       TEGRA_GPIO_PC7
@@ -191,26 +182,20 @@ static int mhl_sii_power(int on)
 
 	switch (on) {
 		case 0:
-
 			/*Turn off MHL_3V3*/
 			gpio_set_value(EDGE_GPIO_MHL_3V3, 0);
 			mdelay(10);
-
 			/*Turn off MHL_1V2*/
 			gpio_set_value(EDGE_GPIO_MHL_1V2, 0);
 			mdelay(5);
-
 			break;
 		case 1:
-
 			/*Turn on MHL_3V3*/
 			gpio_set_value(EDGE_GPIO_MHL_3V3, 1);
 			mdelay(10);
-
 			/*Turn on MHL_1V2*/
 			gpio_set_value(EDGE_GPIO_MHL_1V2, 1);
 			mdelay(5);
-
 			break;
 
 		default:
@@ -233,10 +218,10 @@ static T_MHL_PLATFORM_DATA mhl_sii_device_data = {
 	.power            = mhl_sii_power,
 	.enMhlD3Guard     = false,
 #ifdef CONFIG_TEGRA_HDMI_MHL_SUPERDEMO
-	.abs_x_min = 941,/* 0 */
-	.abs_x_max = 31664,/* 32767 */
-	.abs_y_min = 417,/* 0 */
-	.abs_y_max = 32053,/* 32767 */
+	.abs_x_min = 941,
+	.abs_x_max = 31664,
+	.abs_y_min = 417,
+	.abs_y_max = 32053,
 	.abs_pressure_min = 0,
 	.abs_pressure_max = 255,
 	.abs_width_min = 0,
@@ -254,45 +239,6 @@ static struct i2c_board_info i2c_mhl_sii_info[] =
 };
 #endif
 
-//haptic vibrator
-#ifdef CONFIG_TEGRA_HAPTIC2
-static struct pm8xxx_haptic_data haptic_data[] ={
-		{
-		.pwm_data={
-					.name = "haptic",
-					.bank = 0,
-				  },
-		}, 
-};
-static struct pm8xxx_haptic_data_group haptic_data_group={
-		.p_haptic_data=haptic_data,
-		.size=ARRAY_SIZE(haptic_data),
-};
-static struct platform_device pm8xxx_haptic = {
-	.name= PM8XXX_HAPTIC_NAME,
-	.id=-1,
-	.dev = {
-		.platform_data=&haptic_data_group,
-	},
-};
-static struct platform_device *haptic_vibrator[] __initdata = {
-	&pm8xxx_haptic,
-};
-static void haptic_vibrator_init(int board_id)
-{
-	if (board_id == PROJECT_PHASE_XA) {
-		haptic_data->ena_gpio = TEGRA_GPIO_PR3;
-		haptic_data->pwm_sfio = TEGRA_GPIO_PH0;
-	}
-	else if (board_id >= PROJECT_PHASE_XB) {
-		haptic_data->ena_gpio = TEGRA_GPIO_PF1;
-		haptic_data->pwm_sfio = TEGRA_GPIO_PH0;
-	}
-	platform_add_devices(haptic_vibrator, ARRAY_SIZE(haptic_vibrator));
-}
-#endif
-
-//vibrator
 #ifdef CONFIG_TEGRA_VIBRATOR_ENR
 static struct vibrator_platform_data vibrator_data = {
 	.pwm_data={
@@ -316,7 +262,6 @@ static void tegra_vibrator_init(void)
 }
 #endif
 
-//leds-lp5521
 static struct led_i2c_config lp5521_led_config[] = {
 	{
 		.name = "amber",
@@ -347,17 +292,18 @@ static void leds_lp5521_init(void)
 		ARRAY_SIZE(i2c_led_devices));
 }
 
-//flashlight
 static void config_enterprise_flashlight_gpios(void)
 {
 	int ret;
 	printk("%s: start...", __func__);
-	// FL_TORCH_EN
+
 	ret = gpio_request(FL_TORCH_EN, "fl_torch_en");
+
 	if (ret < 0)
-		pr_err("[FLT] %s: gpio_request failed for gpio %s\n",
-			__func__, "FL_TORCH_EN");
+		pr_err("[FLT] %s: gpio_request failed for gpio %s\n", __func__, "FL_TORCH_EN");
+
 	ret = gpio_direction_output(FL_TORCH_EN, 0);
+
 	if (ret < 0) {
 		pr_err("[FLT] %s: gpio_direction_output failed %d\n", __func__, ret);
 		gpio_free(FL_TORCH_EN);
@@ -366,29 +312,30 @@ static void config_enterprise_flashlight_gpios(void)
 	tegra_gpio_enable(FL_TORCH_EN);
 	gpio_export(FL_TORCH_EN, false);
 
-	// FL_FLASH_EN
 	ret = gpio_request(FL_FLASH_EN, "fl_flash_en");
+
 	if (ret < 0)
-		pr_err("[FLT] %s: gpio_request failed for gpio %s\n",
-			__func__, "FL_FLASH_EN");
+		pr_err("[FLT] %s: gpio_request failed for gpio %s\n", __func__, "FL_FLASH_EN");
+
 	ret = gpio_direction_output(FL_FLASH_EN, 0);
+
 	if (ret < 0) {
 		pr_err("[FLT] %s: gpio_direction_output failed %d\n", __func__, ret);
 		gpio_free(FL_FLASH_EN);
 		return;
 	}
+
 	tegra_gpio_enable(FL_FLASH_EN);
 	gpio_export(FL_FLASH_EN, false);
+
 	printk("%s: end...", __func__);
 }
-
 static struct flashlight_platform_data enterprise_flashlight_data = {
 	.gpio_init  = config_enterprise_flashlight_gpios,
 	.torch = FL_TORCH_EN,
 	.flash = FL_FLASH_EN,
 	.flash_duration_ms = 600
 };
-
 static struct platform_device enterprise_flashlight_device = {
 	.name = FLASHLIGHT_NAME,
 	.dev		= {
@@ -401,7 +348,7 @@ static void enterprise_flashlight_init(void)
 	platform_device_register(&enterprise_flashlight_device);
 }
 
-/* !!!TODO: Change for enterprise (Taken from Cardhu) */
+/* Values taken from Cardhu board */
 static struct tegra_utmip_config utmi_phy_config[] = {
 	[0] = {
 			.hssync_start_delay = 0,
@@ -443,7 +390,6 @@ static unsigned long retry_suspend;
 /* TI 128x Bluetooth begin */
 int plat_kim_suspend(struct platform_device *pdev, pm_message_t state)
 {
-        /* TODO: wait for HCI-LL sleep */
 	pr_info("plat_kim_suspend\n");
         return 0;
 }
@@ -458,7 +404,6 @@ struct ti_st_plat_data wilink_pdata = {
                 .dev_name = "/dev/ttyHS2",
                 .flow_cntrl = 1,
                 .baud_rate = 3000000,
-                /*.baud_rate = 115200,*/
                 .suspend = plat_kim_suspend,
                 .resume = plat_kim_resume,
 };
@@ -541,7 +486,6 @@ static struct platform_device android_usb_device = {
 static struct tegra_i2c_platform_data enterprise_i2c1_platform_data = {
 	.adapter_nr	= 0,
 	.bus_count	= 1,
-//	.bus_clk_rate	= { 100000, 0 }, TripNRaVeR: set this value later
 	.bus_clk_rate	= { 384000, 0 },
 	.scl_gpio		= {TEGRA_GPIO_PC4, 0},
 	.sda_gpio		= {TEGRA_GPIO_PC5, 0},
@@ -551,7 +495,6 @@ static struct tegra_i2c_platform_data enterprise_i2c1_platform_data = {
 static struct tegra_i2c_platform_data enterprise_i2c2_platform_data = {
 	.adapter_nr	= 1,
 	.bus_count	= 1,
-//	.bus_clk_rate	= { 100000, 0 }, TripNRaVeR: set this value later
 	.bus_clk_rate	= { 384000, 0 },
 	.is_clkon_always = true,
 	.scl_gpio		= {TEGRA_GPIO_PT5, 0},
@@ -562,7 +505,6 @@ static struct tegra_i2c_platform_data enterprise_i2c2_platform_data = {
 static struct tegra_i2c_platform_data enterprise_i2c3_platform_data = {
 	.adapter_nr	= 2,
 	.bus_count	= 1,
-//	.bus_clk_rate	= { 100000, 0 }, TripNRaVeR: set this value later
 	.bus_clk_rate	= { 384000, 0 },
 	.scl_gpio		= {TEGRA_GPIO_PBB1, 0},
 	.sda_gpio		= {TEGRA_GPIO_PBB2, 0},
@@ -587,7 +529,7 @@ static struct tegra_i2c_platform_data enterprise_i2c5_platform_data = {
 	.arb_recovery = arb_lost_recovery,
 };
 
-// +++ Audio tlv320aic3008 +++
+// tlv320aic3008
 static struct tegra_spi_device_controller_data dev_cdata_audio = {
 	.is_hw_based_cs = false, /* bool is_hw_based_cs */
 	.cs_setup_clk_count = 4, /* int cs_setup_clk_count */
@@ -612,9 +554,9 @@ static struct platform_device enterprise_audio_device = {
 		.platform_data  = NULL,
 	},
 };
-// --- Audio tlv320aic3008 ---
+// tlv320aic3008
 
-/*HTC rawchip SPI4 ++ */
+/* HTC Camera SPI4 */
 static struct tegra_spi_device_controller_data dev_cdata_rawchip = {
        .is_hw_based_cs = true, /* bool is_hw_based_cs */
        .cs_setup_clk_count = 1, /* int cs_setup_clk_count */
@@ -643,8 +585,7 @@ static struct platform_device tegra_rawchip_device = {
 		.platform_data = &tegra_rawchip_board_info,
 	},
 };
-
-/*HTC rawchip SPI4 -- */
+/* HTC Camera SPI4 */
 
 /* HTC_HEADSET_GPIO Driver */
 static struct htc_headset_gpio_platform_data htc_headset_gpio_data = {
@@ -654,7 +595,6 @@ static struct htc_headset_gpio_platform_data htc_headset_gpio_data = {
 	.key_enable_gpio	= 0,
 	.mic_select_gpio	= 0,
 };
-
 static struct platform_device htc_headset_gpio = {
 	.name	= "HTC_HEADSET_GPIO",
 	.id	= -1,
@@ -664,29 +604,11 @@ static struct platform_device htc_headset_gpio = {
 };
 
 /* HTC_HEADSET_PMIC Driver */
-static struct htc_headset_pmic_platform_data htc_headset_pmic_data = {
-	.eng_cfg		= HS_EDE_U,
-	.driver_flag	= DRIVER_HS_PMIC_RPC_KEY,
-	.adc_mic_bias	= {HS_DEF_MIC_ADC_12_BIT_MIN,
-				   HS_DEF_MIC_ADC_12_BIT_MAX},
-	.adc_remote	= {0, 125, 126, 330, 331, 710},
-};
-
 static struct htc_headset_pmic_platform_data htc_headset_pmic_data_xe = {
-	.eng_cfg		= HS_EDE_U,
+	.eng_cfg	= HS_EDE_U,
 	.driver_flag	= DRIVER_HS_PMIC_RPC_KEY,
-	.adc_mic_bias	= {HS_DEF_MIC_ADC_12_BIT_MIN,
-				   HS_DEF_MIC_ADC_12_BIT_MAX},
+	.adc_mic_bias	= {HS_DEF_MIC_ADC_12_BIT_MIN, HS_DEF_MIC_ADC_12_BIT_MAX},
 	.adc_remote	= {0, 164, 165, 379, 380, 830},
-};
-
-
-static struct platform_device htc_headset_pmic = {
-	.name	= "HTC_HEADSET_PMIC",
-	.id	= -1,
-	.dev	= {
-		.platform_data	= &htc_headset_pmic_data,
-	},
 };
 
 static struct platform_device htc_headset_pmic_xe = {
@@ -694,34 +616,6 @@ static struct platform_device htc_headset_pmic_xe = {
 	.id	= -1,
 	.dev	= {
 		.platform_data	= &htc_headset_pmic_data_xe,
-	},
-};
-
-static struct headset_adc_config htc_headset_mgr_config[] = {
-	{
-		.type = HEADSET_UNPLUG,
-		.adc_max = 4095,
-		.adc_min = 3804,
-	},
-	{
-		.type = HEADSET_MIC,
-		.adc_max = 3803,
-		.adc_min = 2500,
-	},
-	{
-		.type = HEADSET_BEATS,
-		.adc_max = 2499,
-		.adc_min = 1800,
-	},
-	{
-		.type = HEADSET_BEATS_SOLO,
-		.adc_max = 1799,
-		.adc_min = 1175,
-	},
-	{
-		.type = HEADSET_NO_MIC,
-		.adc_max = 1174,
-		.adc_min = 0,
 	},
 };
 
@@ -754,12 +648,6 @@ static struct headset_adc_config htc_headset_mgr_config_xe[] = {
 };
 
 /* HTC_HEADSET_MGR Driver */
-static struct platform_device *headset_devices[] = {
-	&htc_headset_pmic,
-	&htc_headset_gpio,
-	/* Please put the headset detection driver on the last */
-};
-
 static struct platform_device *headset_devices_xe[] = {
 	&htc_headset_pmic_xe,
 	&htc_headset_gpio,
@@ -767,7 +655,7 @@ static struct platform_device *headset_devices_xe[] = {
 };
 
 static struct htc_headset_mgr_platform_data htc_headset_mgr_data_xe = {
-	.eng_cfg				= HS_EDE_U,
+	.eng_cfg		= HS_EDE_U,
 	.headset_devices_num	= ARRAY_SIZE(headset_devices_xe),
 	.headset_devices	= headset_devices_xe,
 	.headset_config_num	= ARRAY_SIZE(htc_headset_mgr_config_xe),
@@ -865,7 +753,6 @@ if (ret < 0) {
 	return;
 }
 tegra_gpio_enable(TEGRA_GPIO_PY4);
-
 
 ret = gpio_request(TEGRA_GPIO_PY5,"headset_uart_RX");
 if (ret < 0) {
@@ -1012,7 +899,6 @@ static struct platform_device *enterprise_devices[] __initdata = {
 	&tegra_avp_device,
 #endif
 	&tegra_camera,
-//	&enterprise_bcm4329_rfkill_device, FIXME: TripNRaVeR: add this device
 	&tegra_ahub_device,
 	&tegra_dam_device0,
 	&tegra_dam_device1,
@@ -1039,100 +925,16 @@ static struct platform_device *enterprise_devices[] __initdata = {
 
 static struct synaptics_i2c_rmi_platform_data edge_ts_3k_data[] = {
 	{
-		.version = 0x0100,
-		.abs_x_min = 0,
-		.abs_x_max = 1100,
-		.abs_y_min = 0,
-		.abs_y_max = 1755,
-		//.flags = SYNAPTICS_FLIP_Y,
-		//.gpio_irq = TOUCH_GPIO_IRQ,
-		.irqflags = IRQF_TRIGGER_FALLING,
-		.default_config = 1,
-		.source = 1, 
-		.config = {
-			0x00 , 0x00 , 0x00 , 0x00 , //config version
-			0x84 , 0x0F , 0x03 , 0x1E , 0x05 , 0x20 , 
-			0xB1 , 0x00 , 0x0B , 0x19 , 0x19 , 0x00 , 0x00 , 0x4C , 0x04 , 0x6C , 
-			0x07 , 0x1E , 0x05 , 0x28 , 0xF5 , 0x28 , 0x1E , 0x05 , 0x01 , 0x48 , 
-			0xFD , 0x41 , 0xFE , 0x00 , 0x48 , 0x00 , 0x48 , 0xF1 , 0xC5 , 0x79 , 
-			0xC8 , 0x00 , 0x70 , 0x00 , 0x00 , 0x00 , 0x00 , 0x0A , 0x04 , 0xC0 , 
-			0x00 , 0x02 , 0xF3 , 0x00 , 0x80 , 0x03 , 0x0D , 0x1E , 0x00 , 0x32 , 
-			0x00 , 0x19 , 0x04 , 0x1E , 0x00 , 0x10 , 0x0A , 0x00 , 0x19 , 0x11 , 
-			0x1B , 0x14 , 0x1A , 0x12 , 0x18 , 0x0F , 0x17 , 0x16 , 0x0D , 0x0A , 
-			0x0E , 0x08 , 0x09 , 0x15 , 0x07 , 0x02 , 0x01 , 0x0B , 0x00 , 0x0C , 
-			0xFF , 0xFF , 0xFF , 0xFF , 0xFF , 0x07 , 0x04 , 0x0E , 0x05 , 0x0C , 
-			0x02 , 0x0F , 0x06 , 0x12 , 0x01 , 0x10 , 0x08 , 0xFF , 0xFF , 0xFF , 
-			0xFF , 0xC0 , 0xC0 , 0xC0 , 0xC0 , 0xA0 , 0xA0 , 0xA0 , 0xA0 , 0x4B , 
-			0x4A , 0x48 , 0x47 , 0x45 , 0x44 , 0x42 , 0x40 , 0x00 , 0x02 , 0x04 , 
-			0x06 , 0x08 , 0x0A , 0x0D , 0x10 , 0x00 , 0xFF , 0xFF , 0xFF , 0xFF , 
-			0xFF , 0xFF , 0xFF , 0xFF , 0xFF , 0x00 , 0xFF , 0xFF , 0x00 , 0xC0 , 
-			0x80 , 0x00 , 0x10 , 0x00 , 0x10 , 0x00 , 0x10 , 0x00 , 0x10 , 0x80 , 
-			0x80 , 0x80 , 0x80 , 0x80 , 0x80 , 0x80 , 0x80 , 0x80 , 0x80 , 0x80 , 
-			0x80 , 0x80 , 0x80 , 0x80 , 0x80 , 0x80 , 0x80 , 0x80 , 0x80 , 0x80 , 
-			0x80 , 0x80 , 0x80 , 0x80 , 0x80 , 0x80 , 0x02 , 0x02 , 0x02 , 0x02 , 
-			0x02 , 0x02 , 0x02 , 0x02 , 0x20 , 0x20 , 0x20 , 0x20 , 0x20 , 0x20 , 
-			0x20 , 0x20 , 0x58 , 0x5B , 0x5D , 0x5F , 0x61 , 0x63 , 0x66 , 0x69 , 
-			0x48 , 0x41 , 0x00 , 0x1E , 0x19 , 0x05 , 0xFD , 0xFE , 0x3D , 0x08 
-		}
-		//.sensitivity_adjust = 0,
-		//.finger_support = 10,
-		//.display_height = 960,
-	},
-	{
-		.version = 0x0100,
-		.abs_x_min = 0,
-		.abs_x_max = 1100,
-		.abs_y_min = 0,
-		.abs_y_max = 1755,
-		//.flags = SYNAPTICS_FLIP_Y,
-		//.gpio_irq = TOUCH_GPIO_IRQ,
-		.irqflags = IRQF_TRIGGER_FALLING,
-		.source = 0, 
-		.config = {
-			0x00 , 0x00 , 0x00 , 0x01 , //config version
-			0x84 , 0x0F , 0x03 , 0x1E , 0x05 , 0x20 , 
-			0xB1 , 0x00 , 0x0B , 0x19 , 0x19 , 0x00 , 0x00 , 0x4C , 0x04 , 0x6C , 
-			0x07 , 0x1E , 0x05 , 0x28 , 0xF5 , 0x28 , 0x1E , 0x05 , 0x01 , 0x48 , 
-			0xFD , 0x41 , 0xFE , 0x00 , 0x48 , 0x00 , 0x48 , 0xF1 , 0xC5 , 0x79 , 
-			0xC8 , 0x00 , 0x70 , 0x00 , 0x00 , 0x00 , 0x00 , 0x0A , 0x04 , 0xC0 , 
-			0x00 , 0x02 , 0xF3 , 0x00 , 0x80 , 0x03 , 0x0D , 0x1E , 0x00 , 0x32 , 
-			0x00 , 0x19 , 0x04 , 0x1E , 0x00 , 0x10 , 0x0A , 0x00 , 0x19 , 0x11 , 
-			0x1B , 0x14 , 0x1A , 0x12 , 0x18 , 0x0F , 0x17 , 0x16 , 0x0D , 0x0A , 
-			0x0E , 0x08 , 0x09 , 0x15 , 0x07 , 0x02 , 0x01 , 0x0B , 0x00 , 0x0C , 
-			0xFF , 0xFF , 0xFF , 0xFF , 0xFF , 0x07 , 0x04 , 0x0E , 0x05 , 0x0C , 
-			0x02 , 0x0F , 0x06 , 0x12 , 0x01 , 0x10 , 0x08 , 0xFF , 0xFF , 0xFF , 
-			0xFF , 0xC0 , 0xC0 , 0xC0 , 0xC0 , 0xA0 , 0xA0 , 0xA0 , 0xA0 , 0x4B , 
-			0x4A , 0x48 , 0x47 , 0x45 , 0x44 , 0x42 , 0x40 , 0x00 , 0x02 , 0x04 , 
-			0x06 , 0x08 , 0x0A , 0x0D , 0x10 , 0x00 , 0xFF , 0xFF , 0xFF , 0xFF , 
-			0xFF , 0xFF , 0xFF , 0xFF , 0xFF , 0x00 , 0xFF , 0xFF , 0x00 , 0xC0 , 
-			0x80 , 0x00 , 0x10 , 0x00 , 0x10 , 0x00 , 0x10 , 0x00 , 0x10 , 0x80 , 
-			0x80 , 0x80 , 0x80 , 0x80 , 0x80 , 0x80 , 0x80 , 0x80 , 0x80 , 0x80 , 
-			0x80 , 0x80 , 0x80 , 0x80 , 0x80 , 0x80 , 0x80 , 0x80 , 0x80 , 0x80 , 
-			0x80 , 0x80 , 0x80 , 0x80 , 0x80 , 0x80 , 0x02 , 0x02 , 0x02 , 0x02 , 
-			0x02 , 0x02 , 0x02 , 0x02 , 0x20 , 0x20 , 0x20 , 0x20 , 0x20 , 0x20 , 
-			0x20 , 0x20 , 0x58 , 0x5B , 0x5D , 0x5F , 0x61 , 0x63 , 0x66 , 0x69 , 
-			0x48 , 0x41 , 0x00 , 0x1E , 0x19 , 0x05 , 0xFD , 0xFE , 0x3D , 0x08 
-		}
-		//.sensitivity_adjust = 0,
-		//.finger_support = 10,
-		//.display_height = 960,
-	}
-};
-
-static struct synaptics_i2c_rmi_platform_data edge_ts_3k_data_XB[] = {
-	{
-		.version = 0x3330, // fw30
+		.version = 0x3330,
 		.abs_x_min = 0,
 		.abs_x_max = 1100,
 		.abs_y_min = 0,
 		.abs_y_max = 1770,
-		.notifyFinger = NULL, /* speedupCPU, */
-		//.flags = SYNAPTICS_FLIP_Y,
-		//.gpio_irq = TOUCH_GPIO_IRQ,
+		.notifyFinger = NULL,
 		.irqflags = IRQF_TRIGGER_FALLING,
 		.default_config = 1,
 		.cable_support = 1,
-		.source = 1, //YFO
+		.source = 1,
 		.customer_register = {0xF9,0x64,0x74,0x32},
 		.config = {
 			0x35,0x44,0x30,0x38,
@@ -1168,17 +970,15 @@ static struct synaptics_i2c_rmi_platform_data edge_ts_3k_data_XB[] = {
 		}
 	},
 	{
-		.version = 0x3330, // fw30
+		.version = 0x3330,
 		.abs_x_min = 0,
 		.abs_x_max = 1100,
 		.abs_y_min = 0,
 		.abs_y_max = 1770,
-		.notifyFinger = NULL, /* speedupCPU,*/
-		//.flags = SYNAPTICS_FLIP_Y,
-		//.gpio_irq = TOUCH_GPIO_IRQ,
+		.notifyFinger = NULL,
 		.irqflags = IRQF_TRIGGER_FALLING,
 		.cable_support = 1,
-		.source = 0, //second source
+		.source = 0,
 		.customer_register = {0xF9,0x64,0x74,0x32},
 		.config = {
 			0x35,0x4A,0x30,0x39,
@@ -1214,16 +1014,15 @@ static struct synaptics_i2c_rmi_platform_data edge_ts_3k_data_XB[] = {
 		}
 	},
 	{
-		.version = 0x3230,  //fw20
+		.version = 0x3230,
 		.abs_x_min = 0,
 		.abs_x_max = 1100,
 		.abs_y_min = 0,
 		.abs_y_max = 1770,
 		.flags = SYNAPTICS_FLIP_Y,
-		//.gpio_irq = TOUCH_GPIO_IRQ,
 		.irqflags = IRQF_TRIGGER_FALLING,
 		.default_config = 1,
-		.source = 1, //YFO
+		.source = 1,
 		.config = {
 			0x30, 0x30, 0x30, 0x31, 
 			0x84, 0x0F, 0x03, 0x1E, 0x05, 0x20, 
@@ -1251,15 +1050,13 @@ static struct synaptics_i2c_rmi_platform_data edge_ts_3k_data_XB[] = {
 		}
 	},
 	{
-		.version = 0x3230, //fw20
+		.version = 0x3230,
 		.abs_x_min = 0,
 		.abs_x_max = 1100,
 		.abs_y_min = 0,
 		.abs_y_max = 1770,
-		//.flags = SYNAPTICS_FLIP_Y,
-		//.gpio_irq = TOUCH_GPIO_IRQ,
 		.irqflags = IRQF_TRIGGER_FALLING,
-		.source = 0, //wintek
+		.source = 0,
 		.config = {
 			0x30, 0x30, 0x30, 0x30, 
 			0x84, 0xFF, 0x03, 0x1E, 0x05, 0x20, 0xB1, 0x00, 0x0B, 0x19, 
@@ -1296,80 +1093,31 @@ static struct i2c_board_info __initdata synaptics_i2c_info[] = {
 	},
 };
 
-static struct i2c_board_info __initdata synaptics_i2c_info_XB[] = {
-	{
-		I2C_BOARD_INFO(SYNAPTICS_3200_NAME, 0x20),
-		.platform_data = &edge_ts_3k_data_XB,
-		.irq = TEGRA_GPIO_TO_IRQ(TOUCH_GPIO_IRQ),
-	},
-
-};
-
 struct tegra_touchscreen_init __initdata synaptics_init_data = {
-	.irq_gpio = TOUCH_GPIO_IRQ,                    /* GPIO1 Value for IRQ */
-	.rst_gpio = TOUCH_GPIO_RST,                    /* GPIO2 Value for RST */
+	.irq_gpio = TOUCH_GPIO_IRQ, /* GPIO1 Value for IRQ */
+	.rst_gpio = TOUCH_GPIO_RST, /* GPIO2 Value for RST */
 	.sv_gpio1 = {1, TOUCH_GPIO_RST, 0, 1},
-	.sv_gpio2 = {1, TOUCH_GPIO_RST, 1, 100},       /* Valid, GPIOx, Set value, Delay      */
-	.ts_boardinfo = {1, synaptics_i2c_info, 1}      /* BusNum, BoardInfo, Value     */
+	.sv_gpio2 = {1, TOUCH_GPIO_RST, 1, 100}, /* Valid, GPIOx, Set value, Delay */
+	.ts_boardinfo = {1, synaptics_i2c_info, 1} /* BusNum, BoardInfo, Value */
 };
-
-struct tegra_touchscreen_init __initdata synaptics_init_data_XB = {
-	.irq_gpio = TOUCH_GPIO_IRQ,                    /* GPIO1 Value for IRQ */
-	.rst_gpio = TOUCH_GPIO_RST,                    /* GPIO2 Value for RST */
-	.sv_gpio1 = {1, TOUCH_GPIO_RST, 0, 1},
-	.sv_gpio2 = {1, TOUCH_GPIO_RST, 1, 100},       /* Valid, GPIOx, Set value, Delay      */
-	.ts_boardinfo = {1, synaptics_i2c_info_XB, 1}      /* BusNum, BoardInfo, Value     */
-};
-
-int __init generic_touch_init(struct tegra_touchscreen_init *tsdata)
-{
-	int ret;
-
-	ret = gpio_request(tsdata->rst_gpio, "touch-reset");
-	if (ret < 0) {
-		pr_err("%s(): gpio_request() fails for gpio %d (touch-reset)\n",
-			__func__, tsdata->rst_gpio);
-		return ret;
-	} else {
-                gpio_direction_output(tsdata->rst_gpio,1);
-                tegra_gpio_enable(tsdata->rst_gpio);
-                gpio_set_value(tsdata->rst_gpio, 1);
-                msleep(1);
-	}
-
-	ret = gpio_request(tsdata->irq_gpio, "touch-irq");
-	if (ret < 0) {
-		pr_err("%s(): gpio_request() fails for gpio %d (touch-irq)\n",
-			__func__, tsdata->irq_gpio);
-		gpio_free(tsdata->irq_gpio);
-		return ret;
-	} else {
-		gpio_direction_input(tsdata->irq_gpio);
-		tegra_gpio_enable(tsdata->irq_gpio);
-	}
-
-	tegra_pinmux_set_pullupdown(TEGRA_PINGROUP_GPIO_PV1, TEGRA_PUPD_NORMAL);
-
-	i2c_register_board_info(tsdata->ts_boardinfo.busnum,
-		tsdata->ts_boardinfo.info,
-		tsdata->ts_boardinfo.n);
-
-	return 0;
-}
 
 static int __init enterprise_touch_init(void)
 {
-	int retval = 0;
-	struct board_info BoardInfo;
+	tegra_gpio_enable(TOUCH_GPIO_IRQ);
+	tegra_gpio_enable(TOUCH_GPIO_RST);
 
-	tegra_get_board_info(&BoardInfo);
-	
-	if (htc_get_pcbid_info() == PROJECT_PHASE_XA)
-		retval = generic_touch_init(&synaptics_init_data);
-	else
-		retval = generic_touch_init(&synaptics_init_data_XB);
+	gpio_request(TOUCH_GPIO_IRQ, "touch-irq");
+	gpio_direction_input(TOUCH_GPIO_IRQ);
 
-	return retval;
+	gpio_request(TOUCH_GPIO_RST, "touch-reset");
+	gpio_direction_output(TOUCH_GPIO_RST, 0);
+	msleep(1);
+	gpio_set_value(TOUCH_GPIO_RST, 1);
+	msleep(100);
+
+	i2c_register_board_info(1, synaptics_i2c_info, 1);
+
+	return 0;
 }
 
 static struct usb_phy_plat_data tegra_usb_phy_pdata[] = {
@@ -1449,18 +1197,14 @@ struct platform_device *tegra_usb_hsic_host_register(void)
 	pdev->dev.dma_mask =  tegra_ehci2_device.dev.dma_mask;
 	pdev->dev.coherent_dma_mask = tegra_ehci2_device.dev.coherent_dma_mask;
 
-/* 77544-1 patch */
 	val = platform_device_add_data(pdev, &tegra_ehci_uhsic_pdata,
 		sizeof(struct tegra_ehci_platform_data));
 	if (val)
-/* 77544-1 patch */
 		goto error;
 
 	val = platform_device_add(pdev);
 	if (val)
-/* 77544-1 patch */
 		goto error;
-/* 77544-1 patch */
 
 	return pdev;
 
@@ -1475,40 +1219,42 @@ void tegra_usb_hsic_host_unregister(struct platform_device *pdev)
 	platform_device_unregister(pdev);
 }
 
-
 static struct tegra_otg_platform_data tegra_otg_pdata = {
 	.ehci_device = &tegra_ehci1_device,
 	.ehci_pdata = &tegra_ehci_pdata[0],
 	.rcv_host_en = 1,
 };
 
-
 static int cardu_usb_hsic_postsupend(void)
 {
-	printk(KERN_INFO"%s\n",__func__);
+	pr_debug("%s\n", __func__);
+#ifdef CONFIG_TEGRA_BB_XMM_POWER
 	baseband_xmm_set_power_status(BBXMM_PS_L2);
-	return 0;
+#endif
 }
 
 static int cardu_usb_hsic_preresume(void)
 {
-	printk(KERN_INFO"%s\n",__func__);
+	pr_debug("%s\n", __func__);
+#ifdef CONFIG_TEGRA_BB_XMM_POWER
 	baseband_xmm_set_power_status(BBXMM_PS_L2TOL0);
-	return 0;
+#endif
 }
 
 static int cardu_usb_hsic_phy_ready(void)
 {
-	printk(KERN_INFO"%s\n",__func__);
+	pr_debug("%s\n", __func__);
+#ifdef CONFIG_TEGRA_BB_XMM_POWER
 	baseband_xmm_set_power_status(BBXMM_PS_L0);
-	return 0;
+#endif
 }
 
 static int cardu_usb_hsic_phy_off(void)
 {
-	printk(KERN_INFO"%s\n",__func__);
+	pr_debug("%s\n", __func__);
+#ifdef CONFIG_TEGRA_BB_XMM_POWER
 	baseband_xmm_set_power_status(BBXMM_PS_L3);
-	return 0;
+#endif
 }
 
 static void enterprise_usb_init(void)
@@ -1649,7 +1395,6 @@ static void enterprise_cable_detect_init(void)
 	platform_device_register(&cable_detect_device);
 }
 
-//#if CONFIG_IMC_FLASHLESS
 static struct baseband_power_platform_data tegra_baseband_power_data = {
 	.baseband_type = BASEBAND_XMM,
 	.modem = {
@@ -1690,7 +1435,7 @@ static void enterprise_modem_init(void)
 	int ret;
 
 		pr_info("%s: enable baseband gpio(s)\n", __func__);
-		/* enable baseband gpio(s) */
+
 		tegra_gpio_enable(BB_VDD_EN);
 
 		tegra_gpio_enable(AP2BB_RST_PWRDWNn);
@@ -1703,15 +1448,14 @@ static void enterprise_modem_init(void)
 		tegra_gpio_enable(tegra_baseband_power_data.modem.generic.mdm2ap_ack);
 		tegra_gpio_enable(tegra_baseband_power_data.modem.generic.ap2mdm_ack2);
 		tegra_gpio_enable(tegra_baseband_power_data.modem.generic.mdm2ap_ack2);
-		/* HTC: Seshendra patch 1117 */
+
 		tegra_baseband_power_data.hsic_register = &tegra_usb_hsic_host_register;
 		tegra_baseband_power_data.hsic_unregister = &tegra_usb_hsic_host_unregister;
 
 		platform_device_register(&tegra_baseband_power_device);
 		platform_device_register(&tegra_baseband_power2_device);
 		platform_device_register(&simhotswap_device);
-		
-		// TEGRA_GPIO_PI5
+
 		printk(KERN_INFO"%s: gpio config for sim_det#.", __func__);
 
 		ret = gpio_request(TEGRA_GPIO_PI5, "sim_det#");
@@ -1720,7 +1464,6 @@ static void enterprise_modem_init(void)
 				__func__, "sin_init");
 		ret = gpio_direction_input(TEGRA_GPIO_PI5);
 
-
 		if (ret < 0) {
 			pr_err("[FLT] %s: gpio_direction_output failed %d\n", __func__, ret);
 			gpio_free(TEGRA_GPIO_PI5);
@@ -1728,14 +1471,14 @@ static void enterprise_modem_init(void)
 		}
 		tegra_gpio_enable(TEGRA_GPIO_PI5);
 		gpio_export(TEGRA_GPIO_PI5, true);
-		
-			/*enable core dumo dectect++*/
+
 			printk(KERN_INFO"%s: gpio config for core dump when radio fatal error.", __func__);
-			/* TEGRA_GPIO_PN2*/
+
 				ret = gpio_request(TEGRA_GPIO_PN2, "core_dump");
 				if (ret < 0)
 					pr_err("[FLT] %s: gpio_request failed for gpio %s\n",
 						__func__, "core_dump");
+
 				ret = gpio_direction_input(TEGRA_GPIO_PN2);
 				if (ret < 0) {
 					pr_err("[FLT] %s: gpio_direction_input failed %d\n", __func__, ret);
@@ -1751,35 +1494,6 @@ static void enterprise_baseband_init(void)
 	enterprise_modem_init();
 }
 
-//virtual key 
-static ssize_t Aproj_virtual_keys_show(struct kobject *kobj,
-		struct kobj_attribute *attr, char *buf)
-{
-	return sprintf(buf,
-			__stringify(EV_KEY) ":" __stringify(KEY_HOME)       ":111:1340:40:120"
-			":" __stringify(EV_KEY) ":" __stringify(KEY_MENU)   ":267:1340:40:120"
-			":" __stringify(EV_KEY) ":" __stringify(KEY_BACK)   ":432:1340:54:120"
-			":" __stringify(EV_KEY) ":" __stringify(KEY_SEARCH) ":594:1340:40:120"
-			"\n");
-}
-static struct kobj_attribute Aproj_virtual_keys_attr = {
-	.attr = {
-		.name = "virtualkeys.synaptics-rmi-touchscreen",
-		.mode = S_IRUGO,
-	},
-	.show = &Aproj_virtual_keys_show,
-};
-
-static struct attribute *Aproj_properties_attrs[] = {
-	&Aproj_virtual_keys_attr.attr,
-	NULL
-};
-
-static struct attribute_group Aproj_properties_attr_group = {
-	.attrs = Aproj_properties_attrs,
-};
-
-//virtual key for XC board and later (3 virtual keys)
 static ssize_t Aproj_virtual_keys_show_XC(struct kobject *kobj,
 		struct kobj_attribute *attr, char *buf)
 {
@@ -1841,10 +1555,8 @@ static void __init tegra_endeavoru_init(void)
 	platform_device_register(&htc_headset_mgr_xe);
 
 #if defined(CONFIG_TEGRA_GRHOST) && defined(CONFIG_TEGRA_HDMI_MHL)
-	if (board_id >= PROJECT_PHASE_A) {
 		mhl_sii_device_data.ci2ca = 1;
 		mhl_sii_device_data.enMhlD3Guard = true;
-	}
 #endif
 
 	enterprise_regulator_init();
@@ -1854,7 +1566,6 @@ static void __init tegra_endeavoru_init(void)
 #ifdef CONFIG_TEGRA_EDP_LIMITS
 	enterprise_edp_init();
 #endif
-	//enterprise_kbc_init();
 	A_PROJECT_keys_init();
 
 #ifdef CONFIG_TEGRA_HDMI_MHL
@@ -1872,17 +1583,10 @@ static void __init tegra_endeavoru_init(void)
 		printk(KERN_WARNING "%s: register reset key fail\n", __func__);
 		properties_kobj = kobject_create_and_add("board_properties", NULL);
 	if (properties_kobj) {
-		if (htc_get_pcbid_info() >= PROJECT_PHASE_XC) {
 			sysfs_create_group(properties_kobj, &Aproj_properties_attr_group_XC);
-		} else {
-			sysfs_create_group(properties_kobj, &Aproj_properties_attr_group);
-		}
 	}
 	enterprise_suspend_init();
 	tegra_release_bootloader_fb();
-#ifdef CONFIG_TEGRA_HAPTIC2
-	haptic_vibrator_init(board_id);
-#endif
 #ifdef CONFIG_TEGRA_VIBRATOR_ENR
 	tegra_vibrator_init();
 #endif
