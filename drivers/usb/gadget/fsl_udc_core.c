@@ -3818,8 +3818,7 @@ static int fsl_udc_resume(struct platform_device *pdev)
 	//unsigned long val;
 	irq_udc_debug =1 ;
 	irq_otg_debug =1 ;
-	if(global_wakeup_state == VBUS_WAKEUP_ENR)
-		wake_lock_timeout(&udc_resume_wake_lock, 8*HZ);
+	wake_lock_timeout(&udc_resume_wake_lock, 8*HZ);
 
 #if 0
 	val =fsl_readl(&usb_sys_regs->vbus_wakeup);
