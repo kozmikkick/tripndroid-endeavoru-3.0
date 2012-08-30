@@ -336,7 +336,7 @@ static __initdata struct tegra_pingroup_config endeavoru_pinmux_common[] = {
     DEFAULT_PINMUX(SPI1_MOSI,       SPI1,            NORMAL,       NORMAL,     INPUT), // NC
     DEFAULT_PINMUX(SPI1_SCK,        RSVD,            PULL_UP,      NORMAL,     INPUT), // PWR_CHG_INT
     DEFAULT_PINMUX(SPI1_CS0_N,      SPI1,            NORMAL,       NORMAL,     INPUT), // NC
-    DEFAULT_PINMUX(SPI1_MISO,       RSVD,            NORMAL,       NORMAL,     OUTPUT), // AUDIO_MCLK_EN
+    DEFAULT_PINMUX(SPI1_MISO,       RSVD3,           NORMAL,       NORMAL,     OUTPUT), // AUDIO_MCLK_EN
 
     //Port Y
     DEFAULT_PINMUX(ULPI_CLK,        RSVD,            NORMAL,       NORMAL,     OUTPUT), // LED_DRV_EN
