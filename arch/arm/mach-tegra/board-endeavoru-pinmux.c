@@ -375,7 +375,7 @@ static __initdata struct tegra_pingroup_config endeavoru_pinmux_common[] = {
     DEFAULT_PINMUX(GPIO_PBB4,       RSVD,            NORMAL,       NORMAL,     INPUT), // CAM_VCAM_VDDIO_1V8_EN
     DEFAULT_PINMUX(GPIO_PBB5,       RSVD,            NORMAL,       NORMAL,     INPUT), // CAM_CAM1_VCM_PD
     DEFAULT_PINMUX(GPIO_PBB6,       RSVD,            NORMAL,       NORMAL,     INPUT), // AUD_REMO_PRES
-    DEFAULT_PINMUX(GPIO_PBB7,       RSVD,            NORMAL,       NORMAL,     INPUT), // CAM_FRONT_CAM_STANDBY
+    DEFAULT_PINMUX(GPIO_PBB7,       RSVD2,           NORMAL,       NORMAL,     INPUT), // CAM_FRONT_CAM_STANDBY
 
     //Port CC
     DEFAULT_PINMUX(CAM_MCLK,        VI_ALT2,         NORMAL,       NORMAL,     INPUT), // CAM_MCLK
