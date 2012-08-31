@@ -38,59 +38,64 @@
 #include <linux/mpu.h>
 #include <linux/nct1008.h>
 #include <linux/err.h>
-#include <linux/mpu.h>
 #include <linux/platform_data/ina230.h>
 #include <linux/regulator/consumer.h>
 #include <linux/slab.h>
 #include <linux/platform_device.h>
 #include <linux/tps65200.h>
-#include <mach/htc_battery_tps80032.h>
 #include <linux/pn544.h>
-#include <mach/gpio.h>
+#include <linux/akm8975.h>
+#include <linux/bma250.h>
+#include <linux/ewtzmu2.h>
+#include <linux/isl29028.h>
+#include <linux/cm3628.h>
+#include <linux/cm3629.h>
+
 #include <media/ar0832_main.h>
 #include <media/s5k3h2y.h>
 #include <media/s5k6a1gx03.h>
 #include <media/ad5823.h>
 #include <media/tps61050.h>
 #include <media/ov9726.h>
+#include <media/rawchip/Yushan_API.h>
+
+#include <mach/gpio.h>
 #include <mach/edp.h>
 #include <mach/thermal.h>
+#include <mach/board_htc.h>
+#include <mach/htc_battery_tps80032.h>
+
 #include "cpu-tegra.h"
 #include "gpio-names.h"
 #include "board-endeavoru.h"
 #include "board.h"
-#include <linux/akm8975.h>
-#include <linux/bma250.h>
-#include <linux/ewtzmu2.h>
-#include <mach/board_htc.h>
-#include <linux/isl29028.h>
-#include <linux/cm3628.h>
-#include <linux/cm3629.h>
 
 #define RAWCHIP 1
-#include <media/rawchip/Yushan_API.h>
+#define CAMERA_REGULATOR
+#define SENSOR_MPU_NAME "mpu3050"
 
-static struct regulator *v_sdmmc_2v85_en ;
-static struct regulator *v_srio_1v8_en ;
-void cm3629_enable_power(int enable)
+static struct regulator *v_sdmmc_2v85_en = NULL;
+static struct regulator *v_srio_1v8_en = NULL;
+
+int cm3629_enable_power(int enable)
 {
-	if(htc_get_pcbid_info() >= PROJECT_PHASE_XD) {
 		if(enable == 1) {
 			if (v_sdmmc_2v85_en == NULL) {
 		  		v_sdmmc_2v85_en = regulator_get(NULL, "v_sdmmc_2v85");
-		  		if (WARN_ON(IS_ERR(v_sdmmc_2v85_en))) {
-		   			pr_err("[v_sdmmc_2v85] %s: couldn't get regulator v_sdmmc_2v85_en: %ld\n", __func__, PTR_ERR(v_sdmmc_2v85_en));
+		  		if (IS_ERR_OR_NULL(v_sdmmc_2v85_en)) {
+		   			pr_err("%s: v_sdmmc_2v85 pwr err\n", __func__);
 				}
 			}
 		 	regulator_enable(v_sdmmc_2v85_en);
 
 			if (v_srio_1v8_en == NULL) {
 		  		v_srio_1v8_en = regulator_get(NULL, "v_srio_1v8");
-		  		if (WARN_ON(IS_ERR(v_srio_1v8_en))) {
-		   			pr_err("[v_srio_1v8] %s: couldn't get regulator v_srio_1v8_en: %ld\n", __func__, PTR_ERR(v_srio_1v8_en));
+		  		if (IS_ERR_OR_NULL(v_srio_1v8_en)) {
+		   			pr_err("%s: v_srio_1v8_en pwr err\n", __func__);
 				}
 			}
 		 	regulator_enable(v_srio_1v8_en);
+
 		}else if(enable == 0) {
 			if(regulator_is_enabled(v_srio_1v8_en)) {
 				regulator_disable(v_srio_1v8_en);
@@ -98,25 +103,12 @@ void cm3629_enable_power(int enable)
 			if(regulator_is_enabled(v_sdmmc_2v85_en)) {
 				regulator_disable(v_sdmmc_2v85_en);
 			}	
-		}
-	}else {
-		if(enable == 1) {
-		 	if (v_srio_1v8_en == NULL) {
-		  		v_srio_1v8_en = regulator_get(NULL, "v_srio_1v8");
-		  		if (WARN_ON(IS_ERR(v_srio_1v8_en))) {
-		   			pr_err("[v_srio_1v8] %s: couldn't get regulator v_srio_1v8_en: %ld\n", __func__, PTR_ERR(v_srio_1v8_en));
-				}
-			}
-		 	regulator_enable(v_srio_1v8_en);
-		}else if(enable == 0) {
-			if(regulator_is_enabled(v_srio_1v8_en)) {
-				regulator_disable(v_srio_1v8_en);
-			}	
-		}
 	}
+	return 0;
 }
 
 static struct cm3628_platform_data cm3628_pdata = {
+	.pwr = 0,
 	.intr = TEGRA_GPIO_PK2,
 	.levels = { 12, 14, 16, 41, 83, 3561, 6082, 6625, 7168, 65535},
 	.golden_adc = 0x1145,
@@ -141,7 +133,7 @@ static struct cm3629_platform_data cm3629_pdata = {
 	.intr = TEGRA_GPIO_PK2,
 	.levels = { 12, 14, 16, 176, 361, 4169, 6891, 9662, 12433, 65535},
 	.golden_adc = 0x13EF,
-	.power = NULL,
+	.power = cm3629_enable_power,
 	.cm3629_slave_address = 0xC0>>1,
 	.ps_calibration_rule = 1,
 	.ps1_thd_set = 0x3,
@@ -172,7 +164,6 @@ static struct i2c_board_info i2c_CM3629_devices[] = {
 
 static void psensor_init(void)
 {
-#if 1
 	if(ps_type) {
 		i2c_register_board_info(0,
 				i2c_CM3629_devices, ARRAY_SIZE(i2c_CM3629_devices));
@@ -183,7 +174,6 @@ static void psensor_init(void)
 				i2c_CM3628_devices, ARRAY_SIZE(i2c_CM3628_devices));
 		pr_info("[PS][cm3628]%s ps_type = %d\n", __func__, ps_type);
 	}
-#endif
 }
 static struct regulator *cam_vcm_2v85_en = NULL;
 static struct regulator *cam_vddio_1v8_en = NULL;
@@ -191,7 +181,6 @@ static struct regulator *cam_a2v85_en = NULL;
 static struct regulator *cam_d1v2_en = NULL;
 static struct regulator *cam2_d1v2_en = NULL;
 
-#ifndef CONFIG_TEGRA_INTERNAL_TSENSOR_EDP_SUPPORT
 static int nct_get_temp(void *_data, long *temp)
 {
 	struct nct1008_data *data = _data;
@@ -251,7 +240,6 @@ static void nct1008_probe_callback(struct nct1008_data *data)
 
 	tegra_thermal_set_device(thermal_device);
 }
-#endif
 
 static struct nct1008_platform_data enterprise_nct1008_pdata = {
 	.supported_hwrev = true,
@@ -291,6 +279,7 @@ static void enterprise_nct1008_init(void)
 	i2c_register_board_info(4, enterprise_i2c4_nct1008_board_info,
 				ARRAY_SIZE(enterprise_i2c4_nct1008_board_info));
 }
+
 void config_ruby_gyro_diag_gpios(bool pulldown)
 {
 /*
@@ -311,7 +300,7 @@ static struct pana_gyro_platform_data pana_gyro_pdata = {
 	.gyro_polarity = 0x02,
 	.mag_dir = 0x06,
 	.mag_polarity = 0x07,
-	.sleep_pin = TEGRA_GPIO_PR2,//RUBY_GPIO_PANA_GYRO_SLEEP,
+	.sleep_pin = TEGRA_GPIO_PR2,
 	.config_gyro_diag_gpios = config_ruby_gyro_diag_gpios,
 };
 
@@ -327,24 +316,12 @@ static struct bma250_platform_data gsensor_bma250_platform_data = {
 	.intr = TEGRA_GPIO_PO5,
 	.chip_layout = 1,
 };
+
 static struct i2c_board_info i2c_bma250_devices[] = {
 	{
 		I2C_BOARD_INFO(BMA250_I2C_NAME, 0x19),
 		.platform_data = &gsensor_bma250_platform_data,
 		.irq = TEGRA_GPIO_TO_IRQ(TEGRA_GPIO_PO5),
-	},
-};
-
-static struct akm8975_platform_data compass_platform_data_xb = {
-	.layouts = RUBY_LAYOUTS_XB,
-	.use_pana_gyro = 1,
-};
-
-static struct i2c_board_info i2c_akm8975_devices_xb[] = {
-	{
-		I2C_BOARD_INFO(AKM8975_I2C_NAME, 0x0D),
-		.platform_data = &compass_platform_data_xb,
-		.irq = TEGRA_GPIO_TO_IRQ(TEGRA_GPIO_PJ2),
 	},
 };
 
@@ -358,41 +335,6 @@ static struct i2c_board_info i2c_akm8975_devices_xc[] = {
 		I2C_BOARD_INFO(AKM8975_I2C_NAME, 0x0D),
 		.platform_data = &compass_platform_data_xc,
 		.irq = TEGRA_GPIO_TO_IRQ(TEGRA_GPIO_PJ2),
-	},
-};
-
-#define SENSOR_MPU_NAME "mpu3050"
-static struct mpu3050_platform_data mpu3050_data = {
-	.int_config  = 0x10,
-	/* Orientation matrix for MPU on enterprise */
-	  .en_1v8 = 1,
-	  .orientation = { -1, 0, 0, 0, -1, 0, 0, 0, 1 },
-	.level_shifter = 0,
-
-	.accel = {
-		.get_slave_descr = get_accel_slave_descr,
-		.adapt_num   = 0,
-		.bus         = EXT_SLAVE_BUS_SECONDARY,
-		.address     = 0x19,
-		/* Orientation matrix for Kionix on enterprise */
-		  .orientation = { 1, 0, 0, 0, 1, 0, 0, 0, 1 },
-	},
-
-	.compass = {
-		.get_slave_descr = get_compass_slave_descr,
-		.adapt_num   = 0,
-		.bus         = EXT_SLAVE_BUS_PRIMARY,
-		.address     = 0x0D,//for A-project
-		/* Orientation matrix for AKM on enterprise */
-		  .orientation = { -1, 0, 0, 0, 1, 0, 0, 0, -1 },
-	},
-};
-
-static struct i2c_board_info __initdata mpu3050_i2c0_boardinfo[] = {
-	{
-		I2C_BOARD_INFO(SENSOR_MPU_NAME, 0x68),
-		.irq = TEGRA_GPIO_TO_IRQ(TEGRA_GPIO_PI6),
-		.platform_data = &mpu3050_data,
 	},
 };
 
@@ -474,23 +416,7 @@ static void enterprise_gsensor_irq_init(void)
 	int ret = 0;
 
 	pr_info("[GSNR] g-sensor irq_start...\n");
-	if(htc_get_pcbid_info() <= PROJECT_PHASE_XB){
-		ret = gpio_request(TEGRA_GPIO_PO5, "GSNR_INT");
-		if (ret < 0) {
-			pr_err("%s: gpio_request failed %d\n", __func__, ret);
-			return;
-		}
 
-		ret = gpio_direction_input(TEGRA_GPIO_PO5);
-		if (ret < 0) {
-			pr_err("%s: gpio_direction_input failed %d\n", __func__, ret);
-			gpio_free(TEGRA_GPIO_PO5);
-			return;
-		}
-		tegra_gpio_enable(TEGRA_GPIO_PO5);
-		tegra_pinmux_set_pullupdown(TEGRA_PINGROUP_ULPI_DATA4, TEGRA_PUPD_NORMAL);
-	}
-	else{
 		ret = gpio_request(TEGRA_GPIO_PN5, "GSNR_INT");
 		if (ret < 0) {
 			pr_err("%s: gpio_request failed %d\n", __func__, ret);
@@ -505,8 +431,6 @@ static void enterprise_gsensor_irq_init(void)
 		}
 		tegra_gpio_enable(TEGRA_GPIO_PN5);
 		tegra_pinmux_set_pullupdown(TEGRA_PINGROUP_LCD_SDOUT, TEGRA_PUPD_NORMAL);
-
-	}
 		
 	pr_info("[GSNR] g-sensor irq end...\n");
 
@@ -515,7 +439,6 @@ static void enterprise_gsensor_irq_init(void)
 static void enterprise_gyro_diag_init(void)
 {
 	int ret = 0;
-
 
 	pr_info("[GYRO] gyro diag_start...\n");
 		ret = gpio_request(TEGRA_GPIO_PH3, "GYRO_DIAG");
@@ -556,12 +479,8 @@ static void __init enterprise_mpuirq_init(void)
 		return;
 	}
 	tegra_pinmux_set_pullupdown(TEGRA_PINGROUP_GMI_CS7_N, TEGRA_PUPD_NORMAL);
-
-	if(htc_get_pcbid_info() == PROJECT_PHASE_XA){
-		i2c_register_board_info(0, mpu3050_i2c0_boardinfo,
-					ARRAY_SIZE(mpu3050_i2c0_boardinfo));
-	}
 }
+
 static void enterprise_gyro_sleep_pin(void)
 {
 
@@ -582,14 +501,12 @@ static void enterprise_gyro_sleep_pin(void)
 	}
 	tegra_gpio_enable(TEGRA_GPIO_PR2);
 
-
 }
 
 static void enterprise_comp_irq_init(void)
 {
 	int ret = 0;
 
-	// comp int
 	ret = gpio_request(TEGRA_GPIO_PJ2, "COMP_INT");
 	if (ret < 0) {
 		pr_err("[COMP] %s: gpio_request failed %d\n", __func__, ret);
@@ -618,8 +535,6 @@ static int endeavor_s5k3h2y_power_on(void)
 {
     int ret;
 
-    pr_info("[CAM] s5k3h2y power on ++\n");
-
 	if (endeavor_s5k3h2y_power_state)
 		return 0;
 
@@ -633,17 +548,11 @@ static int endeavor_s5k3h2y_power_on(void)
 
     gpio_direction_output(CAM_PWDN, 0);
     gpio_direction_output(CAM1_VCM_PD_GPIO, 0);
-    #if RAWCHIP
     gpio_direction_output(RAW_RSTN, 0);
-    #endif
 
-#ifdef CAMERA_REGULATOR
-
-	#if RAWCHIP
-	/*RAW_1V8_EN */
+	/* RAW_1V8_EN */
 	gpio_direction_output(RAW_1V8_EN, 1);
 	ENR_usleep(200);
-	#endif
 
 	/* VCM */
 	ret = regulator_enable(cam_vcm_2v85_en);
@@ -654,7 +563,7 @@ static int endeavor_s5k3h2y_power_on(void)
 		return ret;
 	}
 
-    /* main/front cam analog*/
+    	/* main/front cam analog */
 	ret = regulator_enable(cam_a2v85_en);
 	if (ret < 0) {
 		pr_err("[CAM] couldn't enable regulator cam_a2v85_en\n");
@@ -662,9 +571,9 @@ static int endeavor_s5k3h2y_power_on(void)
 		cam_a2v85_en = NULL;
 		return ret;
 	}
-    ENR_usleep(200);
+    	ENR_usleep(200);
  
-    /*main cam core 1v2 & rawchip external 1v2 */
+    	/* main cam core 1v2 & rawchip external 1v2 */
 	ret = regulator_enable(cam_d1v2_en);
 	if (ret < 0) {
 		pr_err("[CAM] couldn't enable regulator cam_d1v2_en\n");
@@ -674,15 +583,13 @@ static int endeavor_s5k3h2y_power_on(void)
 	}
 	ENR_usleep(200);
  
-	#if RAWCHIP
-	/*RAW_1V2_EN */
-    if (htc_get_pcbid_info() < PROJECT_PHASE_XE) {
+	/* RAW_1V2_EN */
+    	if (htc_get_pcbid_info() < PROJECT_PHASE_XE) {
         gpio_direction_output(RAW_1V2_EN, 1);
 	    ENR_usleep(200);
-    }
-	#endif
+    	}
 
-    /* IO */
+    	/* IO */
 	ret = regulator_enable(cam_vddio_1v8_en);
 	if (ret < 0) {
 		pr_err("[CAM] couldn't enable regulator cam_vddio_1v8_en\n");
@@ -690,93 +597,40 @@ static int endeavor_s5k3h2y_power_on(void)
 		cam_vddio_1v8_en = NULL;
 		return ret;
 	}
-    ENR_usleep(100);
+    	ENR_usleep(100);
 
-    /*CAM SEL */
-    gpio_direction_output(CAM_SEL_GPIO, 0);
-    ENR_usleep(100);
-
-    #if RAWCHIP
-    /*RAW_RSTN */
-    gpio_direction_output(RAW_RSTN, 1);
-    ENR_msleep(3);
-    /*SPI send command to configure RAWCHIP here!*/
-	yushan_spi_write(0x0008, 0x7f);
-	ENR_msleep(1);
-    #endif
-
-    /* XSHUTDOWM */
-    gpio_direction_output(CAM_PWDN, 1);
-    ENR_usleep(100);
-
-     /* VCM PD*/
-    gpio_direction_output(CAM1_VCM_PD_GPIO, 1);
-    ENR_usleep(100);
-
-#else/* use gpio pull up to get power*/
-      #if RAWCHIP
-	/*RAW_1V8_EN */
-	gpio_direction_output(RAW_1V8_EN, 1);
-	ENR_usleep(200);
-      #endif
-
-	/* VCM */
-	gpio_direction_output(CAM_VCM2V85, 1);
-	ENR_usleep(200);
-
-	/* analog */
-	gpio_direction_output(CAM_A2V85_EN, 1);
-	ENR_usleep(200);
-
-	/*core*/
-	gpio_direction_output(CAM_D1V2_EN, 1);
-	ENR_usleep(200);
-
-	#if RAWCHIP
-	/*RAW_1V2_EN */
-    if (htc_get_pcbid_info() < PROJECT_PHASE_XE) {
-	    ret = gpio_direction_output(RAW_1V2_EN, 1);
-	    ENR_usleep(200);
-    }
-    #endif
-
-	/* IO */
-	gpio_direction_output(CAMIO_1V8_EN, 1);
-	ENR_usleep(100);
-
-	/*CAM SEL */
+	/* CAM SEL */
 	gpio_direction_output(CAM_SEL_GPIO, 0);
 	ENR_usleep(100);
 
-      #if RAWCHIP
-	/*RAW_RSTN */
-	ret = gpio_direction_output(RAW_RSTN, 1);
+	/* RAW_RSTN */
+	gpio_direction_output(RAW_RSTN, 1);
 	ENR_msleep(3);
-
-      /*SPI send command to configure RAWCHIP here!*/
-	  yushan_spi_write(0x0008, 0x7f);
-		ENR_msleep(1);
-      #endif
+	/* SPI send command to configure RAWCHIP here! */
+	yushan_spi_write(0x0008, 0x7f);
+	ENR_msleep(1);
 
 	/* XSHUTDOWM */
 	gpio_direction_output(CAM_PWDN, 1);
 	ENR_usleep(100);
-	/* VCM PD*/
+
+	/* VCM PD */
 	gpio_direction_output(CAM1_VCM_PD_GPIO, 1);
 	ENR_usleep(100);
-#endif
+
 	endeavor_s5k3h2y_power_state = 1;
-    //pr_info("[CAM] s5k3h2y power on --\n");
+
     return 0;
 }
 
 static int endeavor_s5k3h2y_power_off(void)
 {
-    pr_info("[CAM] s5k3h2y power off ++\n");
+
     if (!endeavor_s5k3h2y_power_state)
 	return 0;
+
     endeavor_s5k3h2y_power_state = 0;
-#ifdef CAMERA_REGULATOR
+
     /* VCM PD*/
     gpio_direction_output(CAM1_VCM_PD_GPIO, 0);
     ENR_msleep(1);
@@ -785,94 +639,41 @@ static int endeavor_s5k3h2y_power_off(void)
     gpio_direction_output(CAM_PWDN, 0);
     ENR_msleep(1);
 
-    #if RAWCHIP
     /* RAW RSTN*/
     gpio_direction_output(RAW_RSTN, 0);
     ENR_msleep(3);
-    #endif
 
    /* VCM */
    regulator_disable(cam_vcm_2v85_en);
    ENR_msleep(1);
 
-    #if RAWCHIP
     /*RAW_1V2_EN */
     if (htc_get_pcbid_info() < PROJECT_PHASE_XE) {
         gpio_direction_output(RAW_1V2_EN, 0);
         ENR_msleep(5);
     }
-    #endif
 
    /* digital */
    regulator_disable(cam_d1v2_en);
    ENR_msleep(1);
 
-   #if RAWCHIP
-   /*RAW_1V8_EN */
+   /* RAW_1V8_EN */
    gpio_direction_output(RAW_1V8_EN, 0);
    ENR_msleep(1);
-   #endif
 
    /* analog */
    regulator_disable(cam_a2v85_en);
    ENR_msleep(5);
+
    /* IO */
    regulator_disable(cam_vddio_1v8_en);
    ENR_msleep(10);
 
-#else/* use gpio pull down to disable power */
-    /* VCM PD*/
-    gpio_direction_output(CAM1_VCM_PD_GPIO, 0);
-    ENR_msleep(1);
-    /* TODO: Set 0x0100[0] = 0 (Enter SW Standby mode)*/
-
-    /* XSHUTDOWN */
-    gpio_direction_output(CAM_PWDN, 0);
-    ENR_msleep(1);
-
-    #if RAWCHIP
-    /* RAW RSTN*/
-    gpio_direction_output(RAW_RSTN, 0);
-    ENR_msleep(3);
-    #endif
-
-    /* VCM */
-    gpio_direction_output(CAM_VCM2V85, 0);
-    ENR_msleep(1);
-
-    #if RAWCHIP
-    /*RAW_1V2_EN */
-    if (htc_get_pcbid_info() < PROJECT_PHASE_XE) {
-        gpio_direction_output(RAW_1V2_EN, 0);
-        ENR_msleep(5);
-    }
-    #endif
-
-    /* digital */
-    gpio_direction_output(CAM_D1V2_EN, 0);
-	ENR_msleep(1);
-
-   #if RAWCHIP
-   /*RAW_1V8_EN */
-   gpio_direction_output(RAW_1V8_EN, 0);
-   ENR_msleep(1);
-   #endif
-
-    /* analog */
-    gpio_direction_output(CAM_A2V85_EN, 0);
-	ENR_msleep(5);
-    /* IO */
-    gpio_direction_output(CAMIO_1V8_EN, 0);
-    ENR_msleep(10);
-#endif
-
-	/* set gpio output low : O(L) */
+   	/* set gpio output low : O(L) */
 	tegra_gpio_enable(RAW_SPI_CLK);
 	tegra_gpio_enable(RAW_SPI_CS);
 	tegra_gpio_enable(RAW_SPI_DI);
 	tegra_gpio_enable(RAW_SPI_DO);
-	//tegra_gpio_enable(RAW_INTR0);
-	//tegra_gpio_enable(RAW_INTR1);
 	tegra_gpio_enable(CAM_I2C_SCL_GPIO);
 	tegra_gpio_enable(CAM_I2C_SDA_GPIO);
 	tegra_gpio_enable(CAM_MCLK_GPIO);
@@ -892,17 +693,15 @@ struct ad5823_platform_data endeavor_ad5823_data = {
 
 static int endeavor_s5k6a1gx03_power_on(void)
 {
-    pr_info("[CAM] s5k6a1g power on ++\n");
+    int ret;
+
     gpio_direction_output(FRONT_CAM_RST_GPIO, 0);
     gpio_direction_output(CAM_SEL_GPIO, 0);
 
-	tegra_gpio_disable(CAM_I2C_SCL_GPIO);
-	tegra_gpio_disable(CAM_I2C_SDA_GPIO);
-	tegra_gpio_disable(CAM_MCLK_GPIO);
+    tegra_gpio_disable(CAM_I2C_SCL_GPIO);
+    tegra_gpio_disable(CAM_I2C_SDA_GPIO);
+    tegra_gpio_disable(CAM_MCLK_GPIO);
 
-#ifdef CAMERA_REGULATOR
-    int ret;
-    pr_info("[CAM] use regurator to get power\n");
     /* analog */
 	ret = regulator_enable(cam_a2v85_en);
 	if (ret < 0) {
@@ -912,7 +711,7 @@ static int endeavor_s5k6a1gx03_power_on(void)
 		return ret;
 	}
     ENR_usleep(200);
-    /*vcm*/
+    /* vcm */
 	ret = regulator_enable(cam_vcm_2v85_en);
 	if (ret < 0) {
 		pr_err("[CAM] couldn't enable regulator cam_vcm_2v85_en\n");
@@ -921,7 +720,7 @@ static int endeavor_s5k6a1gx03_power_on(void)
 		return ret;
 	}
     ENR_usleep(200);
-    /*IO*/
+    /* IO */
 	ret = regulator_enable(cam_vddio_1v8_en);
 	if (ret < 0) {
 		pr_err("[CAM] couldn't enable regulator cam_vddio_1v8_en\n");
@@ -930,7 +729,7 @@ static int endeavor_s5k6a1gx03_power_on(void)
 		return ret;
 	}
     ENR_usleep(200);
-    /*RSTN */
+    /* RSTN */
     gpio_direction_output(FRONT_CAM_RST_GPIO, 1);
     /* digital */
 	ret = regulator_enable(cam2_d1v2_en);
@@ -940,35 +739,18 @@ static int endeavor_s5k6a1gx03_power_on(void)
 		cam_d1v2_en = NULL;
 		return ret;
 	}
-    /*CAM SEL */
+    /* CAM SEL */
     gpio_direction_output(CAM_SEL_GPIO, 1);
     ENR_msleep(1);
-#else /* use gpio pull up to get power */
-    /* vcm */
-    gpio_direction_output(CAM_VCM2V85, 1);
-    ENR_usleep(200);
-    /* analog */
-    gpio_direction_output(CAM_A2V85_EN, 1);
-    ENR_usleep(200);
-    /*IO*/
-    gpio_direction_output(CAMIO_1V8_EN, 1);
-    ENR_usleep(200);
-    /*RSTN */
-    gpio_direction_output(FRONT_CAM_RST_GPIO, 1);
-    /* digital */
-    gpio_direction_output(CAM2_D1V2_EN, 1);
-    /*CAM SEL */
-    gpio_direction_output(CAM_SEL_GPIO, 1);
-    ENR_msleep(1);
-#endif
+
     return 0;
 }
 
 static int endeavor_s5k6a1gx03_power_off(void)
 {
     pr_info("[CAM] s5k6a1g power off ++\n");
-#ifdef CAMERA_REGULATOR
-    /*CAM SEL */
+
+    /* CAM SEL */
     gpio_direction_output(CAM_SEL_GPIO, 0);
     ENR_msleep(1);
     /* vcm */
@@ -977,34 +759,14 @@ static int endeavor_s5k6a1gx03_power_off(void)
     /* analog */
     regulator_disable(cam_a2v85_en);
     ENR_msleep(5);
-    /*RSTN */
+    /* RSTN */
     gpio_direction_output(FRONT_CAM_RST_GPIO, 0);
     /* digital */
     regulator_disable(cam2_d1v2_en);
     ENR_msleep(1);
-      /* IO */
+    /* IO */
     regulator_disable(cam_vddio_1v8_en);
     ENR_msleep(10);
-
-#else/* use gpio pull down to disable power*/
-    /*CAM SEL */
-    gpio_direction_output(CAM_SEL_GPIO, 0);
-    ENR_msleep(1);
-    /* vcm */
-    gpio_direction_output(CAM_VCM2V85, 0);
-    ENR_msleep(5);
-    /* analog */
-    gpio_direction_output(CAM_A2V85_EN, 0);
-    ENR_msleep(5);
-    /*RSTN */
-    gpio_direction_output(FRONT_CAM_RST_GPIO, 0);
-    /* digital */
-    gpio_direction_output(CAM2_D1V2_EN, 0);
-    ENR_msleep(1);
-      /* IO */
-    gpio_direction_output(CAMIO_1V8_EN, 0);
-    ENR_msleep(10);
-#endif
 
 	tegra_gpio_enable(CAM_I2C_SCL_GPIO);
 	tegra_gpio_enable(CAM_I2C_SDA_GPIO);
@@ -1048,30 +810,7 @@ struct endeavor_cam_gpio {
 		.label = _label,			\
 		.value = _value,			\
 	}
-#ifndef CAMERA_REGULATOR
-static struct endeavor_cam_gpio endeavor_cam_gpio_output_data[] = {
-	[0] = TEGRA_CAMERA_GPIO(CAM_SEL_GPIO, "cam_sel_gpio", 0),
-	[1] = TEGRA_CAMERA_GPIO(FRONT_CAM_RST_GPIO, "front_cam_rst_gpio", 0),
-	[2] = TEGRA_CAMERA_GPIO(CAM_A2V85_EN, "cam_a2v85_en", 0),
-	[3] = TEGRA_CAMERA_GPIO(CAM_PWDN, "cam_pwdn", 0),
-	[4] = TEGRA_CAMERA_GPIO(CAM_D1V2_EN, "cam_d1v2_en", 0),
-	[5] = TEGRA_CAMERA_GPIO(CAM2_D1V2_EN, "cam2_d1v2_en", 0),
-	[6] = TEGRA_CAMERA_GPIO(CAM_VCM2V85, "cam_vcm2v85", 0),
-	[7] = TEGRA_CAMERA_GPIO(CAMIO_1V8_EN, "camio_1v8_en", 0),
-	[8] = TEGRA_CAMERA_GPIO(CAM1_VCM_PD_GPIO, "cam1_vcm_pd", 0),
-	[9] = TEGRA_CAMERA_GPIO(CAM_I2C_SCL_GPIO, "CAM_I2C_SCL_GPIO", 0),
-	[10] = TEGRA_CAMERA_GPIO(CAM_I2C_SDA_GPIO, "CAM_I2C_SDA_GPIO", 0),
-	[11] = TEGRA_CAMERA_GPIO(CAM_MCLK_GPIO, "CAM_MCLK_GPIO", 0),
-	/*for rawchip */
-	[12] = TEGRA_CAMERA_GPIO(RAW_1V8_EN, "RAW_1V8_EN", 0),
-	[13] = TEGRA_CAMERA_GPIO(RAW_1V2_EN, "RAW_1V2_EN", 0),
-	[14] = TEGRA_CAMERA_GPIO(RAW_RSTN, "RAW_RSTN", 0),
-	[15] = TEGRA_CAMERA_GPIO(RAW_SPI_CLK, "RAW_SPI_CLK", 0),
-	[16] = TEGRA_CAMERA_GPIO(RAW_SPI_CS, "RAW_SPI_CS", 0),
-	[17] = TEGRA_CAMERA_GPIO(RAW_SPI_DI, "RAW_SPI_DI", 0),
-	[18] = TEGRA_CAMERA_GPIO(RAW_SPI_DO, "RAW_SPI_DO", 0),
-};
-#else
+
 static struct endeavor_cam_gpio endeavor_cam_gpio_output_data[] = {
 	[0] = TEGRA_CAMERA_GPIO(CAM_SEL_GPIO, "cam_sel_gpio", 0),
 	[1] = TEGRA_CAMERA_GPIO(FRONT_CAM_RST_GPIO, "front_cam_rst_gpio", 0),
@@ -1089,7 +828,7 @@ static struct endeavor_cam_gpio endeavor_cam_gpio_output_data[] = {
 	[12] = TEGRA_CAMERA_GPIO(RAW_SPI_DI, "RAW_SPI_DI", 0),
 	[13] = TEGRA_CAMERA_GPIO(RAW_SPI_DO, "RAW_SPI_DO", 0),
 };
-#endif
+
 static struct endeavor_cam_gpio endeavor_cam_gpio_input_data[] = {
 	[0] = TEGRA_CAMERA_GPIO(CAM1_ID_GPIO, "cam1_id_gpio", 0),
 	[1] = TEGRA_CAMERA_GPIO(FRONT_CAM_ID_GPIO, "front_cam_id_gpio", 0),
@@ -1103,10 +842,6 @@ static int endeavor_cam_init(void)
     int i = 0, j = 0;
 
     for (i = 0; i < ARRAY_SIZE(endeavor_cam_gpio_output_data); i++) {
-        /* for XE, raw_1v2_en is removed */
-        if (htc_get_pcbid_info() >= PROJECT_PHASE_XE && endeavor_cam_gpio_output_data[i].gpio == RAW_1V2_EN) {
-            continue;
-        }
         ret = gpio_request(endeavor_cam_gpio_output_data[i].gpio,
                    endeavor_cam_gpio_output_data[i].label);
         if (ret < 0) {
@@ -1203,17 +938,6 @@ static struct i2c_board_info tps_65200_boardinfo[] = {
 	},
 };
 
-#if 1	/* fixme: for MFG build to disable mbat_in check */
-static int __init check_mbat_in_tag(char *get_mbat_in)
-{
-	if (strlen(get_mbat_in) && !strcmp(get_mbat_in, "false")) {
-		htc_battery_pdev_data.power_off_by_id = 0;
-	}
-	return 1;
-}
-__setup("mbat_in_check=", check_mbat_in_tag);
-#endif
-
 static void enterprise_battery_init(void)
 {
 	int ret;
@@ -1237,9 +961,6 @@ static void enterprise_battery_init(void)
 
 		tegra_gpio_enable(enterprise_battery_gpio_data[i].gpio);
 	}
-
-	if(htc_get_pcbid_info() <= PROJECT_PHASE_XC)
-		htc_battery_pdev_data.volt_adc_offset = -17;
 
 	platform_device_register(&htc_battery_pdev);
 
@@ -1286,33 +1007,20 @@ int __init enterprise_sensors_init(void)
 
 	enterprise_comp_irq_init();
 
-	if (htc_get_pcbid_info() == PROJECT_PHASE_XA){
-		pr_info("[GYRO]Use Invensense solution");
-		enterprise_mpuirq_init();
-	}
-
-	//enterprise_srio_1v8_en();
 	enterprise_gsensor_irq_init(); 
-	if (htc_get_pcbid_info() != PROJECT_PHASE_XA ){
-		enterprise_mpuirq_init();
-		enterprise_gyro_diag_init();
-		i2c_register_board_info(0,
-			pana_gyro_GSBI12_boardinfo, ARRAY_SIZE(pana_gyro_GSBI12_boardinfo));
-		i2c_register_board_info(0,
-			i2c_bma250_devices, ARRAY_SIZE(i2c_bma250_devices));
-		if (htc_get_pcbid_info() < PROJECT_PHASE_XC )
-			i2c_register_board_info(0,
-				i2c_akm8975_devices_xb, ARRAY_SIZE(i2c_akm8975_devices_xb));
-		else
-			i2c_register_board_info(0,
-				i2c_akm8975_devices_xc, ARRAY_SIZE(i2c_akm8975_devices_xc));
+	enterprise_mpuirq_init();
+	enterprise_gyro_diag_init();
+
+	i2c_register_board_info(0, pana_gyro_GSBI12_boardinfo, ARRAY_SIZE(pana_gyro_GSBI12_boardinfo));
+	i2c_register_board_info(0, i2c_bma250_devices, ARRAY_SIZE(i2c_bma250_devices));
+	i2c_register_board_info(0, i2c_akm8975_devices_xc, ARRAY_SIZE(i2c_akm8975_devices_xc));
 	
-		enterprise_gyro_sleep_pin();
-	}
+	enterprise_gyro_sleep_pin();
 
 	enterprise_battery_init();
 	ret = endeavor_cam_init();
 	enterprise_nct1008_init();
+
 #if ENTERPRISE_INA230_ENABLED
 	enterprise_ina230_init();
 #endif
@@ -1367,6 +1075,4 @@ int __init endeavor_cam_late_init(void)
 	return ret;
 }
 
-#ifdef CAMERA_REGULATOR
 late_initcall(endeavor_cam_late_init);
-#endif
