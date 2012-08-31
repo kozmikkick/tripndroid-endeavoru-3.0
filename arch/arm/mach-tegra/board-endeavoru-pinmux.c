@@ -301,7 +301,7 @@ static __initdata struct tegra_pingroup_config endeavoru_pinmux_common[] = {
     DEFAULT_PINMUX(SDMMC4_CMD,      SDMMC4,          PULL_UP,      NORMAL,     INPUT), // PER_EMMC_CMD
 
     // Port U
-    DEFAULT_PINMUX(GPIO_PU0,        RSVD,            NORMAL,       NORMAL,     INPUT), // CON_BT_EN
+    DEFAULT_PINMUX(GPIO_PU0,        RSVD1,           NORMAL,       NORMAL,     INPUT), // CON_BT_EN
     DEFAULT_PINMUX(GPIO_PU1,        RSVD,            NORMAL,       NORMAL,     INPUT), // NC
     DEFAULT_PINMUX(GPIO_PU2,        RSVD,            NORMAL,       NORMAL,     INPUT), // NC
     DEFAULT_PINMUX(GPIO_PU3,        RSVD,            NORMAL,       NORMAL,     INPUT), // NC
