@@ -1135,24 +1135,11 @@ out:
 	host->clock = clock;
 }
 
-#if defined(CONFIG_MACH_ENDEAVORU)
-static int wifi_is_on = 0;
-extern int enterprise_wifi_power(int on);
-void set_wifi_is_on (int on){
-    wifi_is_on = on;
-}
-EXPORT_SYMBOL(set_wifi_is_on);
-#endif
-
 static void sdhci_set_power(struct sdhci_host *host, unsigned short power)
 {
 	u8 pwr = 0;
 
 	if (power != (unsigned short)-1) {
-#if defined(CONFIG_MACH_ENDEAVORU)
-	if(host->mmc->index==1)
-		enterprise_wifi_power(1);
-#endif
 		switch (1 << power) {
 		case MMC_VDD_165_195:
 			pwr = SDHCI_POWER_180;
@@ -1168,12 +1155,6 @@ static void sdhci_set_power(struct sdhci_host *host, unsigned short power)
 		default:
 			BUG();
 		}
-	}
-	else {
-#if defined(CONFIG_MACH_ENDEAVORU)
-		if(host->mmc->index==1)
-			enterprise_wifi_power(0);
-#endif
 	}
 
 	if (host->pwr == pwr)
@@ -2651,15 +2632,6 @@ int sdhci_add_host(struct sdhci_host *host)
 	if ((host->quirks & SDHCI_QUIRK_BROKEN_CARD_DETECTION) &&
 	    mmc_card_is_removable(mmc) && !(host->ops->get_cd))
 		mmc->caps |= MMC_CAP_NEEDS_POLL;
-#if defined(CONFIG_MACH_ENDEAVORU)
-	if(host->mmc->index==1) {
-		mmc->caps |= MMC_CAP_NONREMOVABLE;
-		mmc->caps |= MMC_CAP_DISABLE;
-		mmc->caps |= MMC_CAP_POWER_OFF_CARD;
-		mmc->caps |= MMC_PM_KEEP_POWER;
-        host->flags |= MMC_PM_KEEP_POWER;
-	}
-#endif
 
 	/* UHS-I mode(s) supported by the host controller. */
 	if (host->version >= SDHCI_SPEC_300)
