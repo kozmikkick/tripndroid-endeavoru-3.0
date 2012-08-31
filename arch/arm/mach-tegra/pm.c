@@ -1169,12 +1169,10 @@ out:
 	writel(0, pmc + PMC_SCRATCH41);
 
 	/* Always enable CPU power request; just normal polarity is supported */
-#if !defined(CONFIG_MACH_ENDEAVORU)
 	reg = readl(pmc + PMC_CTRL);
 	BUG_ON(reg & TEGRA_POWER_CPU_PWRREQ_POLARITY);
 	reg |= TEGRA_POWER_CPU_PWRREQ_OE;
 	pmc_32kwritel(reg, PMC_CTRL);
-#endif
 
 	/* Configure core power request and system clock control if LP0
 	   is supported */
