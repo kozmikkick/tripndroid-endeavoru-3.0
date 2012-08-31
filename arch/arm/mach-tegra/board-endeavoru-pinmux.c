@@ -199,7 +199,7 @@ static __initdata struct tegra_pingroup_config endeavoru_pinmux_common[] = {
     DEFAULT_PINMUX(GMI_AD10,        NAND,            NORMAL,       NORMAL,     OUTPUT), // NC
     DEFAULT_PINMUX(GMI_AD11,        RSVD2,           NORMAL,       NORMAL,     INPUT), // NC
     DEFAULT_PINMUX(GMI_AD12,        RSVD2,           NORMAL,       NORMAL,     INPUT), // NC
-    DEFAULT_PINMUX(GMI_AD13,        RSVD,            NORMAL,       NORMAL,     INPUT), // NC
+    DEFAULT_PINMUX(GMI_AD13,        RSVD2,           NORMAL,       NORMAL,     INPUT), // NC
     DEFAULT_PINMUX(GMI_AD14,        RSVD2,           NORMAL,       NORMAL,     INPUT), // DSP_TP_RST
     DEFAULT_PINMUX(GMI_AD15,        NAND,            PULL_UP,      TRISTATE,   INPUT), // NC
 
