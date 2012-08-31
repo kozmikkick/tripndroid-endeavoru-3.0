@@ -182,25 +182,14 @@ static int suspend_enter(suspend_state_t state, bool *wakeup)
 	arch_suspend_enable_irqs();
 	BUG_ON(irqs_disabled());
 
-#ifdef CONFIG_MACH_ENDEAVORU
-Platform_wake:
+ Enable_cpus:
+	enable_nonboot_cpus();
+
+ Platform_wake:
 	if (suspend_ops->wake)
 		suspend_ops->wake();
 
 	dpm_resume_noirq(PMSG_RESUME);
-
-Enable_cpus:
-	   enable_nonboot_cpus();
-#else
-Enable_cpus:
-	   enable_nonboot_cpus();
-
-Platform_wake:
-	if (suspend_ops->wake)
-		suspend_ops->wake();
-
-	dpm_resume_noirq(PMSG_RESUME);
-#endif
 
  Platform_finish:
 	if (suspend_ops->finish)
