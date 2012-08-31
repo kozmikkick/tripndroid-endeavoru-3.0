@@ -302,7 +302,7 @@ static __initdata struct tegra_pingroup_config endeavoru_pinmux_common[] = {
 
     // Port U
     DEFAULT_PINMUX(GPIO_PU0,        RSVD1,           NORMAL,       NORMAL,     INPUT), // CON_BT_EN
-    DEFAULT_PINMUX(GPIO_PU1,        RSVD,            NORMAL,       NORMAL,     INPUT), // NC
+    DEFAULT_PINMUX(GPIO_PU1,        RSVD2,           NORMAL,       NORMAL,     INPUT), // NC
     DEFAULT_PINMUX(GPIO_PU2,        RSVD,            NORMAL,       NORMAL,     INPUT), // NC
     DEFAULT_PINMUX(GPIO_PU3,        RSVD,            NORMAL,       NORMAL,     INPUT), // NC
     DEFAULT_PINMUX(GPIO_PU4,        RSVD1,           NORMAL,       NORMAL,     INPUT), // PWR_MBAT_IN
