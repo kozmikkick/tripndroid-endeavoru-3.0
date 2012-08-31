@@ -368,7 +368,7 @@ static __initdata struct tegra_pingroup_config endeavoru_pinmux_common[] = {
     DEFAULT_PINMUX(SDMMC4_DAT7,     SDMMC4,          PULL_UP,      NORMAL,     INPUT), // BSP_EMMC_D7
 
     //Port BB
-    DEFAULT_PINMUX(GPIO_PBB0,       RSVD,            NORMAL,       NORMAL,     INPUT), // CAM_CAM1_RST
+    DEFAULT_PINMUX(GPIO_PBB0,       RSVD2,           NORMAL,       NORMAL,     INPUT), // CAM_CAM1_RST
     I2C_PINMUX(CAM_I2C_SCL,         I2C3,            NORMAL,       NORMAL,     INPUT,    DISABLE,    DISABLE), // CAM_I2C_SCL
     I2C_PINMUX(CAM_I2C_SDA,         I2C3,            NORMAL,       NORMAL,     INPUT,    DISABLE,    DISABLE), // CAM_I2C_SDA
     DEFAULT_PINMUX(GPIO_PBB3,       VGP3,            NORMAL,       NORMAL,     OUTPUT), // PER_FLASH_EN
