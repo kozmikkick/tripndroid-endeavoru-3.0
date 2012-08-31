@@ -383,7 +383,7 @@ static __initdata struct tegra_pingroup_config endeavoru_pinmux_common[] = {
     DEFAULT_PINMUX(GPIO_PCC2,       RSVD2,           PULL_UP,      NORMAL,     INPUT), // PWR_THEMP_ALERT_INT
     DEFAULT_PINMUX(SDMMC4_RST_N,    RSVD1,	     NORMAL,       NORMAL,     INPUT), // BSP_EMMC_RESOUT
     DEFAULT_PINMUX(SDMMC4_CLK,      SDMMC4,          NORMAL,       NORMAL,     INPUT), // BSP_EMMC_CLK
-    DEFAULT_PINMUX(CLK2_REQ,        RSVD,            NORMAL,       NORMAL,     OUTPUT), // AUD_DOCK_OUT_EN
+    DEFAULT_PINMUX(CLK2_REQ,        RSVD3,           NORMAL,       NORMAL,     OUTPUT), // AUD_DOCK_OUT_EN
 
     //Port DD
     //Port EE
