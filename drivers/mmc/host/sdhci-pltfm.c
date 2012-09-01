@@ -112,6 +112,10 @@ struct sdhci_host *sdhci_pltfm_init(struct platform_device *pdev,
 		goto err;
 	}
 
+#if defined(CONFIG_MACH_ENDEAVORU)
+    int addr = 0;
+    addr = iomem->start;
+#endif
 	if (resource_size(iomem) < 0x100)
 		dev_err(&pdev->dev, "Invalid iomem size!\n");
 
@@ -153,6 +157,12 @@ struct sdhci_host *sdhci_pltfm_init(struct platform_device *pdev,
 
 	platform_set_drvdata(pdev, host);
 
+#if defined(CONFIG_MACH_ENDEAVORU)
+	if (addr == TEGRA_SDMMC3_BASE) {
+		g_wlan_sdioDrv.pdev = pdev;
+		g_wlan_sdioDrv.mmc = host->mmc;
+	}
+#endif
 	return host;
 
 err_remap:
