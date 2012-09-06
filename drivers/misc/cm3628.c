@@ -56,7 +56,7 @@
 #define NEAR_DELAY_TIME ((100 * HZ) / 1000)
 
 #ifdef POLLING_PROXIMITY
-#define POLLING_DELAY		200
+#define POLLING_DELAY		1000
 #define TH_ADD			3
 #endif
 static int record_init_fail;
