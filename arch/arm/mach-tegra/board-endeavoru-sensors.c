@@ -238,7 +238,7 @@ static void nct1008_probe_callback(struct nct1008_data *data)
 	thermal_device->set_alert = nct_set_alert;
 	thermal_device->set_shutdown_temp = nct_set_shutdown_temp;
 
-	tegra_thermal_set_device(thermal_device);
+	tegra_thermal_device_register(thermal_device);
 }
 
 static struct nct1008_platform_data enterprise_nct1008_pdata = {
