@@ -32,8 +32,13 @@ void arm_iommu_release_mapping(struct dma_iommu_mapping *mapping);
 int arm_iommu_attach_device(struct device *dev,
 					struct dma_iommu_mapping *mapping);
 
-dma_addr_t arm_iommu_alloc_iova(struct device *dev, dma_addr_t iova,
+dma_addr_t arm_iommu_alloc_iova_at(struct device *dev, dma_addr_t addr,
 				size_t size);
+
+static inline dma_addr_t arm_iommu_alloc_iova(struct device *dev, size_t size)
+{
+	return arm_iommu_alloc_iova_at(dev, DMA_ANON_ADDR, size);
+}
 
 void arm_iommu_free_iova(struct device *dev, dma_addr_t addr, size_t size);
 

@@ -11,7 +11,7 @@
 #include <asm/memory.h>
 
 #define DMA_ERROR_CODE	(~0)
-
+#define DMA_ANON_ADDR	(~0)
 
 #ifdef __arch_page_to_dma
 #error Please update to __arch_pfn_to_dma
